@@ -45,6 +45,7 @@ type
 PColorConfig =^ TColorConfig;
 TColorConfig = record
         top           : byte;
+        top_hl        : byte;
         text          : byte;
         text_hl       : byte;
         text_sel      : byte;

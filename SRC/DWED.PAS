@@ -71,7 +71,8 @@ begin
                 config.width := scr.getwidth;
                 config.height := scr.getheight;
                 config.tab_size := 8;
-                config.color.top := $70;
+                config.color.top    := $70;
+                config.color.top_hl := $74;
                 config.color.text := $87;
                 config.color.text_hl := $83;
                 config.color.text_sel := $17;

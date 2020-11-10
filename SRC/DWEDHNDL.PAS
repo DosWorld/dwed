@@ -295,8 +295,9 @@ begin
                         dwedscru.update(ctx, SCRU_FULL);
                         with ctx.current^ do begin
                                 scr.cln(0, 0, config^.color.top);
-                                scr.print(1, 0, config^.color.top,
-                                        'Do you want save "' + sfname + '" ? (Y/N/C)');
+                                scr.printhl(1, 0, config^.color.top,
+                                        config^.color.top_hl,
+                                        'Do you want save "' + sfname + '" ? (~Y~/~N~/~C~)');
                         end;
                         scr.show;
                         case scrui.yes_no_cancel of
@@ -723,7 +724,7 @@ begin
                 scr.locate(0, 0);
                 with ctx.current^.config^.color do begin
                         scr.cln(0, 0, top);
-                        scr.print(1, 0, top, 'Substring not found. Press any key.');
+                        scr.printhl(1, 0, top, top_hl, 'Substring ~not~ found. Press any key.');
                 end;
                 scr.show;
                 kbd.reset;
@@ -735,9 +736,11 @@ begin
                 ctx.current^.editor.sel_row := strs.get_num(ctx.current^.cline);
                 ctx.current^.editor.sel_x := ctx.current^.editor.x + length(searchText);
                 dwedscru.update(ctx, SCRU_FULL);
-                msg := ' Replace it? (Y/N)';
+                msg := ' Replace it? (~Y~/~N~)';
                 scr.cln(0, 0, ctx.current^.config^.color.top);
-                scr.print(0, 0, ctx.current^.config^.color.top, msg);
+                scr.printhl(0, 0, ctx.current^.config^.color.top,
+                         ctx.current^.config^.color.top_hl,
+                         msg);
                 scr.show;
                 case scrui.yes_no of
                 YES: begin
@@ -783,9 +786,12 @@ begin
         searchStr := ctx.search;
         replaceStr := ctx.replace;
         if searchCaseSens then msg := ' Search (case-sens) :'
-        else msg := ' Search (case-insens) :';
+        else msg := ' Search (case-~in~sens) :';
         scr.cln(0, 0, ctx.current^.config^.color.top);
-        scr.print(0, 0, ctx.current^.config^.color.top, msg);
+        scr.printhl(0, 0,
+                ctx.current^.config^.color.top,
+                ctx.current^.config^.color.top_hl,
+                msg);
         scr.show;
         while true do begin
                 key := scrui.editstr(length(msg) + 1, 0, ctx.current^.config^.color.top, searchStr, 32, 64);

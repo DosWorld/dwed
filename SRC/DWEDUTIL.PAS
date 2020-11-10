@@ -674,7 +674,9 @@ begin
         else errMsg := 'Unknown error code';
         end;
         scr.cln(0, 0, ctx.current^.config^.color.top);
-        scr.print(0, 0, ctx.current^.config^.color.top, ' Error ' + itoa(errCode) + ': ' + errMsg);
+        scr.printhl(0, 0, ctx.current^.config^.color.top,
+                ctx.current^.config^.color.top_hl,
+                ' Error #~' + itoa(errCode) + '~: ~' + errMsg);
         scr.show;
         kbd.reset;
         kbd.getkey;
