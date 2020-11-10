@@ -792,7 +792,8 @@ begin
                 NO: begin
                                 inc(ctx.current^.editor.x, length(searchText));
                         end;
-                end; 
+                end;
+                r := SCRU_FULL;
                 ctx.current^.editor.selection := false;
         end;
         hk_find_again := r;
