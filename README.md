@@ -12,7 +12,8 @@ Main features:
 
 # Screenshots
 
-![Image screenshot](https://github.com/DosWorld/dwed/raw/main/DWED.PNG)
+![Image Screenshot - Pascal syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-PAS.PNG)
+![Image Screenshot - Basic syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-BAS.PNG)
 
 # Build
 
