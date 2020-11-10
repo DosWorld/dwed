@@ -4,7 +4,7 @@ Text file editor for MS-DOS and 8086 CPU designed in modern style.
 
 Main features:
 
-* Support file over 64k
+* Support files over 64k
 * Support syntax hightlight
 * Support multiple file editing at the same time
 * Support internal clipboard
