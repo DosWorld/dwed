@@ -7,7 +7,7 @@ Main features:
 * Support files over 64k
 * Support syntax hightlight (C/C++/C--, Pascal, Basic, Assembler, Xml/Html, text files etc)
 * Support multiple file editing at the same time
-* Support internal clipboard
+* Support internal clipboard (size up to 32k)
 * Support unix-like text files for open
 * Dont require DPMI-server or 80286 CPU
 
