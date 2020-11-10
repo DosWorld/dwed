@@ -27,7 +27,7 @@ unit scrui;
 interface
 
 type
-ANSWER = (YES, NO, CANCEL, RETRY, ALL, MAYBE, IDONTKNOWN, ASKMETOMORROW);
+ANSWER = (YES, NO, CANCEL, RETRY, IGNORE, ALL, MAYBE, IDONTKNOWN, ASKMETOMORROW);
 
 procedure box(x, y, w, h :integer; clr:byte);
 function vmenu(x, y, w, h :integer; mclr, sclr:byte; mtext:pchar; var selItem:integer):word;
@@ -182,7 +182,11 @@ begin
                         if length(str) <> maxlen then begin
                                 str := str + chr(lo(key));
                         end;
-                end else break;
+                end else if (key = K_ENTER)
+                        or (key = K_ESC)
+                        or (key = K_TAB)
+                        or (key = K_SHIFT_TAB)
+                        then break;
         end;
         scr.set_cursor(save_cursor_start, save_cursor_end);
         editstr := key;

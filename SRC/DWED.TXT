@@ -15,7 +15,7 @@ and works in Real Mode ~without~ DPMI.
 
 1. Some time, editor ask you something like
 
-        ~do something? (Y/N)~
+        ~Can i do %something%? (Y/N)~
 
 In this case, you can press ~Y~ or ~ENTER~ - to answer ~YES~
 and ~N~ or ~ESC~ - to answer ~NO~.
@@ -62,7 +62,9 @@ and ~N~ or ~ESC~ - to answer ~NO~.
         File operations.
 
 ~F2~ or ~Ctrl~+~S~ - Save current file.
-~Ctrl~+~Shift~+~S~ - Save all files.
+~Shift~+~F2~     - Save As.
+~Ctrl~+~Shift~+~S~ - Save ~All~ files.
+
 ~F3~           - Load file. You can enter non~-~exists name
                for a new one.
 

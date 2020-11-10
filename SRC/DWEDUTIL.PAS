@@ -57,6 +57,8 @@ function save_clipboard(var ctx : TEditorContext; fname:string) : integer;
 function load_clipboard(var ctx : TEditorContext; fname:string) : integer;
 procedure go_win_list(var ctx:TEditorContext);
 
+function mk_short_name(fname : string) : string;
+
 procedure new_file(var ctx : TEditorContext; fname : string);
 function load_file(var ctx : TEditorContext; fname : string; var errCode : integer) : integer;
 
@@ -572,10 +574,15 @@ begin
         freemem(p, memlen);
 end;
 
+function mk_short_name(fname : string) : string;
+begin
+        mk_short_name := basename(fname);
+end;
+
 procedure reset_file(p : PFileContext);
 begin
         with p^ do begin
-                sfname := basename(fname);
+                sfname := mk_short_name(fname);
                 st := find_SourceType_by_ext(get_filename_ext(sfname));
                 chg := false;
                 cline := rline;

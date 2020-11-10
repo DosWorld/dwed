@@ -176,10 +176,6 @@ end;
 
 procedure update(var ctx : TEditorContext; scru : integer);
 begin
-        with ctx.config do begin
-                width := scr.getwidth;
-                height := scr.getheight;
-        end;
         if scru <> SCRU_NONE then begin
                 if scru >= SCRU_FULL then update_full(ctx);
                 if scru >= SCRU_CLINE then update_cline(ctx);

@@ -505,12 +505,12 @@ begin
         dwedhl.add_keyword(SRC_BAS, 'string');
         dwedhl.add_keyword(SRC_BAS, 'record');
 
-        dwedhl.add_lang(SRC_BAT, '|bat|', false, ',%.()+*-:=<>#$@^;{}[]"\/'+#$27, '.bat MS-DOS Shell');
+        dwedhl.add_lang(SRC_BAT, '|bat|', false, '%.()+-:=<>#@;"\/'+#$27, '.bat MS-DOS Shell Script');
         dwedhl.add_keyword(SRC_BAT, 'rem');
         dwedhl.add_keyword(SRC_BAT, 'pause');
         dwedhl.add_keyword(SRC_BAT, 'on');
-        dwedhl.add_keyword(SRC_BAT, 'errorlevel');
         dwedhl.add_keyword(SRC_BAT, 'off');
+        dwedhl.add_keyword(SRC_BAT, 'errorlevel');
         dwedhl.add_keyword(SRC_BAT, 'not');
         dwedhl.add_keyword(SRC_BAT, 'exist');
         dwedhl.add_keyword(SRC_BAT, 'call');
@@ -519,6 +519,8 @@ begin
         dwedhl.add_keyword(SRC_BAT, 'goto');
         dwedhl.add_keyword(SRC_BAT, 'echo');
         dwedhl.add_keyword(SRC_BAT, 'type');
+        dwedhl.add_keyword(SRC_BAT, 'dir');
+        dwedhl.add_keyword(SRC_BAT, 'cd');
         dwedhl.add_keyword(SRC_BAT, 'del');
         dwedhl.add_keyword(SRC_BAT, 'mkdir');
         dwedhl.add_keyword(SRC_BAT, 'lh');

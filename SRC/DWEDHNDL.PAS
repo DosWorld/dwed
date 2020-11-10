@@ -358,7 +358,43 @@ begin
                 if errCode <> 0 then handle_error(ctx, errCode) else chg := false;
         end;
         ctx.current := srcctx;
-        hk_save := SCRU_TOP;
+        hk_save := SCRU_CLINE;
+end;
+
+
+function hk_save_as(var ctx:TEditorContext; event:PEvent):integer;
+var    errCode    : integer;
+       newname    : string;
+       key        : word;
+       start_save : boolean;
+       msg        : string;
+begin
+        commit(ctx);
+
+        newname := ctx.current^.fname;
+        msg := ' Save file to :';
+        scr.cln(0, 0, ctx.current^.config^.color.top);
+        scr.print(0, 0, ctx.current^.config^.color.top, msg);
+        while true do begin
+                scr.show;
+                key := scrui.editstr(length(msg) + 1, 0, ctx.current^.config^.color.top, newname, 32, 255);
+                if key = K_ESC then begin start_save := false; break; end;
+                if key = K_ENTER then begin start_save := true; break; end;
+        end;
+        if start_save then begin
+                with ctx.current^ do begin
+                        scr.cln(0, 0, config^.color.top);
+                        scr.print(1, 0, config^.color.top, 'Save "' + sfname + '"');
+                        scr.show;
+                end;
+                strs.to_file(newname, ctx.current^.rline, errCode);
+                if errCode <> 0 then handle_error(ctx, errCode) else ctx.current^.chg := false;
+                if errCode = 0 then begin
+                        ctx.current^.fname := newname;
+                        ctx.current^.sfname := mk_short_name(newname);
+                end;
+        end;
+        hk_save_as := SCRU_CLINE;
 end;
 
 function hk_dos_screen(var ctx:TEditorContext; event:PEvent):integer;
@@ -926,6 +962,8 @@ end;
 
 begin
         reg_handler(K_ESC, false, false, false, false, hk_esc);
+        reg_handler(K_SHIFT_F2, false, true, false, false, hk_save_as);
+
         reg_handler(K_F1, false, false, false, false, hk_help);
         reg_handler(K_F2, false, false, false, false, hk_save);
         reg_handler(K_F3, false, false, false, false, hk_load);

@@ -30,13 +30,13 @@ var screen:array[0..160*50*2] of char;
 var cursor_start, cursor_end : byte;
 
 procedure init;
-procedure cls(clr:byte);
-procedure cln(x,y:integer;clr:byte);
-procedure print(x, y:integer; clr:byte; s:string);
-procedure printhl(x, y:integer; clr, hlclr:byte; s:string);
-procedure hprint(x,y:integer;clr:byte;c:char;len:integer);
-procedure vprint(x,y:integer;clr:byte;c:char;len:integer);
-procedure chcolor(x,y:integer;clr:byte;len:integer);
+procedure cls(clr : byte);
+procedure cln(x, y : integer; clr : byte);
+procedure print(x, y : integer; clr : byte; s : string);
+procedure printhl(x, y : integer; clr, hlclr : byte; s : string);
+procedure hprint(x, y:integer; clr : byte; c : char; len : integer);
+procedure vprint(x, y:integer; clr : byte; c : char; len : integer);
+procedure chcolor(x, y:integer; clr : byte; len: integer);
 
 procedure push_buf;
 procedure pop_buf;
@@ -80,6 +80,8 @@ const
 last_scr        : PScr = nil;
 last_scr_buf    : PScr = nil;
 
+var screen_size, line_size : word;
+
 function getheight:integer;
 begin
         getheight := mem[$000:$484] + 1;
@@ -90,14 +92,11 @@ begin
         getwidth := memw[$000:$44a];
 end;
 
-procedure cls(clr:byte);assembler;
+procedure cls(clr : byte);assembler;
 asm
-        call       getwidth
-        push       ax
-        call       getheight
-        pop        cx
-        mul        cx
-        mov        cx, ax
+        mov        ax, screen_size
+        shr        ax, 1
+        xchg       ax, cx
         mov        ah, clr
         mov        al, ' '
         push       ds
@@ -107,7 +106,7 @@ asm
         repz       stosw
 end;
 
-procedure cln(x,y:integer;clr:byte);assembler;
+procedure cln(x, y : integer; clr : byte);assembler;
 asm
         call       getwidth
         push       ax
@@ -129,13 +128,15 @@ asm
         pop        es
 end;
 
-procedure hprint(x,y:integer;clr:byte;c:char;len:integer);assembler;
+procedure hprint(x, y : integer; clr : byte; c : char; len : integer);assembler;
 asm
-        call       getwidth
-        mov        cx, y
+        mov        ax, y
+        mov        cx, line_size
         mul        cx
-        add        ax, x
+        xchg       ax, cx
+        mov        ax, x
         shl        ax, 1
+        add        ax, cx
         lea        di, screen
         add        di, ax
         mov        cx, len
@@ -149,13 +150,15 @@ asm
         pop        es
 end;
 
-procedure chcolor(x,y:integer;clr:byte;len:integer);assembler;
+procedure chcolor(x, y : integer; clr : byte; len : integer);assembler;
 asm
-        call       getwidth
-        mov        cx, y
+        mov        ax, y
+        mov        cx, line_size
         mul        cx
-        add        ax, x
+        xchg       ax, cx
+        mov        ax, x
         shl        ax, 1
+        add        ax, cx
         lea        di, screen
         add        di, ax
         inc        di
@@ -176,16 +179,15 @@ asm
         pop        es
 end;
 
-procedure vprint(x,y:integer;clr:byte;c:char;len:integer);assembler;
+procedure vprint(x, y : integer; clr : byte; c : char; len : integer);assembler;
 asm
-        call       getwidth
-        mov        bx, ax
+        mov        ax, y
+        mov        bx, line_size
+        mul        bx
+        xchg       ax, cx
+        mov        ax, x
         shl        ax, 1
-        xchg       bx, ax
-        mov        cx, y
-        mul        cx
-        add        ax, x
-        shl        ax, 1
+        add        ax, cx
         lea        di, screen
         add        di, ax
         mov        cx, len
@@ -205,17 +207,17 @@ asm
         pop        es
 end;
 
-procedure print(x, y:integer; clr:byte; s:string);assembler;
+procedure print(x, y:integer; clr : byte; s : string);assembler;
 asm
         push       es
         push       ds
-        call       getwidth
-        xor        ah, ah
-        mov        cx, ax
         mov        ax, y
+        mov        cx, line_size
         mul        cx
-        add        ax, x
+        xchg       ax, cx
+        mov        ax, x
         shl        ax, 1
+        add        ax, cx
         lea        di, screen
         add        di, ax
         push       ds
@@ -241,17 +243,17 @@ asm
         pop        es
 end;
 
-procedure printhl(x, y:integer; clr, hlclr:byte; s:string);assembler;
+procedure printhl(x, y : integer; clr, hlclr : byte; s : string);assembler;
 asm
         push       es
         push       ds
-        call       getwidth
-        xor        ah, ah
-        mov        cx, ax
         mov        ax, y
+        mov        cx, line_size
         mul        cx
-        add        ax, x
+        xchg       ax, cx
+        mov        ax, x
         shl        ax, 1
+        add        ax, cx
         lea        di, screen
         add        di, ax
         push       ds
@@ -286,12 +288,7 @@ end;
 
 procedure show;assembler;
 asm
-        call       getwidth
-        push       ax
-        call       getheight
-        pop        cx
-        mul        cx
-        mov        cx, ax
+        mov        cx, screen_size
         lea        si, screen
         xor        di, di
         push       es
@@ -303,12 +300,10 @@ asm
 end;
 
 procedure push;
-var s : word;
-        p : PScr;
+var     p : PScr;
 begin
-        s := (getwidth * getheight) shl 1;
-        getmem(p, s + sizeof(TScr) - 1);
-        p^.size := s;
+        getmem(p, screen_size + sizeof(TScr) - 1);
+        p^.size := screen_size;
         p^.prev := last_scr;
         p^.x := getx;
         p^.y := gety;
@@ -327,7 +322,7 @@ begin
         freemem(p, p^.size + sizeof(TScr) - 1);
 end;
 
-procedure locate(x, y:integer);assembler;
+procedure locate(x, y : integer);assembler;
 asm
         push       ds
         xor        ax, ax
@@ -352,12 +347,10 @@ begin
 end;
 
 procedure push_buf;
-var s : word;
-        p : PScr;
+var     p : PScr;
 begin
-        s := (getwidth * getheight) shl 1;
-        getmem(p, s + sizeof(TScr) - 1);
-        p^.size := s;
+        getmem(p, screen_size + sizeof(TScr) - 1);
+        p^.size := screen_size;
         p^.prev := last_scr_buf;
         p^.x := getx;
         p^.y := gety;
@@ -430,6 +423,8 @@ begin
         set_blink(false);
         cursor_start := get_cursor_start;
         cursor_end := get_cursor_end;
+        screen_size := (getwidth * getheight) shl 1;
+        line_size := getwidth shl 1;
 end;
 
 begin
