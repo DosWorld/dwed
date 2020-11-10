@@ -8,6 +8,7 @@ Main features:
 * Support syntax hightlight
 * Support multiple file editing at the same time
 * Support internal clipboard
+* Support unix-like text files for open
 * Dont require DPMI-server or 80286 CPU
 
 # Screenshots
