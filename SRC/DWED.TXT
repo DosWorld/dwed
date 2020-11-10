@@ -55,6 +55,7 @@ and ~N~ or ~ESC~ - to answer ~NO~.
         Search and Replace.
 
 ~Ctrl~+~F~ For start case-~in~sensitive search~/~replace.
+or ~F7~
 ~Ctrl~+~Shift~+~F~ For start case-sensitive search~/~replace.
 
 ~Ctrl~+~K~ - Search~/~replace again.
@@ -80,7 +81,7 @@ have clipboard shared between file.
 ~Alt~+~F6~  - Opened File list window.
 
 ~Alt~+~F5~  - Show DOS screen.
-///1SYNTAXHL
+///1SYNTAX-HL
         Syntax ~h~i~g~h~t~l~i~g~h~t~.
 
 ~DWED~ support syntax hightlight for next languages:
@@ -93,12 +94,12 @@ have clipboard shared between file.
 ~XML/HTML~    .xml .htm
 
  and ~MS-DOS Shell Scripting~ .bat
-///1CMDLINE
+///1CMD-LINE
         Command-line parameters magic.
 
 If you want load few file - you can specify all of them
 into command line.
-///1EXTMEM
+///1EXT-MEM
         Ex~t~ended~/~Ex~p~anded Memory.
 
 ~DWED~ does not use Extended~/~Expanded Memory, now. ~TBD~

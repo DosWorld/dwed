@@ -968,10 +968,12 @@ begin
         reg_handler(K_F2, false, false, false, false, hk_save);
         reg_handler(K_F3, false, false, false, false, hk_load);
         reg_handler(K_F6, false, false, false, false, hk_nextwin);
-        reg_handler(K_ALT_F6, false, false, true, false, hk_winlist);
+        reg_handler(K_F7, false, false, false, true, hk_start_find);
 
         reg_handler(K_ALT_F2, false, false, true, false, hk_cb_save);
         reg_handler(K_ALT_F3, false, false, true, false, hk_cb_load);
+        reg_handler(K_ALT_F5, false, false, true, false, hk_dos_screen);
+        reg_handler(K_ALT_F6, false, false, true, false, hk_winlist);
 
         reg_handler(K_CTRL_LEFT, true, false, false, true, hk_word_left);
         reg_handler(K_CTRL_RIGHT, true, false, false, true, hk_word_right);
@@ -1009,7 +1011,6 @@ begin
         reg_handler(K_CTRL_S, true, false, false, true, hk_save);
         reg_handler(K_CTRL_S, true, true, false, true, hk_save);
         reg_handler(K_INS, false, false, false, false, hk_ins);
-        reg_handler(K_ALT_F5, false, false, true, false, hk_dos_screen);
 
         reg_handler(K_CTRL_X, true, false, false, false, hk_cb_cut);
         reg_handler(K_CTRL_C, true, false, false, false, hk_cb_copy);
