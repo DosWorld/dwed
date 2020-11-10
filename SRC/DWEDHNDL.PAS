@@ -822,12 +822,9 @@ begin
         searchStr := ctx.search;
         replaceStr := ctx.replace;
         if searchCaseSens then msg := ' Search (case-sens) :'
-        else msg := ' Search (case-~in~sens) :';
+        else msg := ' Search (case-insens) :';
         scr.cln(0, 0, ctx.current^.config^.color.top);
-        scr.printhl(0, 0,
-                ctx.current^.config^.color.top,
-                ctx.current^.config^.color.top_hl,
-                msg);
+        scr.print(0, 0,ctx.current^.config^.color.top, msg); 
         scr.show;
         while true do begin
                 key := scrui.editstr(length(msg) + 1, 0, ctx.current^.config^.color.top, searchStr, 32, 64);

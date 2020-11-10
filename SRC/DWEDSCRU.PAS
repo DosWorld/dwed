@@ -181,8 +181,7 @@ begin
                 if scru >= SCRU_CLINE then update_cline(ctx);
                 if scru >= SCRU_TOP then update_top(ctx);
 
-                if ctx.ins then scr.set_cursor(scr.cursor_start, scr.cursor_end)
-                else scr.set_cursor(0, scr.cursor_end);
+                if ctx.ins then scr.cursor_on else scr.cursor_big;
 
                 scr.show;
         end;

@@ -21,13 +21,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$G-,S-,R-,I-}
+{$G-,S-,R-,I-,F+}
 unit scr;
 
 interface
 
-var screen : pchar;
-var cursor_start, cursor_end : byte;
+var
+        screen        : pchar;
+        cursor_start  : byte;
+        cursor_end    : byte;
 
 procedure init;
 procedure cls(clr : byte);
@@ -46,6 +48,9 @@ procedure show;
 procedure locate(x, y:integer);
 
 procedure cursor_off;
+procedure cursor_on;
+procedure cursor_big;
+
 function get_cursor_start:byte;
 function get_cursor_end:byte;
 procedure set_cursor(start_line, end_line : byte);
@@ -93,7 +98,7 @@ begin
 end;
 
 { in: ax = x, cx = y }
-{ out: ds:si }
+{ out: es:di }
 procedure buf_es_di;assembler;
 asm
         mov        bx, ax
@@ -117,8 +122,8 @@ asm
         mov        al, ' '
         push       es
         mov        di,word ptr [screen]
-        mov        bx,word ptr [screen + 2]
-        mov        es, di
+        mov        ax,word ptr [screen + 2]
+        mov        es, ax
         cld
         repz       stosw
         pop        es
@@ -335,7 +340,7 @@ begin
         p^.prev := last_scr_buf;
         p^.x := getx;
         p^.y := gety;
-        move(screen, p^.buf, p^.size);
+        move(screen[0], p^.buf, p^.size);
         last_scr_buf := p;
 end;
 
@@ -343,7 +348,7 @@ procedure pop_buf;
 var p : PScr;
 begin
         if last_scr_buf = nil then exit;
-        move(last_scr_buf^.buf, screen, last_scr_buf^.size);
+        move(last_scr_buf^.buf, screen[0], last_scr_buf^.size);
         p := last_scr_buf;
         last_scr_buf := last_scr_buf^.prev;
         scr.locate(p^.x, p^.y);
@@ -353,7 +358,7 @@ end;
 procedure pick_buf;
 begin
         if last_scr_buf = nil then exit;
-        move(last_scr_buf^.buf, screen, last_scr_buf^.size);
+        move(last_scr_buf^.buf, screen[0], last_scr_buf^.size);
         scr.locate(last_scr_buf^.x, last_scr_buf^.y);
 end;
 
@@ -376,25 +381,35 @@ begin
         set_cursor($20, $20);
 end;
 
+procedure cursor_on;
+begin
+        set_cursor(cursor_start, cursor_end);
+end;
+
+procedure cursor_big;
+begin
+        set_cursor(0, cursor_end);
+end;
+
 procedure set_blink(on : boolean);assembler;
 asm
-        mov        bl, byte ptr on
+        mov        bl, byte ptr [on]
         mov        ax, $1003
         int        $10
 end;
 
 function get_cursor_start:byte;assembler;
 asm
-                mov        ah,3
-                int        $10
-                mov        al, ch
+        mov        ah, 3
+        int        $10
+        mov        al, ch
 end;
 
 function get_cursor_end:byte;assembler;
 asm
-                mov        ah,3
-                int        $10
-                mov        al, cl
+        mov        ah, 3
+        int        $10
+        mov        al, cl
 end;
 
 
