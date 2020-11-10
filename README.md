@@ -16,7 +16,8 @@ Main features:
 
 # Build
 
-Type
+To build binaries, you need Turbo Pascal 7.0 in path and my small make. Then - type
+
       make
 
 # LICENSE
