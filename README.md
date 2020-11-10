@@ -19,9 +19,16 @@ Restrictions:
 
 # Screenshots
 
+Text file:
 ![Image Screenshot - Txt syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-TXT.PNG)
+
+Turbo Pascal source code:
 ![Image Screenshot - Pascal syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-PAS.PNG)
+
+Power Basic source code:
 ![Image Screenshot - Basic syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-BAS.PNG)
+
+C source code:
 ![Image Screenshot - C syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-C.PNG)
 
 # Build
