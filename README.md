@@ -14,7 +14,8 @@ Main features:
 Restrictions:
 
 * This software is writen in Turbo Pascal, so string length is limited to 255 chars.
-* DOS-conventional memory will be enought to load file up to ~300k..400k (expect 300k border).
+* DOS-conventional memory will be enought to load file up to ~300k..400k (expect - 300k border).
+* No UnDo/ReDo functionality. The reason is the same as why i dont build AST for syntax hightlight - no memory for this.
 
 # Screenshots
 
