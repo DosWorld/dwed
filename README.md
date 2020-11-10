@@ -24,7 +24,7 @@ Restrictions:
 
 # Screenshots
 
-### Text file
+### Text file hightlight
 ![Image Screenshot - Txt syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-TXT.PNG)
 
 ### Turbo Pascal syntax hightlight
