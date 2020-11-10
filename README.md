@@ -31,6 +31,9 @@ Restrictions:
 ### C source code
 ![Image Screenshot - C syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-C.PNG)
 
+### Help mode
+![Image Screenshot - C syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-HLP.PNG)
+
 # Build
 
 To build binaries, you need Turbo Pascal 7.0 in path and my small make. Then - type
