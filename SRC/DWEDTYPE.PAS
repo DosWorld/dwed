@@ -96,7 +96,7 @@ TEditorContext = record
         ins            : boolean;
         current        : PFileContext;
         all            : PFileContext;
-        clipboard      : array[0..CB_SIZE] of char;
+        clipboard      : pchar;
         search         : string[64];
         searchCaseSens : boolean;
         replace        : string[64];

@@ -82,6 +82,7 @@ begin
                 config.color.help_menu_sel := $07;
                 config.color.help := $87;
                 config.color.help_hl := $83;
+                getmem(clipboard, CB_SIZE);
                 clipboard[0] := #0;
                 search := '';
                 replace := '';

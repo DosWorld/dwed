@@ -26,7 +26,7 @@ unit scr;
 
 interface
 
-var screen:array[0..160*50*2] of char;
+var screen : pchar;
 var cursor_start, cursor_end : byte;
 
 procedure init;
@@ -92,6 +92,22 @@ begin
         getwidth := memw[$000:$44a];
 end;
 
+{ in: ax = x, cx = y }
+{ out: ds:si }
+procedure buf_es_di;assembler;
+asm
+        mov        bx, ax
+        mov        ax, line_size
+        mul        cx
+        xchg       bx, ax
+        shl        ax, 1
+        add        ax, bx
+        add        ax, word ptr [screen]
+        mov        di, ax
+        mov        ax, word ptr [screen + 2]
+        mov        es, ax
+end;
+
 procedure cls(clr : byte);assembler;
 asm
         mov        ax, screen_size
@@ -99,75 +115,56 @@ asm
         xchg       ax, cx
         mov        ah, clr
         mov        al, ' '
-        push       ds
-        pop        es
-        lea        di,screen
+        push       es
+        mov        di,word ptr [screen]
+        mov        bx,word ptr [screen + 2]
+        mov        es, di
         cld
         repz       stosw
+        pop        es
 end;
 
 procedure cln(x, y : integer; clr : byte);assembler;
 asm
+        push       es
         call       getwidth
         push       ax
+        mov        ax, x
         mov        cx, y
-        mul        cx
-        add        ax, x
-        shl        ax, 1
-        lea        di, screen
-        add        di, ax
+        call       buf_es_di
         pop        cx
         sub        cx, x
         mov        ah, clr
         mov        al, ' '
         cld
-        push       es
-        push       ds
-        pop        es
         repz       stosw
         pop        es
 end;
 
 procedure hprint(x, y : integer; clr : byte; c : char; len : integer);assembler;
 asm
-        mov        ax, y
-        mov        cx, line_size
-        mul        cx
-        xchg       ax, cx
+        push       es
         mov        ax, x
-        shl        ax, 1
-        add        ax, cx
-        lea        di, screen
-        add        di, ax
+        mov        cx, y
+        call       buf_es_di
         mov        cx, len
         mov        ah, clr
         mov        al, c
         cld
-        push       es
-        push       ds
-        pop        es
         repz       stosw
         pop        es
 end;
 
 procedure chcolor(x, y : integer; clr : byte; len : integer);assembler;
 asm
-        mov        ax, y
-        mov        cx, line_size
-        mul        cx
-        xchg       ax, cx
+        push       es
         mov        ax, x
-        shl        ax, 1
-        add        ax, cx
-        lea        di, screen
-        add        di, ax
+        mov        cx, y
+        call       buf_es_di
         inc        di
         mov        cx, len
         mov        al, clr
         cld
-        push       es
-        push       ds
-        pop        es
         or         cx, cx
         jz         @end
 @cont:
@@ -181,21 +178,14 @@ end;
 
 procedure vprint(x, y : integer; clr : byte; c : char; len : integer);assembler;
 asm
-        mov        ax, y
-        mov        bx, line_size
-        mul        bx
-        xchg       ax, cx
+        push       es
         mov        ax, x
-        shl        ax, 1
-        add        ax, cx
-        lea        di, screen
-        add        di, ax
+        mov        cx, y
+        call       buf_es_di
+        mov        bx, line_size
         mov        cx, len
         mov        ah, clr
         mov        al, c
-        push       es
-        push       ds
-        pop        es
         or         cx, cx
         jz         @end
 @cont:
@@ -211,32 +201,23 @@ procedure print(x, y:integer; clr : byte; s : string);assembler;
 asm
         push       es
         push       ds
-        mov        ax, y
-        mov        cx, line_size
-        mul        cx
-        xchg       ax, cx
         mov        ax, x
-        shl        ax, 1
-        add        ax, cx
-        lea        di, screen
-        add        di, ax
-        push       ds
-        pop        es
+        mov        cx, y
+        call       buf_es_di
         lea        bx, s
         mov        si, ss:[bx]
-        mov        ax, ss:[bx+2]
-        mov        ds, ax
-        xor        ah, ah
+        mov        bx, ss:[bx+2]
+        mov        ds, bx
         lodsb
-        mov        cx, ax
-        or         ax, ax
+        or         al, al
         jz         @end
+        mov        cl, al
         mov        ah, ss:clr
         cld
 @cont:
         lodsb
         stosw
-        dec        cx
+        dec        cl
         jnz        @cont
 @end:
         pop        ds
@@ -247,26 +228,20 @@ procedure printhl(x, y : integer; clr, hlclr : byte; s : string);assembler;
 asm
         push       es
         push       ds
-        mov        ax, y
-        mov        cx, line_size
-        mul        cx
-        xchg       ax, cx
+
         mov        ax, x
-        shl        ax, 1
-        add        ax, cx
-        lea        di, screen
-        add        di, ax
-        push       ds
-        pop        es
+        mov        cx, y
+        call       buf_es_di
+
         lea        bx, s
         mov        si, ss:[bx]
         mov        ax, ss:[bx+2]
         mov        ds, ax
         xor        ah, ah
         lodsb
-        mov        cx, ax
         or         ax, ax
         jz         @end
+        mov        cx, ax
         mov        ah, ss:clr
         mov        bh, ss:hlclr
         cld
@@ -288,14 +263,20 @@ end;
 
 procedure show;assembler;
 asm
-        mov        cx, screen_size
-        lea        si, screen
-        xor        di, di
         push       es
-        mov        bx, vseg
-        mov        es, bx
+        push       ds
+
+        mov        ax, word ptr [vseg]
+        mov        es, ax
+        mov        cx, [screen_size]
+        mov        si, word ptr [screen]
+        mov        ax, word ptr [screen+2]
+        mov        ds, ax
+        xor        di, di
         cld
         repz       movsw
+
+        pop        ds
         pop        es
 end;
 
@@ -425,6 +406,7 @@ begin
         cursor_end := get_cursor_end;
         screen_size := (getwidth * getheight) shl 1;
         line_size := getwidth shl 1;
+        getmem(screen, screen_size);
 end;
 
 begin
