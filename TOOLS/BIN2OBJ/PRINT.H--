@@ -1,0 +1,109 @@
+/*
+    (c) 2019 Copyright by Viacheslav Komenda
+
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org>
+
+*/
+
+#ifndef _PRINT_H_
+#define _PRINT_H_
+
+// PRINT(char)
+inline void PRINT() { $PUSH AX, BX, CX, DX; DL = AL; AH = 0x02; $ INT 0x21; $POP DX, CX, BX, AX; }
+
+// PRINTLN()
+inline void PRINTLN() { $PUSH AX, BX, CX, DX; DL = 0x0d; AH = 0x02; $ INT 0x21; DL = 0x0a; AH = 0x02; $ INT 0x21; $POP DX, CX, BX, AX; }
+
+// PRINT_STR()
+inline void PRINT_STR() { $PUSH SI; SI = AX; $CLD; WHILE(TRUE) { $LODSB; IF(AL == 0) BREAK; PRINT(); } $POP SI; }
+
+// AL = byte
+inline void PRINT_HEX_BYTE() { AH = AL; AX &= 0xF00F; $PUSH AX;  AL = AH; AL = AL >> 4; IF(AL > 9) PRINT(AL + 'A' - 10); ELSE PRINT(AL + '0'); $POP AX; IF(AL > 9) PRINT(AL + 'A' - 10); ELSE PRINT(AL + '0'); }
+
+// AW = word
+inline void PRINT_HEX_WORD() { $PUSH AX; AL=AH; PRINT_HEX_BYTE(); $POP AX; PRINT_HEX_BYTE(); }
+
+// AX = int
+:void PRINT_INT() {
+  IF(int AX<0) { $NEG AX; $PUSH AX; PRINT('-'); $POP AX;}
+  DX=0; BX = 10; $DIV BX;
+  IF(AX !=0) { $PUSH DX; PRINT_INT(); $POP AX;} ELSE AX = DX;
+  PRINT(AL + '0');
+}
+// AX = uint
+:void PRINT_UINT() {
+  DX=0; BX = 10; $DIV BX;
+  IF(AX !=0) { $PUSH DX; PRINT_UINT(); $POP AX;} ELSE AX = DX;
+  PRINT(AL + '0');
+}
+
+:void printdword(dword i)
+dword j;
+{
+    IF(i < 0) { i = -i; @PRINT('-'); }
+    j = i / 10;
+    IF (j != 0) printint(j);
+    PRINT(i % 10 + '0');
+}
+
+inline void HEX2CHAR() { IF( AL < 0x0A) { AL += '0'; } ELSE { AL -= 10; AL += 'A'; } }
+
+:word printhexbyte(word buf; byte b) {
+    b = b & 0xff;
+    AL = b;
+    AH = AL;
+    AL = AL >> 4;
+
+    AL = AL & 0x0F;
+    HEX2CHAR();
+    BX = buf;
+    DSBYTE[BX] = AL;
+    BX++;
+
+    AL = AH; AL = AL & 0x0F;
+    HEX2CHAR();
+    DSBYTE[BX] = AL;
+    BX++;
+    DSBYTE[BX] = 0;
+    return (BX);
+}
+
+:word printhexword(word buf; word w)
+byte b;
+{
+    b = w >> 8;
+    buf = printhexbyte(buf, b);
+    b = w & 0xFF;
+    buf = printhexbyte(buf, b);
+    return buf;
+}
+
+:word printhexdword(word buf; dword b) {
+    buf = printhexword(buf, b >> 16);
+    buf = printhexword(buf, b & 0xFFFF);
+    return buf;
+}
+
+#endif

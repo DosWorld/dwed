@@ -1,0 +1,4 @@
+all: fastkbd.com
+
+fastkbd.com: fastkbd.c--
+	c-- /lst /x fastkbd.c--

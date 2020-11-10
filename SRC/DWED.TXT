@@ -1,0 +1,134 @@
+///1ABOUT
+        About ~DWED~.
+
+~DWED~ is a fullfeatured multifile text-editor with
+internal cliboard and syntax highlight support.
+
+Designed for ~IBM-XT~-grade PC with Intel ~8086~/~88~ CPU
+and works in Real Mode ~without~ DPMI.
+
+        (c) ~DosWorld~ 2020  MIT License
+
+///1INTERNALS
+        Few tricks.
+
+1. Some time, editor ask you something like
+
+        ~do something? (Y/N)~
+
+In this case, you can press ~Y~ or ~ENTER~ - to answer ~YES~
+and ~N~ or ~ESC~ - to answer ~NO~.
+
+2. For micro-instalation need only ~.exe~ file.
+///2NAVIGATION
+        Navigation.
+
+~UP~/~DOWN~/~LEFT~/~RIGHT~ - Move cursor to selected
+                     direction on one char.
+~HOME~/~END~  - Move cursor to begin/end of line.
+~PGUP~/~PGDN~ - Move cursor up/down page.
+~Ctrl~+~HOME~ - Move to file start.
+~Ctrl~+~END~  - Move to file end.
+
+~Ctrl~+~LEFT~/~RIGHT~   - Move cursor left/right to
+                    next word.
+
+~Ctrl~+~L~ - Go to line number.
+///2CLIPBOARD
+        Clipboard operations.
+
+~Shift~ with
+    ~UP~
+~LEFT~/~RIGHT~    Use for selection.
+   ~DOWN~
+~HOME~/~END~
+
+~Ctrl~+~X~/~C~/~V~ - Cut/Copy/Paste selected text.
+~Ctrl~+~Y~     - Cut current line.
+~Ctrl~+~U~     - Paste clipboard.
+~Shift~+~DEL~  - Cut selected text.
+
+~Alt~+~F2~     - Save clipboard to file.
+~Alt~+~F3~     - Load clipboard from file.
+///2SEARCH
+        Search and Replace.
+
+~Ctrl~+~F~ For start case-~in~sensitive search~/~replace.
+~Ctrl~+~Shift~+~F~ For start case-sensitive search~/~replace.
+
+~Ctrl~+~K~ - Search~/~replace again.
+///2FILE
+        File operations.
+
+~F2~ or ~Ctrl~+~S~ - Save current file.
+~Ctrl~+~Shift~+~S~ - Save all files.
+~F3~           - Load file. You can enter non~-~exists name
+               for a new one.
+
+~Alt~+~F2~       - Save clipboard to file.
+~Alt~+~F3~       - Load clipboard from file.
+///2WINDOW
+        Window using.
+
+~DWED~ allow edit multiple file at one time. Also, you
+have clipboard shared between file.
+
+~F6~      - Switch to next file.
+~Alt~+~F6~  - Opened File list window.
+
+~Alt~+~F5~  - Show DOS screen.
+///1SYNTAXHL
+        Syntax ~h~i~g~h~t~l~i~g~h~t~.
+
+~DWED~ support syntax hightlight for next languages:
+
+~Assembler~   .asm
+~Sphinx C--~  .c-- .h-- .cmm .hmm
+~Pascal~      .pas
+~Basic~       .bas
+~C~/~C++~       .c .h .cpp .hpp
+~XML/HTML~    .xml .htm
+
+ and ~MS-DOS Shell Scripting~ .bat
+///1CMDLINE
+        Command-line parameters magic.
+
+If you want load few file - you can specify all of them
+into command line.
+///1EXTMEM
+        Ex~t~ended~/~Ex~p~anded Memory.
+
+~DWED~ does not use Extended~/~Expanded Memory, now. ~TBD~
+///1ADDONS
+Empty ~:(~
+///2CALCULATOR
+~TBD~
+///2ASCII-TABLE
+~TBD~
+///2TETRIS
+        ~Tetris~ (Video-Game)
+
+Every text-editor ~must have~ a buildin Tetris! ~TBD~
+///2FASTKBD.COM
+        Fast keyboard.
+
+Keyboard works not so fast, because have a big delay into
+type metrics. ~AT-BIOS~ allow change it.
+
+By my opinion, this is not task for text-editor - this is
+environment settings.
+
+So, if you want decrease this delay - you can use next
+~FASTKBD.COM~ file into your ~AUTOEXEC.BAT~:
+
+0100: ~B8 05 03~  mov  ax~,~ 0305h
+0103: ~31 DB~     xor  bx~,~ bx
+0105: ~CD 16~     int  16h
+0107: ~C3~        ret
+///1LICENSE
+        The MIT License (MIT)
+        Copyright (c) 2020 DosWorld
+
+Full text of license you can read at
+
+        ~htttps://mit-license.org/~

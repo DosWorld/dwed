@@ -1,0 +1,166 @@
+/*
+    (c) 2019 Copyright by Viacheslav Komenda
+
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org>
+
+*/
+
+#ifndef _OBJOMF_C_
+#define _OBJOMF_C_
+
+#include "objomf.h--"
+char __b[3];
+
+char ORREAD(CX, SI, DI) {
+// f = CX, *recType = SI, *recLen = DI
+    $PUSH SI,DI;
+    read(CX, #__b, 3);
+    $POP DI,SI;
+    IF(AX == 3) {
+        DSBYTE[SI] = __b[0];
+        AL = __b[1];
+        AH = __b[2];
+        DSWORD[DI] = AX;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+char ORWRITE(BX, CL, AX) {
+    __b[0] = CL;
+    __b[1] = AL;
+    __b[2] = AH;
+
+    IF(write(BX, #__b, 3) == 3) {
+        AL = TRUE;
+    }
+    ELSE {
+        AL = FALSE;
+    }
+}
+
+word ormname(word dst, word fname) {
+    word f;
+    byte recType;
+    word recLen, len;
+
+    len = 0;
+    f = open(fname, F_READ);
+    IF(AX != 0) {
+        IF(ORREAD(f, #recType, #recLen)) {
+            IF(recType == THEADR) {
+                read(f, #len, 1);
+                read(f, dst, len);
+                DSBYTE[dst + len] = 0;
+            }
+        }
+        close(f);
+    }
+    return len;
+}
+
+word OADDB(AX, CL) {
+    DSBYTE[AX] = CL;
+    return AX + 1;
+}
+
+word OADDW(AX, CX) {
+    DSWORD[AX] = CX;
+    return AX + 2;
+}
+
+word OADDS(DI, SI) {
+    BX = DI;
+    CX = 0;
+    DI++;
+    WHILE(TRUE) {
+        AL = DSBYTE[SI];
+        IF(AL == 0) BREAK;
+        DSBYTE[DI] = AL;
+        SI++;
+        DI++;
+        CX++;
+    }
+    DSBYTE[BX] = CL;
+    return DI;
+}
+
+word ogets(word buf, word str) {
+    DX = 0;
+    SI = buf;
+    DI = str;
+    DL = DSBYTE[SI];
+    SI++;
+    WHILE(DX != 0) {
+        AL = DSBYTE[SI];
+        DSBYTE[DI] = AL;
+        SI++;
+        DI++;
+        DX--;
+    }
+    DSBYTE[DI] = DL;
+    return SI;
+}
+
+void OSKIP(BX, CX) {
+    word pos[2];
+
+    SSWORD[#pos] = CX;
+    SSWORD[#pos + 2] = 0;
+    BSEEK(BX, #pos, SEEK_CUR);
+}
+
+char owmalign(word f) {
+    word pos[2], newpos;
+    char buf[16];
+
+    BTELL(f, #pos);
+    newpos = pos[0] & 0x0F;
+    IF(newpos != 0) {
+        newpos = 0x10 - newpos;
+        BX = 0;
+        WHILE(BX != newpos) {
+            buf[BX] = 0;
+            BX++;
+        }
+        write(f, #buf, newpos);
+        IF(AX != newpos) RETURN FALSE;
+    }
+    return TRUE;
+}
+
+void ormalign(word f) {
+    word pos[2];
+    word newpos;
+
+    BTELL(f, #pos);
+    newpos = pos[0] & 0x0F;
+    if(newpos != 0) {
+        OSKIP(f, 0x10 - newpos);
+    }
+}
+
+#endif

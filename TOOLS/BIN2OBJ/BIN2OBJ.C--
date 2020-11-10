@@ -1,0 +1,194 @@
+/*
+    (c) 2019 Copyright by Viacheslav Komenda
+
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org>
+
+*/
+
+?use8086
+?parsecommandline TRUE
+?resize FALSE
+
+#include "stdlib.h--"
+#include "print.h--"
+#include "str.h--"
+#include "file.h--"
+#include "objomf.c--"
+
+#define IOBUF_SIZE 1024
+
+char iobuf[IOBUF_SIZE];
+
+char buf[256];
+char name2[256];
+word pEnd[2], pBegin[2];
+word count, ofs;
+
+void ERROR(BX,CX) {
+    $PUSH CX;
+    PRINT_STR(BX);
+    $POP CX;
+    PRINT_STR(CX);
+    PRINTLN();
+}
+
+int run(word iname, word oname, word pubname) {
+    word i, o, ptr;
+
+    i = open(iname, F_READ);
+    if(AX == 0) {
+        ERROR("ERROR:Could not read ", oname);
+        return 1;
+    }
+    DSWORD[#pBegin + 2] = DSWORD[#pBegin] = 0;
+
+    BSEEK(i, #pBegin, SEEK_END);
+    BTELL(i, #pEnd);
+    BSEEK(i, #pBegin, SEEK_SET);
+
+    if(DSWORD[#pEnd + 2] != 0) {
+        PRINT_STR("ERROR:Input file greater then 64K\n");
+        close(i);
+        return 1;
+    }
+
+    o = open(oname, F_WRITE);
+    if(AX == 0) {
+        o = create(oname, FA_NORMAL);
+        if(AX == 0) {
+            ERROR("ERROR:Could not write ", oname);
+            close(i);
+            return 1;
+        }
+    }
+
+    strcpy(#name2, oname);
+    BASENAME(#name2);
+    strup(#name2);
+
+    /*
+      Module header
+    */
+    ptr = OADDS(#buf, #name2);
+    ptr = OADDB(ptr, 0);
+    ORWRITE(o, THEADR, ptr - #buf);
+    write(o, #buf, ptr - #buf);
+
+    /*
+      Comment
+    */
+    OADDB(#buf, 0);
+    OADDS(AX, "BIN2OBJ (c) DosWorld 2019");
+    OADDS(AX, "Public domain (The Unlicense http://unlicense.org)");
+    ptr = OADDB(AX, 0) - #buf;
+    ORWRITE(o, COMENT, ptr);
+    write(o, #buf, ptr);
+
+    OADDS(#buf, "");
+    OADDS(AX, "DGROUP");
+    OADDS(AX, "_TEXT");
+    OADDS(AX, "TEXT");
+    ptr = OADDB(AX, 0) - #buf;
+    ORWRITE(o, LNAMES, ptr);
+    write(o, #buf, ptr);
+
+    /*
+      Write SEGDEF16 for DATA
+    */
+    OADDB(#buf, SEGA_BYTE | SEGC_PUBLIC | SEGS_NOTBIG);
+    OADDW(AX, DSWORD[#pEnd]);
+    OADDB(AX, 0x03); /* name */
+    OADDB(AX, 0x04); /* class */
+    OADDB(AX, 0x01); /* ??? */
+    ptr = OADDB(AX, 0) - #buf;
+    ORWRITE(o, SEGDEF16, ptr);
+    write(o, #buf, ptr);
+
+    /*
+      Include _DATA into DGROUP
+    */
+    OADDB(#buf, 0x02);
+    OADDB(AX, 0xff);
+    OADDB(AX, 0x01);
+    ptr = OADDB(AX, 0) - #buf;
+    ORWRITE(o, GRPDEF, ptr);
+    write(o, #buf, ptr);
+
+    /*
+      Write public name
+    */
+    OADDB(#buf, 0); // reserved
+    OADDB(AX, 1); // Segment Idx
+    OADDS(AX, pubname);
+    OADDW(AX, 0); // offset
+    OADDB(AX, 0); // type 0, no debug info
+    ptr = OADDB(AX, 0) - #buf;
+    ORWRITE(o, PUBDEF16, ptr);
+    write(o, #buf, ptr);
+
+    /*
+      Copy file content with 1024 blocks
+    */
+    ofs = 0;
+    while(DSWORD[#pEnd] != 0) {
+        count = DSWORD[#pEnd];
+        IF(count > 1023) {
+            count = 1023;
+        }
+
+        OADDB(#buf, 1); /* Segment No */
+        ptr = OADDW(AX, ofs) - #buf;  /* Offset */
+        ORWRITE(o, LEDATA16, count + 4);
+        write(o, #buf, ptr);
+
+        read(i, #iobuf, count);
+        write(o, #iobuf, count);
+        iobuf[0] = 0;
+        write(o, #iobuf, 1);
+        DSWORD[#pEnd] -= count;
+        ofs += count;
+    }
+
+    /*
+      Module footer: non-main, no start
+    */
+    OADDB(#buf, MA_NM_NS);
+    ptr = OADDB(AX, 0) - #buf;
+    ORWRITE(o, MODEND16, ptr);
+    write(o, #buf, ptr);
+
+    close(i);
+    close(o);
+    return 0;
+}
+
+void main() {
+    if(@PARAMCOUNT() != 3) {
+        PRINT_STR("BIN2OBJ (c) DosWorld 2019\nPublic domain (The Unlicense http://unlicense.org)\n\n");
+        PRINT_STR("Usage:\n\tbin2obj inputfile outputfile.obj publicname\n");
+        EXIT(1);
+    }
+    EXIT(run(PARAMSTR(0), PARAMSTR(1), PARAMSTR(2)));
+}

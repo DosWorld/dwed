@@ -1,0 +1,102 @@
+/*
+    (c) 2019 Copyright by Viacheslav Komenda
+
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org>
+
+*/
+
+#ifndef _STDLIB_H_
+#define _STDLIB_H_
+
+// EXIT(code);
+inline void EXIT() { AH=0x4C; $INT 0x21; }
+inline void ABORT() { AX=0x4C01; $INT 0x21; }
+
+void exit(int code) { EXIT(code); }
+void abort() { ABORT(); }
+
+enum { SEEK_SET = 0, SEEK_CUR = 1, SEEK_END = 2};
+
+char BSEEK(BX, DI, AL) {
+    DX = DSWORD[DI];
+    CX = DSWORD[DI + 2];
+    AH = 0x42;
+    $INT 0x21;
+    IF (NOTCARRYFLAG) {
+        AL = TRUE;
+    }
+    ELSE { AL = FALSE; }
+    return (AL);
+}
+
+void BTELL(BX, DI) {
+    $PUSH DI;
+    AX = 0x4201;
+    CX = DX = 0;
+    $INT 0x21;
+    $POP DI;
+    DSWORD[DI] = AX;
+    DSWORD[DI+2] = DX;
+}
+
+/*
+char bseek(word f; word pos; byte mode) {
+    DI = pos;
+    DX = DSWORD[DI];
+    CX = DSWORD[DI + 2];
+    BX = f;
+    AL = mode;
+    AH = 0x42;
+    $INT 0x21;
+    IF (NOTCARRYFLAG) {
+        AL = TRUE;
+    }
+    ELSE { AL = FALSE; }
+    return (AL);
+}
+
+void btell(word f; word pos) {
+    BX = f;
+    AX = 0x4201;
+    CX = DX = 0;
+    $INT 0x21;
+    DI = pos;
+    DSWORD[DI] = AX;
+    DSWORD[DI+2] = DX;
+}
+*/
+
+void strcpy(word dst, word src) {
+    $CLD;
+    SI = src;
+    DI = dst;
+    WHILE(TRUE) {
+        $LODSB;
+        $STOSB;
+        IF(AL==0) BREAK;
+    }
+}
+
+#endif

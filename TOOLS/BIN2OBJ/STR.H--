@@ -1,0 +1,201 @@
+/*
+    (c) 2019 Copyright by Viacheslav Komenda
+
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org>
+
+*/
+
+#ifndef _STR_H_
+#define _STR_H_
+
+void BASENAME(DI) {
+
+    BX = DI;
+
+    WHILE(1) {
+        AL = DSBYTE[BX];
+        IF(AL == 0) BREAK;
+        BX++;
+    }
+
+    WHILE(1) {
+        AL = DSBYTE[BX];
+        IF(BX == DI) BREAK;
+        IF(AL == ':') {
+            BX++;
+            BREAK;
+        }
+        IF(AL == '/') {
+            BX++;
+            BREAK;
+        }
+        IF(AL == '\\') {
+            BX++;
+            BREAK;
+        }
+        BX--;
+
+    }
+
+    WHILE(1) {
+        AL = DSBYTE[BX];
+        DSBYTE[DI] = AL;
+        IF(AL == 0) BREAK;
+        BX++;
+        DI++;
+    }
+}
+
+inline char UCASE() {
+    IF(AL>='a') IF(AL<='z') AL -=0x20;
+}
+
+inline char LCASE() {
+    IF(AL>='A') IF(AL<='A') AL +=0x20;
+}
+
+// AX = addr
+:
+word STRLEN(BX) {
+    $PUSH CX;
+    CX = 0;
+    WHILE(TRUE) {
+        AL = DSBYTE[BX];
+        IF(AL == 0) BREAK;
+        BX++;
+        CX++;
+    }
+    AX = CX;
+    $POP CX;
+}
+// AX = addr1, BX = addr2
+:
+char STRCMP(AX, BX) {
+    $PUSH BX, DX, CX;
+    DX = AX;
+    CH = FALSE;
+    WHILE(TRUE) {
+        AL = DSBYTE[BX];
+        AH = DSBYTE[DX];
+        IF(AL != AH) {
+            BREAK;
+        }
+        IF(AL == 0) {
+            CH = TRUE;
+            BREAK;
+        }
+        BX++;
+        DX++;
+    }
+    AL = CH;
+    $POP CX, DX, BX;
+}
+
+// AX = addr1, BX = addr2
+:
+char STRICMP(AX, BX) {
+    $PUSH BX, DX, CX;
+    DX = AX;
+    CH = FALSE;
+    WHILE(TRUE) {
+        AH = @UCASE(DSBYTE[DX]);
+        AL = @UCASE(DSBYTE[BX]);
+        IF(AL != AH) {
+            BREAK;
+        }
+        IF(AL == 0) {
+            CH = TRUE;
+            BREAK;
+        }
+        BX++;
+        DX++;
+    }
+    AL = CH;
+    $POP CX, DX, BX;
+}
+
+// BX = addr
+:
+word UPSTR(BX) {
+    WHILE(TRUE) {
+        AL = DSBYTE[BX];
+        IF(AL == 0) BREAK;
+        @UCASE();
+        DSBYTE[BX] = AL;
+        BX++;
+    }
+}
+
+// AX = addr
+:
+word LOSTR(BX) {
+    WHILE(TRUE) {
+        AL = DSBYTE[BX];
+        IF(AL == 0) BREAK;
+        @LCASE();
+        DSBYTE[BX] = AL;
+        BX++;
+    }
+}
+
+// AX = dest, BX = src
+:
+word STRCPY(AX, BX) {
+    $PUSH SI,DI;
+    $CLD;
+    SI = BX;
+    DI = AX;
+    WHILE(TRUE) {
+        $LODSB;
+        $STOSB;
+        IF(AL==0) BREAK;
+    }
+    AX = DI;
+    $POP DI, SI;
+}
+// AX = dest, BX = src;
+:
+word STRCAT (AX, BX) {
+    $PUSH DI, SI;
+    SI = BX;
+    DI = AX;
+    $CLD;
+    WHILE(ESBYTE[DI] != 0) {
+        DI++;
+    }
+    WHILE(TRUE) {
+        $LODSB;
+        $STOSB;
+        IF(AL == 0) BREAK;
+    }
+    AX = DI;
+    $POP SI, DI;
+}
+
+void strup(word str) {
+    @UPSTR(str);
+}
+
+#endif
