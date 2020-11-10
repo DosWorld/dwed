@@ -27,13 +27,13 @@ Restrictions:
 ### Text file
 ![Image Screenshot - Txt syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-TXT.PNG)
 
-### Turbo Pascal source code
+### Turbo Pascal syntax hightlight
 ![Image Screenshot - Pascal syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-PAS.PNG)
 
-### Power Basic source code
+### Power Basic syntax hightlight
 ![Image Screenshot - Basic syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-BAS.PNG)
 
-### C source code
+### C syntax hightlight
 ![Image Screenshot - C syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-C.PNG)
 
 ### Help mode
