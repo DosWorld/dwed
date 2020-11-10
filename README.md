@@ -17,6 +17,11 @@ Restrictions:
 * DOS-conventional memory will be enought to load file up to ~300k..400k (expect - 300k border).
 * No Undo/Redo functionality. The reason is the same as why i dont build AST for syntax hightlight - here is no memory for it.
 
+# How to run
+
+	dwed.exe - dos real mode
+	dwed16.exe - 16bit DPMI
+
 # Screenshots
 
 ### Text file
