@@ -13,7 +13,7 @@ Main features:
 
 Restrictions:
 
-* This software is writen in Turbo Pascal, so string length is limited to 255 chars.
+* This software is writen in Borland Pascal, so string length is limited to 255 chars.
 * DOS-conventional memory will be enought to load file up to ~300k..400k (expect - 300k border).
 * No Undo/Redo functionality. The reason is the same as why i dont build AST for syntax hightlight - here is no memory for it.
 
@@ -41,7 +41,7 @@ Restrictions:
 
 # Build
 
-To build binaries, you need Turbo Pascal 7.0 in path and my small make. Then - type
+To build binaries, you need Borland Pascal 7.0 in path and my small make. Then - type
 
       make
 
