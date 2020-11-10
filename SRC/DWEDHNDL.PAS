@@ -279,9 +279,10 @@ begin
 end;
 
 function hk_esc(var ctx:TEditorContext; event:PEvent):integer;
-var r         : integer;
-       c      : PFileContext;
-       srcctx : PFileContext;
+var r          : integer;
+       c       : PFileContext;
+       srcctx  : PFileContext;
+       errCode : integer;
 begin
         r := SCRU_QUIT;
         commit(ctx);
@@ -304,8 +305,12 @@ begin
                                                 scr.cln(0, 0, config^.color.top);
                                                 scr.print(1, 0, config^.color.top, 'Save "' + sfname + '"');
                                                 scr.show;
-                                                strs.to_file(fname, rline);
-                                                chg := false;
+                                                strs.to_file(fname, rline, errCode);
+                                                if errCode <> 0 then begin
+                                                        handle_error(ctx, errCode);
+                                                        r := SCRU_FULL;
+                                                        break;
+                                                end else chg := false;
                                         end;
                                 end;
                         CANCEL: begin
@@ -322,7 +327,8 @@ begin
 end;
 
 function hk_save(var ctx:TEditorContext; event:PEvent):integer;
-var    srcctx : PFileContext;
+var    srcctx  : PFileContext;
+       errCode : integer;
 begin
         srcctx := ctx.current;
         commit(ctx);
@@ -335,8 +341,10 @@ begin
                                         scr.cln(0, 0, config^.color.top);
                                         scr.print(1, 0, config^.color.top, 'Save "' + sfname + '"');
                                         scr.show;
-                                        strs.to_file(fname, rline);
-                                        chg := false;
+                                        strs.to_file(fname, rline, errCode);
+                                        if errCode <> 0 then begin
+                                                handle_error(ctx, errCode);
+                                        end else chg := false;
                                 end;
                         end;
                         ctx.current := ctx.current^.next;
@@ -345,8 +353,8 @@ begin
                 scr.cln(0, 0, config^.color.top);
                 scr.print(1, 0, config^.color.top, 'Save "' + sfname + '"');
                 scr.show;
-                strs.to_file(fname, rline);
-                chg := false;
+                strs.to_file(fname, rline, errCode);
+                if errCode <> 0 then handle_error(ctx, errCode) else chg := false;
         end;
         ctx.current := srcctx;
         hk_save := SCRU_TOP;
@@ -838,6 +846,7 @@ var fname : string;
         msg        : string;
         start_save : boolean;
         key        : word;
+        errCode    : integer;
 begin
         commit(ctx);
         fname := '';
@@ -850,7 +859,10 @@ begin
                 if key = K_ESC then begin start_save := false; break; end;
                 if key = K_ENTER then begin start_save := true; break; end;
         end;
-        if start_save then save_clipboard(ctx, fname);
+        if start_save then begin
+                errCode := save_clipboard(ctx, fname);
+                if errCode <> 0 then handle_error(ctx, errCode);
+        end;
         hk_cb_save := SCRU_CLINE;
 end;
 
@@ -859,6 +871,7 @@ var fname : string;
         msg        : string;
         start_load : boolean;
         key        : word;
+        errCode    : integer;
 begin
         commit(ctx);
         fname := '';
@@ -871,7 +884,9 @@ begin
                 if key = K_ESC then begin start_load := false; break; end;
                 if key = K_ENTER then begin start_load := true; break; end;
         end;
+        errCode := 0;
         if start_load then load_clipboard(ctx, fname);
+        if errCode <> 0 then handle_error(ctx, errCode);
         hk_cb_load := SCRU_CLINE;
 end;
 
@@ -881,6 +896,7 @@ var r : integer;
         fname      : string;
         key        : word;
         start_load : boolean;
+        errCode    : integer;
 begin
         commit(ctx);
         r := SCRU_CLINE;
@@ -895,7 +911,8 @@ begin
                 if key = K_ENTER then begin start_load := true; break; end;
         end;
         if start_load then begin
-                load_file(ctx, fname);
+                load_file(ctx, fname, errCode);
+                if errCode <> 0 then handle_error(ctx, errCode);
                 r := SCRU_FULL;
         end;
         hk_load := r;

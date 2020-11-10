@@ -53,12 +53,14 @@ function go_page_down(var ctx : TEditorContext) : integer;
 
 procedure copy_selected(var ctx : TEditorContext);
 procedure delete_selected(var ctx : TEditorContext);
-function save_clipboard(var ctx : TEditorContext; fname:string) : boolean;
-function load_clipboard(var ctx : TEditorContext; fname:string) : boolean;
+function save_clipboard(var ctx : TEditorContext; fname:string) : integer;
+function load_clipboard(var ctx : TEditorContext; fname:string) : integer;
 procedure go_win_list(var ctx:TEditorContext);
 
 procedure new_file(var ctx : TEditorContext; fname : string);
-procedure load_file(var ctx : TEditorContext; fname : string);
+function load_file(var ctx : TEditorContext; fname : string; var errCode : integer) : integer;
+
+procedure handle_error(var ctx : TEditorContext; errCode:integer);
 
 implementation
 
@@ -377,16 +379,16 @@ begin
         end;
 end;
 
-function save_clipboard(var ctx : TEditorContext; fname:string) : boolean;
+function save_clipboard(var ctx : TEditorContext; fname:string) : integer;
 var f : file;
-        r        : boolean;
+        r        : integer;
 begin
         assign(f, lfn2dos(fname));
         {$I-}
         rewrite(f, 1);
-        if ioresult <> 0 then r := false else r := true;
+        r := ioresult;
         {$I+}
-        if r then begin
+        if r = 0 then begin
                 blockwrite(f, ctx.clipboard, strlen(ctx.clipboard));
                 truncate(f);
                 close(f);
@@ -394,17 +396,17 @@ begin
         save_clipboard := r;
 end;
 
-function load_clipboard(var ctx : TEditorContext; fname:string) : boolean;
+function load_clipboard(var ctx : TEditorContext; fname:string) : integer;
 var f : file;
-        r        : boolean;
+        r        : integer;
         readed   : word;
 begin
         assign(f, lfn2dos(fname));
         {$I-}
         System.reset(f, 1);
-        if ioresult <> 0 then r := false else r := true;
+        r := ioresult;
         {$I+}
-        if r then begin
+        if r = 0 then begin
                 blockread(f, ctx.clipboard, CB_SIZE - 1, readed);
                 ctx.clipboard[readed] := #0;
                 close(f);
@@ -603,18 +605,79 @@ begin
         load_ed(ctx);
 end;
 
-procedure load_file(var ctx : TEditorContext; fname : string);
+function load_file(var ctx : TEditorContext; fname : string; var errCode : integer) : integer;
 var p : PFileContext;
+        r : integer;
 begin
         getmem(p, sizeof(TFileContext));
         p^.fname := fname;
-        p^.rline := strs.from_file(fname, ctx.config.tab_size);
+        p^.rline := strs.from_file(fname, ctx.config.tab_size, errCode);
         reset_file(p);
         p^.next := ctx.all;
         p^.config := @ctx.config;
         ctx.all := p;
         ctx.current := p;
         load_ed(ctx);
+        load_file := r;
+end;
+
+procedure handle_error(var ctx : TEditorContext; errCode:integer);
+var errMsg : string;
+begin
+        case errCode of
+        1: errMsg := 'Invalid function number';
+        2: errMsg := 'File not found';
+        3: errMsg := 'Path not found';
+        4: errMsg := 'Too many open files';
+        5: errMsg := 'File access denied';
+        6: errMsg := 'Invalid file handle';
+        12: errMsg := 'Invalid file access code';
+        15: errMsg := 'Invalid drive number';
+        16: errMsg := 'Cannot remove current directory';
+        17: errMsg := 'Cannot rename across drives';
+        18: errMsg := 'No more files';
+        100: errMsg := 'Disk read error';
+        101: errMsg := 'Disk write error';
+        102: errMsg := 'File not assigned';
+        103: errMsg := 'File not open';
+        104: errMsg := 'File not open for input';
+        105: errMsg := 'File not open for output';
+        106: errMsg := 'Invalid numeric format';
+        150: errMsg := 'Disk is write-protected';
+        151: errMsg := 'Bad drive request struct length';
+        152: errMsg := 'Drive not ready';
+        154: errMsg := 'CRC error in data';
+        156: errMsg := 'Disk seek error';
+        157: errMsg := 'Unknown media type';
+        158: errMsg := 'Sector Not Found';
+        159: errMsg := 'Printer out of paper';
+        160: errMsg := 'Device write fault';
+        161: errMsg := 'Device read fault';
+        162: errMsg := 'Hardware failure';
+        200: errMsg := 'Division by zero';
+        201: errMsg := 'Range check error';
+        202: errMsg := 'Stack overflow error';
+        203: errMsg := 'Heap overflow error';
+        204: errMsg := 'Invalid pointer operation';
+        205: errMsg := 'Floating point overflow';
+        206: errMsg := 'Floating point underflow';
+        207: errMsg := 'Invalid floating point operation';
+        208: errMsg := 'Overlay manager not installed';
+        209: errMsg := 'Overlay file read error';
+        210: errMsg := 'Object not initialized';
+        211: errMsg := 'Call to abstract method';
+        212: errMsg := 'Stream registration error';
+        213: errMsg := 'Collection index out of range';
+        214: errMsg := 'Collection overflow error';
+        215: errMsg := 'Arithmetic overflow error';
+        216: errMsg := 'General Protection fault';
+        else errMsg := 'Unknown error code';
+        end;
+        scr.cln(0, 0, ctx.current^.config^.color.top);
+        scr.print(0, 0, ctx.current^.config^.color.top, ' Error ' + itoa(errCode) + ': ' + errMsg);
+        scr.show;
+        kbd.reset;
+        kbd.getkey;
 end;
 
 end.

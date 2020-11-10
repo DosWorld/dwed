@@ -115,10 +115,11 @@ begin
         has_switch := (length(s) > 0) and (s[1] in ['-', '/']);
 end;
 
-var     ctx       : TEditorContext;
-        i, pCount : integer;
-        param     : string;
-        key, value: string;
+var     ctx        : TEditorContext;
+        i, pCount  : integer;
+        param      : string;
+        key, value : string;
+        errCode    : integer;
 begin
         strs.init(DOS);
         reset_context(ctx);
@@ -133,7 +134,10 @@ begin
         end;
         for i := 1 to pCount do begin
                 param := ParamStr(i);
-                if not has_switch(param) then load_file(ctx, param);
+                if not has_switch(param) then begin
+                        load_file(ctx, param, errCode);
+                        if errCode <> 0 then handle_error(ctx, errCode);
+                end;
         end;
         if ctx.all = nil then new_file(ctx, 'NONAME.TXT');
         edit(ctx);

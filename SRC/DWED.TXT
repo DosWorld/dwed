@@ -9,6 +9,7 @@ and works in Real Mode ~without~ DPMI.
 
         (c) ~DosWorld~ 2020  MIT License
 
+        ~https://github.com/DosWorld/dwed/~
 ///1INTERNALS
         Few tricks.
 

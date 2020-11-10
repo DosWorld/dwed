@@ -36,8 +36,8 @@ procedure init(mType : MemoryType);
 
 function new : EditorStr;
 
-function from_file(fname : string; tab_size : integer) : EditorStr;
-procedure to_file(fname : string; r : EditorStr);
+function from_file(fname : string; tab_size : integer; var errCode : integer) : EditorStr;
+procedure to_file(fname : string; r : EditorStr; var errCode : integer);
 
 function create(next, prev : EditorStr; body : string) : EditorStr;
 procedure free(r : EditorStr);
@@ -109,7 +109,7 @@ begin
         create := next;
 end;
 
-function from_file(fname : string; tab_size : integer) : EditorStr;
+function from_file(fname : string; tab_size : integer; var errCode : integer) : EditorStr;
 var     root, cur, last : Pointer;
         f       : file;
         buf     : array[0..BUF_SIZE-1] of char;
@@ -124,48 +124,55 @@ begin
         pos := 0;
         root := nil; last := nil;
         assign(f, lfn2dos(fname));
+        {$I-}
         reset(f, 1);
-        blockread(f, buf[0], BUF_SIZE, readed);
-        strbufpos := 0;
-        while readed <> 0 do begin
-                while pos < readed do begin
-                        c := buf[pos];
-                        case c of
-                        #$0A: begin
-                                if strbufpos > 255 then strbufpos := 255;
-                                move(strbuf[0], s[1], strbufpos);
-                                s[0] := chr(strbufpos);
-                                cur := strs.create(nil, last, s);
-                                if root = nil then root := cur;
-                                last := cur;
-                                strbufpos := 0;
-                                end;
-                        #$09:   for i := 1 to tab_size do begin
-                                        strbuf[strbufpos] := ' ';
-                                        inc(strbufpos);
-                                end;
-                        #$0D:
-                        else begin
-                                strbuf[strbufpos] := c;
-                                inc(strbufpos);
-                                end;
-                        end;
-                        inc(pos);
-                end;
+        errCode := ioresult;
+        {$I+}
+        if errCode = 0 then begin
                 blockread(f, buf[0], BUF_SIZE, readed);
-                pos := 0;
+                strbufpos := 0;
+                while readed <> 0 do begin
+                        while pos < readed do begin
+                                c := buf[pos];
+                                case c of
+                                #$0A: begin
+                                        if strbufpos > 255 then strbufpos := 255;
+                                        move(strbuf[0], s[1], strbufpos);
+                                        s[0] := chr(strbufpos);
+                                        cur := strs.create(nil, last, s);
+                                        if root = nil then root := cur;
+                                        last := cur;
+                                        strbufpos := 0;
+                                        end;
+                                #$09:   for i := 1 to tab_size do begin
+                                                strbuf[strbufpos] := ' ';
+                                                inc(strbufpos);
+                                        end;
+                                #$0D:
+                                else begin
+                                        strbuf[strbufpos] := c;
+                                        inc(strbufpos);
+                                        end;
+                                end;
+                                inc(pos);
+                        end;
+                        blockread(f, buf[0], BUF_SIZE, readed);
+                        pos := 0;
+                end;
+        
+                if strbufpos > 255 then strbufpos := 255;
+                move(strbuf[0], s[1], strbufpos);
+                s[0] := chr(strbufpos);
+                cur := strs.create(nil, last, s);
+                if root = nil then root := cur;
+                close(f);
+        end else begin
+                root := strs.new;
         end;
-
-        if strbufpos > 255 then strbufpos := 255;
-        move(strbuf[0], s[1], strbufpos);
-        s[0] := chr(strbufpos);
-        cur := strs.create(nil, last, s);
-        if root = nil then root := cur;
-        close(f);
         from_file := root;
 end;
 
-procedure to_file(fname : string; r : EditorStr);
+procedure to_file(fname : string; r : EditorStr; var errCode : integer);
 var
         f       : file;
         buf     : array[0..BUF_SIZE-1] of char;
@@ -174,7 +181,11 @@ var
         s       : string;
 begin
         assign(f, lfn2dos(fname));
+        {$I-}
         rewrite(f, 1);
+        errCode := ioresult;
+        {$I+}
+        if errCode <> 0 then exit;
         inbuf := 0;
         while r <> nil do begin
                 strs.get(r, s);
