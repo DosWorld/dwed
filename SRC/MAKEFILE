@@ -1,7 +1,7 @@
 all : dwed.exe
 
 dwed.exe: dwed.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas lfn.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj
-	tpc -M -U..\LIBS dwed.pas
+	tpc -M dwed.pas
 
 upx: dwed.exe
 	upx -9 --8086 dwed.exe
@@ -10,12 +10,10 @@ dwed.hlp: dwed.txt hlpc.exe
 	hlpc dwed.txt dwed.hlp
 
 hlpc.exe: hlpc.pas
-	tpc -M -U..\LIBS hlpc.pas
+	tpc -M hlpc.pas
 
 dwedhelp.obj: dwed.hlp
 	bin2obj dwed.hlp dwedhelp.obj HELPBIN
 
-test:
-	tpc -M -U..\LIBS test.pas
 clean:
 	del *.tpu
