@@ -9,7 +9,7 @@ Support multiple file editing at the same time
 Support internal clipboard
 Dont require DPMI-server
 
-![Image screenshot](https://github.com/DosWord/editor/raw/master/DWED.PNG)
+![Image screenshot](https://github.com/DosWord/editor/raw/main/DWED.PNG)
 
 # LICENSE
 
