@@ -8,7 +8,7 @@ Main features:
 * Support syntax hightlight
 * Support multiple file editing at the same time
 * Support internal clipboard
-* Dont require DPMI-server
+* Dont require DPMI-server or 80286 CPU
 
 ![Image screenshot](https://github.com/DosWorld/dwed/raw/main/DWED.PNG)
 
