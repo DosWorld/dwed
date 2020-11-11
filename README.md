@@ -20,8 +20,8 @@ Restrictions:
 # How to run
 Use:
 
-* dwed.exe - dos real mode
-* dwed16.exe - for 16bit DPMI (allow open big files)
+* `dwed.exe` - in DOS Real Mode
+* `dwed16.exe` - for 16bit DPMI (more memory)
 
 Command line example:
 
