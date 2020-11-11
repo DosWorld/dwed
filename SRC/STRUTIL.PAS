@@ -30,42 +30,45 @@ function basename(s:string):string;
 function change_ext(s:string; new_ext:string):string;
 function get_filename_ext(s:string):string;
 
-function strlen(p:pchar):word;
-procedure strcpy(dst, src:pchar);
-procedure strupr(p:pchar);
-function strhash(p:pchar):word;
+function strlen(p : pchar):word;
+procedure strcpy(dst, src : pchar);
+procedure strupr(p : pchar);
+function strhash(p : pchar):word;
 function strchr(p : pchar; c : char) : pchar;
 
-function upstr(s:string):string;
+function upstr(s : string):string;
 
-function hcode(s:string):word;
+function hcode(s : string):word;
 
-function hexb(b:byte):string;
-function hexw(w:word):string;
-function hexdw(dw:longint):string;
-function hexp(p:pchar):string;
+function hexb(b : byte):string;
+function hexw(w : word):string;
+function hexdw(dw : longint):string;
+function hexp(p : pchar):string;
 
-function is_digit(c:char):boolean;
-function is_hdigit(c:char):boolean;
-function is_alpha(c:char):boolean;
-function is_id(c:char):boolean;
-function is_blank(c:char):boolean;
+function binb(b : byte):string;
+function octb(b : byte):string;
 
-function ltrim(s:string):string;
-function rtrim(s:string):string;
-function trim(s:string):string;
+function is_digit(c : char):boolean;
+function is_hdigit(c : char):boolean;
+function is_alpha(c : char):boolean;
+function is_id(c : char):boolean;
+function is_blank(c : char):boolean;
 
-function rpad(s:string; len:integer):string;
-function lpad(s:string; len:integer):string;
+function ltrim(s : string):string;
+function rtrim(s : string):string;
+function trim(s : string):string;
 
-function itoa(i:integer):string;
-function wtoa(w:word):string;
-function ltoa(l:longint):string;
-function atol(s:string; default_val : longint) : longint;
+function rpad(s : string; len : integer):string;
+function lpad(s : string; len : integer):string;
+
+function itoa(i : integer):string;
+function wtoa(w : word):string;
+function ltoa(l : longint):string;
+function atol(s : string; default_val : longint) : longint;
 
 implementation
 
-function get_filename_ext(s:string):string;
+function get_filename_ext(s : string):string;
 var r : string;
         i : integer;
 begin
@@ -181,6 +184,27 @@ end;
 function hexp(p:pchar):string;
 begin
         hexp := hexw(seg(p[0])) + ':' + hexw(ofs(p[0]));
+end;
+
+function binb(b:byte):string;
+var s : string[12];
+        i : integer;
+begin
+        s[0] := #8;
+        for i := 7 downto 0 do if (b and (1 shl i)) <> 0 then s[8-i] := '1' else s[8-i] := '0';
+        binb := s;
+end;
+
+function octb(b : byte):string;
+var s : string[4];
+begin
+        s := '   ';
+        s[3] := chr($30 + (b and 7));
+        b := b shr 3;
+        s[2] := chr($30 + (b and 7));
+        b := b shr 3;
+        s[1] := chr($30 + (b and 3));
+        octb := s;
 end;
 
 function is_blank(c:char):boolean;

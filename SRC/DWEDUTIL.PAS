@@ -554,7 +554,7 @@ begin
         p[i] := #0;
 
         while true do begin
-                w := scrui.vmenu(1, 2, 32, 16,
+                w := scrui.vmenu(1, 2, 32, scr.getheight - 3,
                         ctx.config.color.menu,
                         ctx.config.color.menu_sel,
                         p, sitem);
@@ -695,7 +695,57 @@ begin
         scr.pop;
 end;
 
-const addons_menu : pchar = '';
+procedure ascii_table;
+var        x, y, i, j : integer;
+        b       : boolean;
+        color   : byte;
+        key     : word;
+        sel, cb : byte;
+begin
+        x := 1; y := 2; sel := 0;
+        scrui.box(x, y, 50, 22, $1b);
+        while true do begin
+                for i := 1 to 20 do scr.hprint(x + 1, y + i, $1b, ' ', 48);
+                for i := 0 to 15 do begin
+                        b := (i and 1) = 0;
+                        for j := 0 to 15 do begin
+                                if b then color := $17 else color := $1e;
+                                cb := j or (i shl 4);
+                                scr.hprint(x + 2 + j * 3, y + 3 + i, color, chr(cb) , 1);
+                                if cb = sel then chcolor(x + 1 + j * 3, y + 3 + i, $31, 3);
+                                b := not b;
+                        end;
+                end;
+                scr.hprint(x + 1, y + 2, $1b, #$C4 , 48);
+                scr.hprint(x + 1, y + 19, $1b, #$C4 , 48);
+                printhl(x + 2, y + 1, $1b, $1e, concat(
+                        'Hex: ~',
+                        hexb(sel),
+                        '~ Dec: ~',
+                        lpad(itoa(sel), 3),
+                        '~ Bin: ~',
+                        binb(sel),
+                        '~ Oct: ~',
+                        octb(sel),
+                        '~  Color'
+                        ));
+                chcolor(x + 43, y + 1, sel, 5);
+                printhl(x + 2, y + 20, $1b, $1e, 
+                        '~'+#$11+#$D9+'~ Enter symbol  ' + #$B3 +
+                        '  ~Shift~+~'+#$11+#$D9+'~ Enter hex code'
+                        );
+                scr.show;
+                case kbd.getkey of
+                K_UP: dec(sel, 16);
+                K_DOWN: inc(sel, 16);
+                K_LEFT: dec(sel);
+                K_RIGHT: inc(sel);
+                K_ESC: break;
+                end;
+        end;
+end;
+
+const addons_menu : pchar = 'ASCII-Table';
 
 procedure addons_window(var ctx : TEditorContext);
 var sitem : integer;
@@ -712,6 +762,10 @@ begin
                 if (key = K_ENTER) or (lo(key) = 32) then break;
         end;
         scr.pop;
+        if sitem = -1 then exit;
+        case sitem of
+        0 : ascii_table;
+        end;
 end;
 
 end.
