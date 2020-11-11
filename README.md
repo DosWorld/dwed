@@ -18,9 +18,14 @@ Restrictions:
 * No Undo/Redo functionality. The reason is the same as why i dont build AST for syntax hightlight - here is no memory for it.
 
 # How to run
+Use
 
-	dwed.exe - dos real mode
-	dwed16.exe - 16bit DPMI
+* dwed.exe - dos real mode
+* dwed16.exe - for 16bit DPMI (allow open big files)
+
+Command line example:
+
+	C:\dwed.exe filename1 .. filenameN
 
 # Screenshots
 
