@@ -64,6 +64,8 @@ function load_file(var ctx : TEditorContext; fname : string; var errCode : integ
 
 procedure handle_error(var ctx : TEditorContext; errCode:integer);
 
+procedure addons_window(var ctx : TEditorContext);
+
 implementation
 
 uses kbd, scr, scrui, strs, strutil, lfn, dwedhl;
@@ -689,6 +691,25 @@ begin
                 K_ESC: break;
                 K_ENTER: break;
                 end;
+        end;
+        scr.pop;
+end;
+
+const addons_menu : pchar = '';
+
+procedure addons_window(var ctx : TEditorContext);
+var sitem : integer;
+    key : word;
+begin
+        scr.push;
+        sitem := 0;
+        while true do begin
+                key := scrui.vmenu(1, 2, 32, 16,
+                        ctx.config.color.menu,
+                        ctx.config.color.menu_sel,
+                        addons_menu, sitem);
+                if key = K_ESC then begin sitem := -1; break; end;
+                if (key = K_ENTER) or (lo(key) = 32) then break;
         end;
         scr.pop;
 end;

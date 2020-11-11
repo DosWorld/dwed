@@ -73,6 +73,8 @@ or ~F7~
 ~F3~           - Load file. You can enter non~-~exists name
                for a new one.
 
+~Alt~+~F4~       - Close file
+
 ~Alt~+~F2~       - Save clipboard to file.
 ~Alt~+~F3~       - Load clipboard from file.
 ///2WINDOW
@@ -83,6 +85,8 @@ have clipboard shared between file.
 
 ~F6~      - Switch to next file.
 ~Alt~+~F6~  - Opened File list window.
+
+~Alt~+~F4~  - Close file
 
 ~Alt~+~F5~  - Show DOS screen.
 ///1SYNTAX-HL

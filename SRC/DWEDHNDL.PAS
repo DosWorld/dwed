@@ -935,6 +935,71 @@ begin
         hk_change_hl := SCRU_FULL;
 end;
 
+function hk_addons(var ctx:TEditorContext; event:PEvent):integer;
+begin
+        commit(ctx);
+        addons_window(ctx);
+        hk_addons := SCRU_FULL;
+end;
+
+
+function hk_close(var ctx:TEditorContext; event:PEvent):integer;
+var canclose:boolean;
+        r, next, prev : PFileContext;
+        msg     : string;
+        res     : integer;
+        errCode : integer;
+begin
+        res := SCRU_FULL;
+        commit(ctx);
+        canclose := false;
+        if ctx.current^.chg then msg := 'Do you want save and close "' + ctx.current^.sfname + '" ? (~Y~/~N~)' 
+        else msg := 'Do you want close "' + ctx.current^.sfname + '" ? (~Y~/~N~)';
+
+        scr.cln(0, 0, ctx.current^.config^.color.top);
+        scr.printhl(1, 0, ctx.current^.config^.color.top,
+                ctx.current^.config^.color.top_hl, msg); 
+        scr.show;
+        case scrui.yes_no of
+        YES: begin
+                if ctx.current^.chg then begin
+                        with ctx.current^ do begin
+                                scr.cln(0, 0, config^.color.top);
+                                scr.print(1, 0, config^.color.top, 'Save "' + sfname + '"');
+                                scr.show;
+                                strs.to_file(fname, rline, errCode);
+                                if errCode <> 0 then begin
+                                        handle_error(ctx, errCode);
+                                        canclose := false;
+                                end else begin chg := false; canclose := true; end;
+                        end;
+                end else canclose := true;
+            end;
+        NO: begin canclose := false; end
+        end;
+
+        if canclose then begin
+                next := ctx.current^.next;
+                prev := nil;
+                r := ctx.all;
+                while r <> nil do begin
+                        if r^.next = ctx.current then begin
+                                prev := r;
+                                break;
+                        end;
+                        r := r^.next;
+                end;
+                r := ctx.current;
+                strs.free(r^.rline);
+                freemem(r, sizeof(TFileContext));
+                if prev <> nil then prev^.next := next else ctx.all := next;
+                if next = nil then next := ctx.all;
+                ctx.current := next;
+                if ctx.all = nil then res := SCRU_QUIT else load_ed(ctx);
+        end;
+        hk_close := res;
+end;
+
 function hk_load(var ctx:TEditorContext; event:PEvent):integer;
 var r : integer;
         msg        : string;
@@ -965,6 +1030,7 @@ end;
 
 begin
         reg_handler(K_ESC, false, false, false, false, hk_esc);
+        reg_handler(K_CTRL_ALT_A, true, false, true, false, hk_addons);
         reg_handler(K_CTRL_ALT_H, true, false, true, false, hk_change_hl);
         reg_handler(K_SHIFT_F2, false, true, false, false, hk_save_as);
 
@@ -976,6 +1042,7 @@ begin
 
         reg_handler(K_ALT_F2, false, false, true, false, hk_cb_save);
         reg_handler(K_ALT_F3, false, false, true, false, hk_cb_load);
+        reg_handler(K_ALT_F4, false, false, true, false, hk_close);
         reg_handler(K_ALT_F5, false, false, true, false, hk_dos_screen);
         reg_handler(K_ALT_F6, false, false, true, false, hk_winlist);
 

@@ -72,6 +72,7 @@ K_SHIFT_F2       = $5500;
 
 K_ALT_F2         = $6900;
 K_ALT_F3         = $6A00;
+K_ALT_F4         = $6B00;
 K_ALT_F5         = $6C00;
 K_ALT_F6         = $6D00;
 
@@ -88,6 +89,7 @@ K_CTRL_L         = $260C;
 K_CTRL_F         = $2106;
 K_CTRL_K         = $250B;
 
+K_CTRL_ALT_A     = $1E00;
 K_CTRL_ALT_H     = $2300;
 
 function getkey:word;
