@@ -39,6 +39,9 @@ Restrictions:
 ### Help mode
 ![Image Screenshot - C syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-HLP.PNG)
 
+### ASCII Table addon
+![Image ASCII Table addon](https://github.com/DosWorld/dwed/raw/main/DWED-ASC.PNG)
+
 # Build
 
 To build binaries, you need Borland Pascal 7.0 in path and my small make. Then - type
