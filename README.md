@@ -44,8 +44,8 @@ Restrictions:
 
 Inspired by
 
-ASCII program. Version 4.23 (C) Compact Soft, 1991.
-By: Alexander Dudarenko & Dmitry Kohmanyuk.
+	ASCII program. Version 4.23 (C) Compact Soft, 1991.
+	By: Alexander Dudarenko & Dmitry Kohmanyuk.
 
 Received from Softpanorama in 90's, now this is my remake for dwed.
 # Build
