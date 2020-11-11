@@ -64,9 +64,6 @@ function load_file(var ctx : TEditorContext; fname : string; var errCode : integ
 
 procedure handle_error(var ctx : TEditorContext; errCode:integer);
 
-procedure ascii_table(var ctx : TEditorContext);
-procedure addons_window(var ctx : TEditorContext);
-
 implementation
 
 uses kbd, scr, scrui, strs, strutil, lfn, dwedhl;
@@ -558,6 +555,7 @@ begin
                 w := scrui.vmenu(1, 2, 32, scr.getheight - 3,
                         ctx.config.color.menu,
                         ctx.config.color.menu_sel,
+                        'Opened files',
                         p, sitem);
                 if w = K_ESC then break;
                 if (w = K_ENTER) or (lo(w) = 32) then begin
@@ -694,115 +692,6 @@ begin
                 end;
         end;
         scr.pop;
-end;
-
-procedure ascii_table(var ctx : TEditorContext);
-var        x, y, i, j : integer;
-        b       : boolean;
-        color   : byte;
-        key     : word;
-        sel, cb : byte;
-        hval    : string[3];
-begin
-        x := (scr.getwidth - 50) shr 1; y := (scr.getheight - 22) shr 1; sel := 0;
-        scrui.box(x, y, 50, 22, $1b);
-        while true do begin
-                for i := 1 to 20 do scr.hprint(x + 1, y + i, $1b, ' ', 48);
-                for i := 0 to 15 do begin
-                        b := (i and 1) = 0;
-                        for j := 0 to 15 do begin
-                                if b then color := $17 else color := $1e;
-                                cb := j or (i shl 4);
-                                scr.hprint(x + 2 + j * 3, y + 3 + i, color, chr(cb) , 1);
-                                if cb = sel then chcolor(x + 1 + j * 3, y + 3 + i, $31, 3);
-                                b := not b;
-                        end;
-                end;
-                scr.hprint(x + 1, y + 2, $1b, #$C4 , 48);
-                scr.hprint(x + 1, y + 19, $1b, #$C4 , 48);
-                printhl(x + 2, y + 1, $1b, $1e, concat(
-                        'Hex: ~',
-                        hexb(sel),
-                        '~ Dec: ~',
-                        lpad(itoa(sel), 3),
-                        '~ Bin: ~',
-                        binb(sel),
-                        '~ Oct: ~',
-                        octb(sel),
-                        '~  Color'
-                        ));
-                chcolor(x + 43, y + 1, sel, 5);
-                printhl(x + 2, y + 20, $1b, $1e, 
-                        '~'+#$11+#$D9+'~ Enter symbol     ' + #$B3 +
-                        '  ~Shift~+~'+#$11+#$D9+'~ Enter hex code'
-                        );
-                scr.show;
-                case kbd.getkey of
-                K_UP: dec(sel, 16);
-                K_DOWN: inc(sel, 16);
-                K_LEFT: dec(sel);
-                K_RIGHT: inc(sel);
-                K_ENTER: begin
-                        if kbd.is_shift then begin
-                                if ctx.ins then begin
-                                        if length(ctx.current^.editor.line) +2 >= 255 then continue;
-                                        System.insert(hexb(sel), ctx.current^.editor.line, ctx.current^.editor.x);
-                                        ctx.current^.editor.chg := true;
-                                        ctx.current^.chg := true;
-                                end else begin
-                                        if length(ctx.current^.editor.line) < ctx.current^.editor.x + 1 then continue;
-                                        hval := hexb(sel);
-                                        ctx.current^.editor.line[ctx.current^.editor.x] := hval[1];
-                                        ctx.current^.editor.line[ctx.current^.editor.x + 1] := hval[2];
-                                        ctx.current^.editor.chg := true;
-                                        ctx.current^.chg := true;
-                                end;
-                                inc(ctx.current^.editor.x, 2);
-                                break;
-                        end else begin
-                                if (sel = 9) or (sel = 0) or (sel = $0a) or (sel = $0d) then continue;
-                                if ctx.ins then begin
-                                        if length(ctx.current^.editor.line) = 255 then continue;
-                                        System.insert('' + chr(sel), ctx.current^.editor.line, ctx.current^.editor.x);
-                                        ctx.current^.editor.chg := true;
-                                        ctx.current^.chg := true;
-                                end else begin
-                                        if length(ctx.current^.editor.line) < ctx.current^.editor.x then continue;
-                                        ctx.current^.editor.line[ctx.current^.editor.x] := chr(sel);
-                                        ctx.current^.editor.chg := true;
-                                        ctx.current^.chg := true;
-                                end;
-                                inc(ctx.current^.editor.x);
-                                break;
-                        end;
-                end;
-                K_ESC: break;
-                end;
-        end;
-end;
-
-const addons_menu : pchar =
-'ASCII-Table        Ctrl+Alt+A';
-
-procedure addons_window(var ctx : TEditorContext);
-var sitem : integer;
-    key : word;
-begin
-        scr.push;
-        sitem := 0;
-        while true do begin
-                key := scrui.vmenu(1, 2, 32, scr.getheight - 3,
-                        ctx.config.color.menu,
-                        ctx.config.color.menu_sel,
-                        addons_menu, sitem);
-                if key = K_ESC then begin sitem := -1; break; end;
-                if (key = K_ENTER) or (lo(key) = 32) then break;
-        end;
-        scr.pop;
-        if sitem = -1 then exit;
-        case sitem of
-        0 : ascii_table(ctx);
-        end;
 end;
 
 end.

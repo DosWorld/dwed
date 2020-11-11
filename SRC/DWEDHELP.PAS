@@ -103,7 +103,9 @@ begin
                                 scr.printhl(width + 5, y, help_clr, help_hl_clr, helpStr);
                         end;
                 end;
-                w := scrui.vmenu(0, 1, width + 4, scr.getheight - 1, help_menu_clr, help_menu_sel_clr, topic_menu, selItem);
+                w := scrui.vmenu(0, 1, width + 4, scr.getheight - 1,
+                        help_menu_clr, help_menu_sel_clr,
+                        'Help', topic_menu, selItem);
                 if (w = K_ESC) or (w = K_BS) then break;
                 if (w = K_ENTER) or (lo(w) = 32) then begin
                         topic_id := selItem;

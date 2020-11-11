@@ -91,6 +91,7 @@ K_CTRL_F         = $2106;
 K_CTRL_K         = $250B;
 
 K_CTRL_ALT_A     = $1E00;
+K_CTRL_ALT_C     = $2E00;
 K_CTRL_ALT_H     = $2300;
 
 function getkey:word;

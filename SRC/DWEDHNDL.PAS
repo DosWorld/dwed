@@ -32,7 +32,7 @@ function process_event(var ctx : TEditorContext; var e : TEvent) : integer;
 
 implementation
 
-uses scr, kbd, scrui, strs, strutil, dwedscru, dwedutil;
+uses scr, kbd, scrui, strs, strutil, dwedscru, dwedutil, dwedaddo;
 
 {$F+}
 
@@ -1034,10 +1034,16 @@ begin
         hk_asciitbl := SCRU_FULL;
 end;
 
+function hk_calc(var ctx:TEditorContext; event:PEvent):integer;
+begin
+        calculator(ctx);
+        hk_calc := SCRU_FULL;
+end;
 begin
         reg_handler(K_ESC, false, false, false, false, hk_esc);
         reg_handler(K_ALT_F10, false, false, true, false, hk_addons);
         reg_handler(K_CTRL_ALT_A, true, false, true, false, hk_asciitbl);
+        reg_handler(K_CTRL_ALT_C, true, false, true, false, hk_calc);
         reg_handler(K_CTRL_ALT_H, true, false, true, false, hk_change_hl);
         reg_handler(K_SHIFT_F2, false, true, false, false, hk_save_as);
 

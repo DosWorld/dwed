@@ -46,7 +46,6 @@ procedure edit(var ctx : TEditorContext);
 var k, i, scru  :integer;
         event   : TEvent;
 begin
-        scr.push;
         scru := SCRU_FULL;
         while scru <> SCRU_QUIT do begin
                 dwedscru.update(ctx, scru);
@@ -65,7 +64,6 @@ begin
                         end;
                 end;
         end;
-        scr.pop;
 end;
 
 procedure reset_context(var ctx : TEditorContext);
@@ -82,8 +80,12 @@ begin
                 config.color.text := $87;
                 config.color.text_hl := $83;
                 config.color.text_sel := $17;
+{
                 config.color.menu := $70;
                 config.color.menu_sel := $0F;
+}
+                config.color.menu := $1b;
+                config.color.menu_sel := $30;
                 config.color.help_menu := $87;
                 config.color.help_menu_sel := $07;
                 config.color.help := $87;
@@ -130,6 +132,8 @@ var     ctx        : TEditorContext;
         key, value : string;
         errCode    : integer;
 begin
+        scr.push;
+        scr.cls(7);
         strs.init(DOS);
         reset_context(ctx);
         pCount := ParamCount;
@@ -150,6 +154,7 @@ begin
         end;
         if ctx.all = nil then new_file(ctx, 'NONAME.TXT');
         edit(ctx);
+        scr.pop;
         scr.set_cursor(scr.cursor_start, scr.cursor_end);
         halt(0);
 end;

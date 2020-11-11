@@ -115,11 +115,7 @@ into command line.
 ~DWED~ does not use Extended~/~Expanded Memory, now. ~TBD~
 ///1ADDONS
 You can active Addons window with ~Alt~+~F10~.
-///1TETRIS
-        ~Tetris~ (Video-Game)
-
-Every text-editor ~must have~ a buildin Tetris! ~TBD~
-///1FASTKBD.COM
+///2FASTKBD.COM
         Fast keyboard.
 
 Keyboard works not so fast, because have a big delay into
@@ -135,6 +131,10 @@ So, if you want decrease this delay - you can use next
 0103: ~31 DB~     xor  bx~,~ bx
 0105: ~CD 16~     int  16h
 0107: ~C3~        ret
+///2TETRIS
+        ~Tetris~ (Video-Game)
+
+Every text-editor ~must have~ a buildin Tetris. ~TBD~
 ///1LICENSE
         The MIT License (MIT)
         Copyright (c) 2020 DosWorld

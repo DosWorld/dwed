@@ -28,7 +28,9 @@ interface
 
 type
 
-SourceType = (SRC_C, SRC_CMM, SRC_PAS, SRC_BAS, SRC_ASM, SRC_BAT, SRC_MD, SRC_XML, SRC_HTML, SRC_NONE);
+SourceType = (SRC_C, SRC_CMM, SRC_PAS, SRC_BAS, SRC_ASM, SRC_BAT, SRC_MD,
+                SRC_XML, SRC_HTML, SRC_FORTH, SRC_NONE,
+                SRC_DISABLE);
 
 function find_SourceType_by_ext(ext : string): SourceType;
 procedure hight_light(st: SourceType; width : integer; hlclr, tclr : byte; scr:pchar);
@@ -81,7 +83,7 @@ begin
         while true do begin
                 w := scrui.vmenu(1, 2, 40, scr.getheight - 3,
                         color, color_sel,
-                        hl_menu, sitem);
+                        'Syntax hightlight scheme', hl_menu, sitem);
                 if w = K_ESC then break;
                 if (w = K_ENTER) or (lo(w) = 32) then begin
                         i := 0;
@@ -245,6 +247,7 @@ end;
 procedure hight_light(st: SourceType; width:integer; hlclr, tclr:byte; scr:pchar);
 var lng : PLangDesc;
 begin
+        if st = SRC_DISABLE then exit;
         lng := langs;
         while lng <> nil do begin
                 if lng^.st = st then begin
@@ -334,74 +337,29 @@ end;
 
 var i : integer; s : string;
 begin
-        dwedhl.add_lang(SRC_PAS, '|pas|', false, ',.()+*-:=<>#$@^;{}[]'+#$27, '.pas Pascal Source');
-        dwedhl.add_keyword(SRC_PAS, 'program');
-        dwedhl.add_keyword(SRC_PAS, 'far');
-        dwedhl.add_keyword(SRC_PAS, 'near');
-        dwedhl.add_keyword(SRC_PAS, 'inline');
-        dwedhl.add_keyword(SRC_PAS, 'ifdef');
-        dwedhl.add_keyword(SRC_PAS, 'ifndef');
-        dwedhl.add_keyword(SRC_PAS, 'endif');
-        dwedhl.add_keyword(SRC_PAS, 'unit');
-        dwedhl.add_keyword(SRC_PAS, 'uses');
-        dwedhl.add_keyword(SRC_PAS, 'interface');
-        dwedhl.add_keyword(SRC_PAS, 'implementation');
-        dwedhl.add_keyword(SRC_PAS, 'end');
-        dwedhl.add_keyword(SRC_PAS, 'set');
-        dwedhl.add_keyword(SRC_PAS, 'constructor');
-        dwedhl.add_keyword(SRC_PAS, 'destructor');
-        dwedhl.add_keyword(SRC_PAS, 'object');
-        dwedhl.add_keyword(SRC_PAS, 'const');
-        dwedhl.add_keyword(SRC_PAS, 'type');
-        dwedhl.add_keyword(SRC_PAS, 'var');
-        dwedhl.add_keyword(SRC_PAS, 'record');
-        dwedhl.add_keyword(SRC_PAS, 'procedure');
-        dwedhl.add_keyword(SRC_PAS, 'function');
-        dwedhl.add_keyword(SRC_PAS, 'array');
-        dwedhl.add_keyword(SRC_PAS, 'of');
-        dwedhl.add_keyword(SRC_PAS, 'in');
-        dwedhl.add_keyword(SRC_PAS, 'case');
-        dwedhl.add_keyword(SRC_PAS, 'sizeof');
-        dwedhl.add_keyword(SRC_PAS, 'ord');
-        dwedhl.add_keyword(SRC_PAS, 'chr');
-        dwedhl.add_keyword(SRC_PAS, 'char');
-        dwedhl.add_keyword(SRC_PAS, 'pchar');
-        dwedhl.add_keyword(SRC_PAS, 'string');
-        dwedhl.add_keyword(SRC_PAS, 'integer');
-        dwedhl.add_keyword(SRC_PAS, 'longint');
-        dwedhl.add_keyword(SRC_PAS, 'byte');
-        dwedhl.add_keyword(SRC_PAS, 'word');
-        dwedhl.add_keyword(SRC_PAS, 'pointer');
-        dwedhl.add_keyword(SRC_PAS, 'boolean');
-        dwedhl.add_keyword(SRC_PAS, 'asm');
-        dwedhl.add_keyword(SRC_PAS, 'assembler');
-        dwedhl.add_keyword(SRC_PAS, 'and');
-        dwedhl.add_keyword(SRC_PAS, 'or');
-        dwedhl.add_keyword(SRC_PAS, 'xor');
-        dwedhl.add_keyword(SRC_PAS, 'not');
-        dwedhl.add_keyword(SRC_PAS, 'shl');
-        dwedhl.add_keyword(SRC_PAS, 'shr');
-        dwedhl.add_keyword(SRC_PAS, 'div');
-        dwedhl.add_keyword(SRC_PAS, 'begin');
-        dwedhl.add_keyword(SRC_PAS, 'exit');
-        dwedhl.add_keyword(SRC_PAS, 'while');
-        dwedhl.add_keyword(SRC_PAS, 'do');
-        dwedhl.add_keyword(SRC_PAS, 'repeat');
-        dwedhl.add_keyword(SRC_PAS, 'until');
-        dwedhl.add_keyword(SRC_PAS, 'break');
-        dwedhl.add_keyword(SRC_PAS, 'continue');
-        dwedhl.add_keyword(SRC_PAS, 'if');
-        dwedhl.add_keyword(SRC_PAS, 'then');
-        dwedhl.add_keyword(SRC_PAS, 'else');
-        dwedhl.add_keyword(SRC_PAS, 'for');
-        dwedhl.add_keyword(SRC_PAS, 'to');
-        dwedhl.add_keyword(SRC_PAS, 'downto');
-        dwedhl.add_keyword(SRC_PAS, 'label');
-        dwedhl.add_keyword(SRC_PAS, 'goto');
-        dwedhl.add_keyword(SRC_PAS, 'with');
-        dwedhl.add_keyword(SRC_PAS, 'true');
-        dwedhl.add_keyword(SRC_PAS, 'false');
-        dwedhl.add_keyword(SRC_PAS, 'nil');
+        dwedhl.add_lang(SRC_DISABLE, '|%?%|', false, '', '     DISABLE');
+        dwedhl.add_lang(SRC_FORTH, '|f|4th|', false, '+-/*[]():;,.!@?','.4th Forth Source');
+        dwedhl.add_keyword(SRC_FORTH, 'immediate');
+        dwedhl.add_keyword(SRC_FORTH, 'dup');
+        dwedhl.add_keyword(SRC_FORTH, 'drop');
+        dwedhl.add_keyword(SRC_FORTH, 'swap');
+        dwedhl.add_keyword(SRC_FORTH, 'over');
+        dwedhl.add_keyword(SRC_FORTH, 'pick');
+        dwedhl.add_keyword(SRC_FORTH, 'does');
+        dwedhl.add_keyword(SRC_FORTH, 'mark');
+        dwedhl.add_keyword(SRC_FORTH, 'resolve');
+        dwedhl.add_keyword(SRC_FORTH, 'and');
+        dwedhl.add_keyword(SRC_FORTH, 'or');
+        dwedhl.add_keyword(SRC_FORTH, 'xor');
+        dwedhl.add_keyword(SRC_FORTH, 'not');
+        dwedhl.add_keyword(SRC_FORTH, 'do');
+        dwedhl.add_keyword(SRC_FORTH, 'loop');
+        dwedhl.add_keyword(SRC_FORTH, 'while');
+        dwedhl.add_keyword(SRC_FORTH, 'repeat');
+        dwedhl.add_keyword(SRC_FORTH, 'until');
+        dwedhl.add_keyword(SRC_FORTH, 'if');
+        dwedhl.add_keyword(SRC_FORTH, 'else');
+        dwedhl.add_keyword(SRC_FORTH, 'then');
 
         dwedhl.add_lang(SRC_C, '|C|H|CPP|HPP|', true, ',.()+*-:=<>#$@^%?;!~&|\{}[]"/'+#$27
                              , '.c   C-Family Source');
@@ -677,6 +635,75 @@ begin
         dwedhl.add_keyword(SRC_HTML, 'p');
         dwedhl.add_keyword(SRC_HTML, 'a');
         dwedhl.add_keyword(SRC_HTML, 'div');
+
+        dwedhl.add_lang(SRC_PAS, '|pas|', false, ',.()+*-:=<>#$@^;{}[]'+#$27, '.pas Pascal Source');
+        dwedhl.add_keyword(SRC_PAS, 'program');
+        dwedhl.add_keyword(SRC_PAS, 'far');
+        dwedhl.add_keyword(SRC_PAS, 'near');
+        dwedhl.add_keyword(SRC_PAS, 'inline');
+        dwedhl.add_keyword(SRC_PAS, 'ifdef');
+        dwedhl.add_keyword(SRC_PAS, 'ifndef');
+        dwedhl.add_keyword(SRC_PAS, 'endif');
+        dwedhl.add_keyword(SRC_PAS, 'unit');
+        dwedhl.add_keyword(SRC_PAS, 'uses');
+        dwedhl.add_keyword(SRC_PAS, 'interface');
+        dwedhl.add_keyword(SRC_PAS, 'implementation');
+        dwedhl.add_keyword(SRC_PAS, 'end');
+        dwedhl.add_keyword(SRC_PAS, 'set');
+        dwedhl.add_keyword(SRC_PAS, 'constructor');
+        dwedhl.add_keyword(SRC_PAS, 'destructor');
+        dwedhl.add_keyword(SRC_PAS, 'object');
+        dwedhl.add_keyword(SRC_PAS, 'const');
+        dwedhl.add_keyword(SRC_PAS, 'type');
+        dwedhl.add_keyword(SRC_PAS, 'var');
+        dwedhl.add_keyword(SRC_PAS, 'record');
+        dwedhl.add_keyword(SRC_PAS, 'procedure');
+        dwedhl.add_keyword(SRC_PAS, 'function');
+        dwedhl.add_keyword(SRC_PAS, 'array');
+        dwedhl.add_keyword(SRC_PAS, 'of');
+        dwedhl.add_keyword(SRC_PAS, 'in');
+        dwedhl.add_keyword(SRC_PAS, 'case');
+        dwedhl.add_keyword(SRC_PAS, 'sizeof');
+        dwedhl.add_keyword(SRC_PAS, 'ord');
+        dwedhl.add_keyword(SRC_PAS, 'chr');
+        dwedhl.add_keyword(SRC_PAS, 'char');
+        dwedhl.add_keyword(SRC_PAS, 'pchar');
+        dwedhl.add_keyword(SRC_PAS, 'string');
+        dwedhl.add_keyword(SRC_PAS, 'integer');
+        dwedhl.add_keyword(SRC_PAS, 'longint');
+        dwedhl.add_keyword(SRC_PAS, 'byte');
+        dwedhl.add_keyword(SRC_PAS, 'word');
+        dwedhl.add_keyword(SRC_PAS, 'pointer');
+        dwedhl.add_keyword(SRC_PAS, 'boolean');
+        dwedhl.add_keyword(SRC_PAS, 'asm');
+        dwedhl.add_keyword(SRC_PAS, 'assembler');
+        dwedhl.add_keyword(SRC_PAS, 'and');
+        dwedhl.add_keyword(SRC_PAS, 'or');
+        dwedhl.add_keyword(SRC_PAS, 'xor');
+        dwedhl.add_keyword(SRC_PAS, 'not');
+        dwedhl.add_keyword(SRC_PAS, 'shl');
+        dwedhl.add_keyword(SRC_PAS, 'shr');
+        dwedhl.add_keyword(SRC_PAS, 'div');
+        dwedhl.add_keyword(SRC_PAS, 'begin');
+        dwedhl.add_keyword(SRC_PAS, 'exit');
+        dwedhl.add_keyword(SRC_PAS, 'while');
+        dwedhl.add_keyword(SRC_PAS, 'do');
+        dwedhl.add_keyword(SRC_PAS, 'repeat');
+        dwedhl.add_keyword(SRC_PAS, 'until');
+        dwedhl.add_keyword(SRC_PAS, 'break');
+        dwedhl.add_keyword(SRC_PAS, 'continue');
+        dwedhl.add_keyword(SRC_PAS, 'if');
+        dwedhl.add_keyword(SRC_PAS, 'then');
+        dwedhl.add_keyword(SRC_PAS, 'else');
+        dwedhl.add_keyword(SRC_PAS, 'for');
+        dwedhl.add_keyword(SRC_PAS, 'to');
+        dwedhl.add_keyword(SRC_PAS, 'downto');
+        dwedhl.add_keyword(SRC_PAS, 'label');
+        dwedhl.add_keyword(SRC_PAS, 'goto');
+        dwedhl.add_keyword(SRC_PAS, 'with');
+        dwedhl.add_keyword(SRC_PAS, 'true');
+        dwedhl.add_keyword(SRC_PAS, 'false');
+        dwedhl.add_keyword(SRC_PAS, 'nil');
 
         s := '';
         for i := $B3 to $DA do s := s + chr(i);

@@ -30,7 +30,7 @@ type
 ANSWER = (YES, NO, CANCEL, RETRY, IGNORE, ALL, MAYBE, IDONTKNOWN, ASKMETOMORROW);
 
 procedure box(x, y, w, h :integer; clr:byte);
-function vmenu(x, y, w, h :integer; mclr, sclr:byte; mtext:pchar; var selItem:integer):word;
+function vmenu(x, y, w, h :integer; mclr, sclr:byte; title : string; mtext:pchar; var selItem:integer):word;
 function hmenu(y : integer;
         mclr, sclr : byte;
         mtext : pchar;
@@ -61,7 +61,7 @@ begin
         scr.hprint(x + w - 1, y + h - 1, clr, #$D9, 1);
 end;
 
-function vmenu(x, y, w, h :integer; mclr, sclr:byte; mtext:pchar; var selItem:integer):word;
+function vmenu(x, y, w, h :integer; mclr, sclr:byte; title : string; mtext:pchar; var selItem:integer):word;
 var key : word;
         i, total : integer;
         scr_ofs : integer;
@@ -74,6 +74,7 @@ begin
         scr.cursor_off;
         scr.push_buf;
         scrui.box(x, y, w, h, mclr);
+        if length(title) <> 0 then scr.print(x + 1, y, mclr, '['+#$FE+'] ' + title + ' ');
         inc(x);
         inc(y);
         dec(w, 2);
