@@ -33,10 +33,11 @@ SourceType = (SRC_C, SRC_CMM, SRC_PAS, SRC_BAS, SRC_ASM, SRC_BAT, SRC_MD, SRC_XM
 function find_SourceType_by_ext(ext : string): SourceType;
 procedure hight_light(st: SourceType; width : integer; hlclr, tclr : byte; scr:pchar);
 procedure hight_light_braket(width, posit : integer; c : char; scr : pchar);
+procedure change_hl(var st : SourceType; color, color_sel : byte);
 
 implementation
 
-uses strutil;
+uses scr, scrui, kbd, strutil;
 
 type
 
@@ -59,6 +60,44 @@ TLangDesc = record
 end;
 
 const langs : PLangDesc = nil;
+var hl_menu : pchar;
+
+procedure change_hl(var st : SourceType; color, color_sel : byte);
+var
+        i, sitem   : integer;
+        w          : word;
+        r          : PLangDesc;
+begin
+
+        r := langs;
+        sitem := 0;
+        while r <> nil do begin
+                if st = r^.st then break;
+                inc(sitem);
+                r := r^.next;
+        end;
+
+        scr.cursor_off;        
+        while true do begin
+                w := scrui.vmenu(1, 2, 40, scr.getheight - 3,
+                        color, color_sel,
+                        hl_menu, sitem);
+                if w = K_ESC then break;
+                if (w = K_ENTER) or (lo(w) = 32) then begin
+                        i := 0;
+                        r := langs;
+                        while r <> nil do begin
+                                if i = sitem then begin
+                                        st := r^.st;
+                                        break;
+                                end;
+                                inc(i);
+                                r := r^.next;
+                        end;
+                        break;
+                end;
+        end;
+end;
 
 procedure add_lang(st : SourceType; ext : string; caseSens : boolean; hlchars, title : string);
 var lng : PLangDesc;
@@ -261,6 +300,38 @@ begin
                 inc(x, step);
         end;
 end;
+
+procedure create_menu;
+var
+        r         : PLangDesc;
+        menu_len  : integer;
+        item_len  : integer;
+        max_width : integer;
+        pos       : integer;
+begin
+        menu_len := 0; max_width := 0;
+        r := langs;
+        while r <> nil do begin
+                item_len := length(r^.title) + 2;
+                if max_width < item_len then max_width := item_len;
+                inc(menu_len, item_len + 1);
+                r := r^.next;
+        end;
+        pos := 0;
+        getmem(hl_menu, menu_len);
+        r := langs;
+        while r <> nil do begin
+                if pos <> 0 then begin hl_menu[pos] := #$0A; inc(pos); end;
+                hl_menu[pos] := ' '; inc(pos);
+                item_len := length(r^.title);
+                move(r^.title[1], hl_menu[pos], item_len);
+                inc(pos, item_len);
+                hl_menu[pos] := ' '; inc(pos);
+                r := r^.next;
+        end;
+        hl_menu[pos] := #$0;
+end;
+
 var i : integer; s : string;
 begin
         dwedhl.add_lang(SRC_PAS, '|pas|', false, ',.()+*-:=<>#$@^;{}[]'+#$27, '.pas Pascal Source');
@@ -632,4 +703,6 @@ begin
         dwedhl.add_keyword(SRC_NONE, 'fix');
         dwedhl.add_keyword(SRC_NONE, 'fixit');
         dwedhl.add_keyword(SRC_NONE, 'note');
+
+        create_menu;
 end.

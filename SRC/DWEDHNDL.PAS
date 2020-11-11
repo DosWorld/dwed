@@ -757,14 +757,13 @@ begin
                 line := strs.go_next(line);
         end;
         if line = nil then begin
-                scr.locate(0, 0);
-                with ctx.current^.config^.color do begin
-                        scr.cln(0, 0, top);
-                        scr.printhl(1, 0, top, top_hl, 'Substring ~not~ found. Press any key.');
-                end;
+                scr.push;
+                scrui.msg_box(ctx.current^.config^.color.top, 'Search / Replace', 'Substring not found.', '[ OK ]');
                 scr.show;
                 kbd.reset;
                 kbd.getkey;
+                scr.pop;
+                r := SCRU_FULL;
         end else if is_replace then begin
                 norm_xy(ctx, SCRU_FULL);
                 load_ed(ctx);
@@ -930,6 +929,12 @@ begin
         hk_cb_load := SCRU_CLINE;
 end;
 
+function hk_change_hl(var ctx:TEditorContext; event:PEvent):integer;
+begin
+        dwedhl.change_hl(ctx.current^.st, ctx.config.color.menu, ctx.config.color.menu_sel);
+        hk_change_hl := SCRU_FULL;
+end;
+
 function hk_load(var ctx:TEditorContext; event:PEvent):integer;
 var r : integer;
         msg        : string;
@@ -960,6 +965,7 @@ end;
 
 begin
         reg_handler(K_ESC, false, false, false, false, hk_esc);
+        reg_handler(K_CTRL_ALT_H, true, false, true, false, hk_change_hl);
         reg_handler(K_SHIFT_F2, false, true, false, false, hk_save_as);
 
         reg_handler(K_F1, false, false, false, false, hk_help);

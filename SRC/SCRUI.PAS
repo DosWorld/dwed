@@ -41,6 +41,7 @@ function editstr(x, y : integer; clr:byte; var str : string; vislen, maxlen:inte
 
 function yes_no : ANSWER;
 function yes_no_cancel:ANSWER;
+procedure msg_box(color : byte; title, content, bottom : string);
 
 implementation
 
@@ -225,6 +226,45 @@ begin
                 if hi(w) = $2E then r := CANCEL;
         end;
         yes_no_cancel := r;
+end;
+
+procedure msg_box(color : byte; title, content, bottom : string);
+var
+        w : integer;
+        h : integer;
+        box_h : integer;
+        box_w : integer;
+        pos_x : integer;
+        pos_y : integer;
+        needb : boolean;
+begin
+        w := scr.getwidth;
+        h := scr.getheight;
+        box_w := 0;
+        title := '[' + #$FE+  '] ' + title + ' ';
+        content := ' ' + content + ' ';
+        if length(content) > w - 4 then content := copy(content, 1, w - 4);
+        if length(bottom) > w - 4 then bottom := copy(bottom, 1, w - 4);
+        if box_w < length(title) + 1 then box_w := length(title) + 1;
+        if box_w < length(content) then box_w := length(content);
+        if box_w < length(bottom) then box_w := length(bottom);
+        needb := length(bottom) <> 0;
+        if box_w > w - 4 then box_w := w - 4;
+        box_h := 3;
+        if needb then inc(box_h, 2);
+        
+        pos_x := (w - box_w - 2) shr 1;
+        pos_y := (h - box_h - 2) shr 1;
+        box(pos_x, pos_y, box_w + 2, box_h + 2, color);
+        scr.print(pos_x + 1, pos_y, color, title);
+        scr.hprint(pos_x + 1, pos_y + 1, color, ' ', box_w);
+        scr.print(pos_x + 1, pos_y + 2, color, content);
+        scr.hprint(pos_x + 1, pos_y + 3, color, ' ', box_w);
+        if needb then begin
+                scr.hprint(pos_x + 1, pos_y + 4, color, ' ', box_w);
+                scr.print((w - length(bottom)) shr 1, pos_y + 4, color, bottom);
+                scr.hprint(pos_x + 1, pos_y + 5, color, ' ', box_w);
+        end;
 end;
 
 end.

@@ -88,6 +88,8 @@ K_CTRL_L         = $260C;
 K_CTRL_F         = $2106;
 K_CTRL_K         = $250B;
 
+K_CTRL_ALT_H     = $2300;
+
 function getkey:word;
 function haskey:boolean;
 procedure reset;
@@ -101,27 +103,27 @@ implementation
 
 function getkey:word;assembler;
 asm
-        xor        ah,ah
+        xor        ah, ah
         int        $16
 end;
 
 function haskey:boolean;assembler;
 asm
-        mov        ah,1
+        mov        ah, 1
         int        $16
-        mov        cx,0
-        jz        @nokey
+        mov        cx, 0
+        jz         @nokey
         dec        cx
 @nokey:
-        mov        ax,cx
+        mov        ax, cx
 end;
 
 function flags:byte;assembler;
 asm
-        push        es
-        xor        ax,ax
-        mov        es,ax
-        mov        al,es:[$417]
+        push       es
+        xor        ax, ax
+        mov        es, ax
+        mov        al, byte ptr es:[$417]
         pop        es
 end;
 

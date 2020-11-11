@@ -102,7 +102,7 @@ end;
 procedure buf_es_di;assembler;
 asm
         mov        bx, ax
-        mov        ax, line_size
+        mov        ax, word ptr [line_size]
         mul        cx
         xchg       bx, ax
         shl        ax, 1
@@ -115,7 +115,7 @@ end;
 
 procedure cls(clr : byte);assembler;
 asm
-        mov        ax, screen_size
+        mov        ax, word ptr [screen_size]
         shr        ax, 1
         xchg       ax, cx
         mov        ah, clr
@@ -134,12 +134,12 @@ asm
         push       es
         call       getwidth
         push       ax
-        mov        ax, x
-        mov        cx, y
+        mov        ax, word ptr [x]
+        mov        cx, word ptr [y]
         call       buf_es_di
         pop        cx
-        sub        cx, x
-        mov        ah, clr
+        sub        cx, word ptr [x]
+        mov        ah, byte ptr [clr]
         mov        al, ' '
         cld
         repz       stosw
@@ -152,9 +152,9 @@ asm
         mov        ax, x
         mov        cx, y
         call       buf_es_di
-        mov        cx, len
-        mov        ah, clr
-        mov        al, c
+        mov        cx, word ptr [len]
+        mov        ah, byte ptr [clr]
+        mov        al, byte ptr [c]
         cld
         repz       stosw
         pop        es
@@ -167,8 +167,8 @@ asm
         mov        cx, y
         call       buf_es_di
         inc        di
-        mov        cx, len
-        mov        al, clr
+        mov        cx, word ptr [len]
+        mov        al, byte ptr [clr]
         cld
         or         cx, cx
         jz         @end
@@ -187,14 +187,14 @@ asm
         mov        ax, x
         mov        cx, y
         call       buf_es_di
-        mov        bx, line_size
-        mov        cx, len
-        mov        ah, clr
-        mov        al, c
+        mov        bx, word ptr [line_size]
+        mov        cx, word ptr [len]
+        mov        ah, byte ptr [clr]
+        mov        al, byte ptr [c]
         or         cx, cx
         jz         @end
 @cont:
-        mov        es:[di], ax
+        mov        word ptr [es:[di]], ax
         add        di, bx
         dec        cx
         jnz        @cont
@@ -206,18 +206,18 @@ procedure print(x, y:integer; clr : byte; s : string);assembler;
 asm
         push       es
         push       ds
-        mov        ax, x
-        mov        cx, y
+        mov        ax, word ptr [x]
+        mov        cx, word ptr [y]
         call       buf_es_di
-        lea        bx, s
-        mov        si, ss:[bx]
-        mov        bx, ss:[bx+2]
+        lea        bx, word ptr s
+        mov        si, word ptr [ss:bx]
+        mov        bx, word ptr [ss:bx+2]
         mov        ds, bx
         lodsb
         or         al, al
         jz         @end
         mov        cl, al
-        mov        ah, ss:clr
+        mov        ah, byte ptr [ss:clr]
         cld
 @cont:
         lodsb
@@ -234,21 +234,21 @@ asm
         push       es
         push       ds
 
-        mov        ax, x
-        mov        cx, y
+        mov        ax, word ptr [x]
+        mov        cx, word ptr [y]
         call       buf_es_di
 
         lea        bx, s
-        mov        si, ss:[bx]
-        mov        ax, ss:[bx+2]
+        mov        si, word ptr [ss:bx]
+        mov        ax, word ptr [ss:bx+2]
         mov        ds, ax
         xor        ah, ah
         lodsb
         or         ax, ax
         jz         @end
         mov        cx, ax
-        mov        ah, ss:clr
-        mov        bh, ss:hlclr
+        mov        ah, byte ptr [ss:clr]
+        mov        bh, byte ptr [ss:hlclr]
         cld
 @cont:
         lodsb

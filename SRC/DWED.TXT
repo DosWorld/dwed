@@ -20,7 +20,11 @@ and works in Real Mode ~without~ DPMI.
 In this case, you can press ~Y~ or ~ENTER~ - to answer ~YES~
 and ~N~ or ~ESC~ - to answer ~NO~.
 
-2. For micro-instalation need only ~.exe~ file.
+2. For micro-instalation need only ~DWED.EXE~ file.
+
+3. DPMI version - ~DWED16.EXE~ require files:
+   ~RTM.EXE~
+   ~DPMI16BI.OVL~
 ///2NAVIGATION
         Navigation.
 
@@ -94,6 +98,8 @@ have clipboard shared between file.
 ~XML/HTML~    .xml .htm
 
  and ~MS-DOS Shell Scripting~ .bat
+
+~Ctrl~+~Alt~+~H~ - to change hightlight scheme.
 ///1CMD-LINE
         Command-line parameters magic.
 

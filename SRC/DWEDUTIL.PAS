@@ -680,13 +680,17 @@ begin
         216: errMsg := 'General Protection fault';
         else errMsg := 'Unknown error code';
         end;
-        scr.cln(0, 0, ctx.current^.config^.color.top);
-        scr.printhl(0, 0, ctx.current^.config^.color.top,
-                ctx.current^.config^.color.top_hl,
-                ' Error #~' + itoa(errCode) + '~: ~' + errMsg);
+        scr.push;
+        scrui.msg_box(ctx.current^.config^.color.top_hl, 'Error', '#' + itoa(errCode) + ': ' + errMsg, '[ OK ]');
         scr.show;
         kbd.reset;
-        kbd.getkey;
+        while true do begin
+                case kbd.getkey of
+                K_ESC: break;
+                K_ENTER: break;
+                end;
+        end;
+        scr.pop;
 end;
 
 end.
