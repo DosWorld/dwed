@@ -60,6 +60,6 @@ To build binaries, you need Borland Pascal 7.0 in path and my small make. Then -
 
       make
 
-# LICENSE
+# License
 
 MIT License
