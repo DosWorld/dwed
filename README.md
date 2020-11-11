@@ -21,7 +21,7 @@ Restrictions:
 Use:
 
 * `dwed.exe` - in DOS Real Mode
-* `dwed16.exe` - for 16bit DPMI (more memory)
+* `dwed16.exe` - recompiled for 16bit DPMI (more memory)
 
 Command line example:
 
