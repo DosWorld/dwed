@@ -47,7 +47,7 @@ Inspired by
 	ASCII program. Version 4.23 (C) Compact Soft, 1991.
 	By: Alexander Dudarenko & Dmitry Kohmanyuk.
 
-Received from Softpanorama in 90's, now this is my remake for dwed.
+Received from Softpanorama in 90's, now here is my remake for dwed.
 # Build
 
 To build binaries, you need Borland Pascal 7.0 in path and my small make. Then - type
