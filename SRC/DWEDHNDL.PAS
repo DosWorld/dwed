@@ -1028,9 +1028,16 @@ begin
         hk_load := r;
 end;
 
+function hk_asciitbl(var ctx:TEditorContext; event:PEvent):integer;
+begin
+        ascii_table(ctx);
+        hk_asciitbl := SCRU_FULL;
+end;
+
 begin
         reg_handler(K_ESC, false, false, false, false, hk_esc);
-        reg_handler(K_CTRL_ALT_A, true, false, true, false, hk_addons);
+        reg_handler(K_ALT_F10, false, false, true, false, hk_addons);
+        reg_handler(K_CTRL_ALT_A, true, false, true, false, hk_asciitbl);
         reg_handler(K_CTRL_ALT_H, true, false, true, false, hk_change_hl);
         reg_handler(K_SHIFT_F2, false, true, false, false, hk_save_as);
 

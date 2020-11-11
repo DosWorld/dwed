@@ -75,6 +75,7 @@ K_ALT_F3         = $6A00;
 K_ALT_F4         = $6B00;
 K_ALT_F5         = $6C00;
 K_ALT_F6         = $6D00;
+K_ALT_F10        = $7100;
 
 K_CTRL_S         = $1F13;
 

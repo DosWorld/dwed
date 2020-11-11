@@ -114,16 +114,12 @@ into command line.
 
 ~DWED~ does not use Extended~/~Expanded Memory, now. ~TBD~
 ///1ADDONS
-Empty ~:(~
-///2CALCULATOR
-~TBD~
-///2ASCII-TABLE
-~TBD~
-///2TETRIS
+You can active Addons window with ~Alt~+~F10~.
+///1TETRIS
         ~Tetris~ (Video-Game)
 
 Every text-editor ~must have~ a buildin Tetris! ~TBD~
-///2FASTKBD.COM
+///1FASTKBD.COM
         Fast keyboard.
 
 Keyboard works not so fast, because have a big delay into
