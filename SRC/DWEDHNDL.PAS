@@ -254,8 +254,14 @@ end;
 function hk_enter(var ctx:TEditorContext; event:PEvent):integer;
 var s : string;
         i : integer;
+        r : integer;
 begin
         commit(ctx);
+        if ctx.current^.editor.selection then begin
+                delete_selected(ctx);
+                with ctx.current^ do total := strs.renum(rline);
+        end;
+        r := SCRU_FULL;
         s := '';
         for i := 1 to length(ctx.current^.editor.line) do begin
                 if ctx.current^.editor.line[i] = ' ' then s := s + ' ' else break;
@@ -275,7 +281,7 @@ begin
         ctx.current^.editor.chg := length(s) <> 0;
         ctx.current^.editor.x := length(s) + 1;
         ctx.current^.scrx := 0;
-        hk_enter := SCRU_FULL;
+        hk_enter := r;
 end;
 
 function hk_esc(var ctx:TEditorContext; event:PEvent):integer;
