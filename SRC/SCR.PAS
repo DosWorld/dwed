@@ -107,10 +107,8 @@ asm
         xchg       bx, ax
         shl        ax, 1
         add        ax, bx
-        add        ax, word ptr [screen]
-        mov        di, ax
-        mov        ax, word ptr [screen + 2]
-        mov        es, ax
+        les        di, [screen]
+        add        di, ax
 end;
 
 procedure cls(clr : byte);assembler;
@@ -121,9 +119,7 @@ asm
         mov        ah, clr
         mov        al, ' '
         push       es
-        mov        di,word ptr [screen]
-        mov        ax,word ptr [screen + 2]
-        mov        es, ax
+        les        di, screen
         cld
         repz       stosw
         pop        es
@@ -422,6 +418,7 @@ begin
         screen_size := (getwidth * getheight) shl 1;
         line_size := getwidth shl 1;
         getmem(screen, screen_size);
+        move(mem[vseg:0], screen[0], screen_size);
 end;
 
 begin
