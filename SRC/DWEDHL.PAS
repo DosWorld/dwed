@@ -83,7 +83,7 @@ begin
         while true do begin
                 w := scrui.vmenu(1, 2, 40, scr.getheight - 3,
                         color, color_sel,
-                        'Syntax hightlight scheme', hl_menu, sitem);
+                        'Syntax highlight scheme', hl_menu, sitem);
                 if w = K_ESC then break;
                 if (w = K_ENTER) or (lo(w) = 32) then begin
                         i := 0;
@@ -181,7 +181,6 @@ end;
 
 function find_keyword(vocab : PVocabEntry; str:string):boolean;
 var r : boolean;
-        entry : PVocabEntry;
         hash : word;
 begin
         r := false;
@@ -203,7 +202,6 @@ var
         str : string;
         buf : array[1..255] of char;
         ch : char;
-        cl : byte;
         pos : integer;
         wordStarted : boolean;
         wordStart : pchar;
@@ -288,7 +286,7 @@ begin
         pair := get_braket_pair(fchar);
         if pair = ' ' then exit;
         if get_direction(fchar) then step := 1 else step := -1;
-        x := posit;
+        x := posit; count := 0;
         while (x >= 0) and (x < width) do begin
                 cchar := scr[x shl 1];
 

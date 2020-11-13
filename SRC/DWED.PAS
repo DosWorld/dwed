@@ -24,8 +24,8 @@ SOFTWARE.
 {$M 16000, 128000, 655360}
 {$G-,B-,S-,R-,I-}
 
-uses dwedmain;
+uses dwedmain, strutil;
 
 begin
-        dwed_main;
+        dwed_main(getpathname(paramstr(0)));
 end.

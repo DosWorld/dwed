@@ -26,7 +26,7 @@ unit dwedmain;
 
 interface
 
-procedure dwed_main;
+procedure dwed_main(exe_path : string);
 
 implementation
 
@@ -80,10 +80,6 @@ begin
                 config.color.text := $87;
                 config.color.text_hl := $83;
                 config.color.text_sel := $17;
-{
-                config.color.menu := $70;
-                config.color.menu_sel := $0F;
-}
                 config.color.menu := $1b;
                 config.color.menu_sel := $30;
                 config.color.help_menu := $87;
@@ -100,8 +96,20 @@ end;
 
 procedure process_param(var ctx : TEditorContext; key, value : string);
 begin
-        writeln('Key = [', key, ']');
-        writeln('Value = [', value, ']');
+        if length(key) = 0 then exit;
+        if key = 'TAB_SIZE' then ctx.config.tab_size := ahtob(value)
+        else if key = 'COLOR.TOP' then ctx.config.color.top := ahtob(value)
+        else if key = 'COLOR.TOP_HL' then ctx.config.color.top_hl := ahtob(value)
+        else if key = 'COLOR.TEXT' then ctx.config.color.text := ahtob(value)
+        else if key = 'COLOR.TEXT_HL' then ctx.config.color.text_hl := ahtob(value)
+        else if key = 'COLOR.TEXT_SEL' then ctx.config.color.text_sel := ahtob(value)
+        else if key = 'COLOR.MENU' then ctx.config.color.menu := ahtob(value)
+        else if key = 'COLOR.MENU_SEL' then ctx.config.color.menu_sel := ahtob(value)
+        else if key = 'COLOR.HELP_MENU' then ctx.config.color.help_menu := ahtob(value)
+        else if key = 'COLOR.HELP_MENU_SEL' then ctx.config.color.help_menu_sel := ahtob(value)
+        else if key = 'COLOR.HELP' then ctx.config.color.help := ahtob(value)
+        else if key = 'COLOR.HELP_HL' then ctx.config.color.help_hl := ahtob(value)
+        else begin writeln('Unknown parameter ', key, '. Press Enter...'); readln; end;
 end;
 
 procedure split(var param, key, value : string);
@@ -117,7 +125,8 @@ begin
                 end;
         end;
         if (length(key) = 0) and (length(value) = 0) then key := param;
-        key := upstr(key);
+        key := upstr(trim(key));
+        value := trim(value);
 end;
 
 function has_switch(var s : string) : boolean;
@@ -125,17 +134,38 @@ begin
         has_switch := (length(s) > 0) and (s[1] in ['-', '/']);
 end;
 
-procedure dwed_main;
+function load_config(var ctx : TEditorContext; fname : string):boolean;
+var f : text;
+        i          : integer;
+        str        : string;
+        key, value : string;
+begin
+        assign(f, lfn.lfn2dos(fname));
+        {$I-}
+        System.reset(f);
+        i := ioresult;
+        {$I+}
+        if i = 0 then begin
+                while not eof(f) do begin
+                        readln(f, str);
+                        split(str, key, value);
+                        process_param(ctx, key, value);
+                end;
+                close(f);
+        end;
+        load_config := i = 0;
+end;
+
+procedure dwed_main(exe_path : string);
 var     ctx        : TEditorContext;
         i, pCount  : integer;
         param      : string;
         key, value : string;
         errCode    : integer;
 begin
-        scr.push;
-        scr.cls(7);
         strs.init(DOS);
         reset_context(ctx);
+        if not load_config(ctx, 'DWED.CFG') then load_config(ctx, exe_path + 'DWED.CFG');
         pCount := ParamCount;
         for i := 1 to pCount do begin
                 param := ParamStr(i);
@@ -145,6 +175,8 @@ begin
                         process_param(ctx, key, value);
                 end;
         end;
+        scr.push;
+        scr.cls(7);
         for i := 1 to pCount do begin
                 param := ParamStr(i);
                 if not has_switch(param) then begin
@@ -155,6 +187,7 @@ begin
         if ctx.all = nil then new_file(ctx, 'NONAME.TXT');
         edit(ctx);
         scr.pop;
+        scr.show;
         scr.set_cursor(scr.cursor_start, scr.cursor_end);
         halt(0);
 end;

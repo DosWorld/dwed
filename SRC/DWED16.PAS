@@ -23,8 +23,8 @@ SOFTWARE.
 }
 {$B-,S-,R-,I-}
 
-uses dwedmain;
+uses dwedmain, strutil;
 
 begin
-        dwed_main;
+        dwed_main(getpathname(paramstr(0)));
 end.

@@ -38,7 +38,9 @@ uses scr, kbd, scrui, strs, strutil, dwedscru, dwedutil, dwedaddo;
 
 const handlers : PEventHandler = nil;
 
-procedure reg_handler(key : word; is_ctrl, is_shift, is_alt, reset_selection : boolean; proc : TEventProc);
+{$F+}
+
+procedure reg_handler(key : word; is_ctrl, is_shift, is_alt, reset_selection : boolean; proc : pointer);
 var h : PEventHandler;
 begin
         getmem(h, sizeof(TEventHandler));
@@ -68,12 +70,14 @@ function process_event(var ctx : TEditorContext; var e : TEvent) : integer;
 var h : PEventHandler;
         r : integer;
         xofs : integer;
+        proc : TEventProc;
 begin
         h := handlers;
         xofs := ctx.current^.scrx;
         while (h <> nil) do begin
                 if compare_event(e, h^.event) then begin
-                        r := h^.proc(ctx, @e);
+		        proc := TEventProc(h^.proc);
+                        r := proc(ctx, @e);
                         if h^.reset_selection and ctx.current^.editor.selection then begin
                                 ctx.current^.editor.selection := false;
                                 r := SCRU_FULL;
@@ -87,6 +91,8 @@ begin
         if xofs <> ctx.current^.scrx then r := SCRU_FULL;
         process_event := r;
 end;
+
+{$F+}
 
 function hk_up(var ctx : TEditorContext; event : PEvent) : integer;
 begin
@@ -406,6 +412,7 @@ end;
 function hk_dos_screen(var ctx:TEditorContext; event:PEvent):integer;
 begin
         scr.pop;
+        scr.show;
         kbd.reset;
         kbd.getkey;
         scr.push;
@@ -1046,74 +1053,74 @@ begin
         hk_calc := SCRU_FULL;
 end;
 begin
-        reg_handler(K_ESC, false, false, false, false, hk_esc);
-        reg_handler(K_ALT_F10, false, false, true, false, hk_addons);
-        reg_handler(K_CTRL_ALT_A, true, false, true, false, hk_asciitbl);
-        reg_handler(K_CTRL_ALT_C, true, false, true, false, hk_calc);
-        reg_handler(K_CTRL_ALT_H, true, false, true, false, hk_change_hl);
-        reg_handler(K_SHIFT_F2, false, true, false, false, hk_save_as);
+        reg_handler(K_ESC, false, false, false, false, @hk_esc);
+        reg_handler(K_ALT_F10, false, false, true, false, @hk_addons);
+        reg_handler(K_CTRL_ALT_A, true, false, true, false, @hk_asciitbl);
+        reg_handler(K_CTRL_ALT_C, true, false, true, false, @hk_calc);
+        reg_handler(K_CTRL_ALT_H, true, false, true, false, @hk_change_hl);
+        reg_handler(K_SHIFT_F2, false, true, false, false, @hk_save_as);
 
-        reg_handler(K_F1, false, false, false, false, hk_help);
-        reg_handler(K_F2, false, false, false, false, hk_save);
-        reg_handler(K_F3, false, false, false, false, hk_load);
-        reg_handler(K_F6, false, false, false, false, hk_nextwin);
-        reg_handler(K_F7, false, false, false, true, hk_start_find);
+        reg_handler(K_F1, false, false, false, false, @hk_help);
+        reg_handler(K_F2, false, false, false, false, @hk_save);
+        reg_handler(K_F3, false, false, false, false, @hk_load);
+        reg_handler(K_F6, false, false, false, false, @hk_nextwin);
+        reg_handler(K_F7, false, false, false, true, @hk_start_find);
 
-        reg_handler(K_ALT_F2, false, false, true, false, hk_cb_save);
-        reg_handler(K_ALT_F3, false, false, true, false, hk_cb_load);
-        reg_handler(K_ALT_F4, false, false, true, false, hk_close);
-        reg_handler(K_ALT_F5, false, false, true, false, hk_dos_screen);
-        reg_handler(K_ALT_F6, false, false, true, false, hk_winlist);
+        reg_handler(K_ALT_F2, false, false, true, false, @hk_cb_save);
+        reg_handler(K_ALT_F3, false, false, true, false, @hk_cb_load);
+        reg_handler(K_ALT_F4, false, false, true, false, @hk_close);
+        reg_handler(K_ALT_F5, false, false, true, false, @hk_dos_screen);
+        reg_handler(K_ALT_F6, false, false, true, false, @hk_winlist);
 
-        reg_handler(K_CTRL_LEFT, true, false, false, true, hk_word_left);
-        reg_handler(K_CTRL_RIGHT, true, false, false, true, hk_word_right);
+        reg_handler(K_CTRL_LEFT, true, false, false, true, @hk_word_left);
+        reg_handler(K_CTRL_RIGHT, true, false, false, true, @hk_word_right);
 
-        reg_handler(K_CTRL_LEFT, true, true, false, false, hk_word_sleft);
-        reg_handler(K_CTRL_RIGHT, true, true, false, false, hk_word_sright);
+        reg_handler(K_CTRL_LEFT, true, true, false, false, @hk_word_sleft);
+        reg_handler(K_CTRL_RIGHT, true, true, false, false, @hk_word_sright);
 
-        reg_handler(K_TAB, false, false, false, false, hk_tab);
-        reg_handler(K_SHIFT_TAB, false, true, false, false, hk_shift_tab);
+        reg_handler(K_TAB, false, false, false, false, @hk_tab);
+        reg_handler(K_SHIFT_TAB, false, true, false, false, @hk_shift_tab);
 
-        reg_handler(K_SHIFT_UP, false, true, false, false, hk_sup);
-        reg_handler(K_SHIFT_DOWN, false, true, false, false, hk_sdown);
-        reg_handler(K_SHIFT_LEFT, false, true, false, false, hk_sleft);
-        reg_handler(K_SHIFT_RIGHT, false, true, false, false, hk_sright);
-        reg_handler(K_SHIFT_PGUP, false, true, false, false, hk_spgup);
-        reg_handler(K_SHIFT_PGDN, false, true, false, false, hk_spgdown);
-        reg_handler(K_SHIFT_HOME, false, true, false, false, hk_shome);
-        reg_handler(K_SHIFT_END, false, true, false, false, hk_send);
+        reg_handler(K_SHIFT_UP, false, true, false, false, @hk_sup);
+        reg_handler(K_SHIFT_DOWN, false, true, false, false, @hk_sdown);
+        reg_handler(K_SHIFT_LEFT, false, true, false, false, @hk_sleft);
+        reg_handler(K_SHIFT_RIGHT, false, true, false, false, @hk_sright);
+        reg_handler(K_SHIFT_PGUP, false, true, false, false, @hk_spgup);
+        reg_handler(K_SHIFT_PGDN, false, true, false, false, @hk_spgdown);
+        reg_handler(K_SHIFT_HOME, false, true, false, false, @hk_shome);
+        reg_handler(K_SHIFT_END, false, true, false, false, @hk_send);
 
-        reg_handler(K_UP, false, false, false, true, hk_up);
-        reg_handler(K_DOWN, false, false, false, true, hk_down);
-        reg_handler(K_LEFT, false, false, false, true, hk_left);
-        reg_handler(K_RIGHT, false, false, false, true, hk_right);
-        reg_handler(K_PGUP, false, false, false, true, hk_pgup);
-        reg_handler(K_PGDN, false, false, false, true, hk_pgdown);
-        reg_handler(K_HOME, false, false, false, true, hk_home);
-        reg_handler(K_END, false, false, false, true, hk_end);
-        reg_handler(K_CTRL_HOME, true, false, false, true, hk_file_begin);
-        reg_handler(K_CTRL_END, true, false, false, true, hk_file_end);
+        reg_handler(K_UP, false, false, false, true, @hk_up);
+        reg_handler(K_DOWN, false, false, false, true, @hk_down);
+        reg_handler(K_LEFT, false, false, false, true, @hk_left);
+        reg_handler(K_RIGHT, false, false, false, true, @hk_right);
+        reg_handler(K_PGUP, false, false, false, true, @hk_pgup);
+        reg_handler(K_PGDN, false, false, false, true, @hk_pgdown);
+        reg_handler(K_HOME, false, false, false, true, @hk_home);
+        reg_handler(K_END, false, false, false, true, @hk_end);
+        reg_handler(K_CTRL_HOME, true, false, false, true, @hk_file_begin);
+        reg_handler(K_CTRL_END, true, false, false, true, @hk_file_end);
 
-        reg_handler(K_DEL, false, false, false, false, hk_del);
-        reg_handler(K_BS, false, false, false, false, hk_bs);
-        reg_handler(K_ENTER, false, false, false, false, hk_enter);
+        reg_handler(K_DEL, false, false, false, false, @hk_del);
+        reg_handler(K_BS, false, false, false, false, @hk_bs);
+        reg_handler(K_ENTER, false, false, false, false, @hk_enter);
 
-        reg_handler(K_CTRL_S, true, false, false, true, hk_save);
-        reg_handler(K_CTRL_S, true, true, false, true, hk_save);
-        reg_handler(K_INS, false, false, false, false, hk_ins);
+        reg_handler(K_CTRL_S, true, false, false, true, @hk_save);
+        reg_handler(K_CTRL_S, true, true, false, true, @hk_save);
+        reg_handler(K_INS, false, false, false, false, @hk_ins);
 
-        reg_handler(K_CTRL_X, true, false, false, false, hk_cb_cut);
-        reg_handler(K_CTRL_C, true, false, false, false, hk_cb_copy);
-        reg_handler(K_CTRL_V, true, false, false, false, hk_cb_paste);
+        reg_handler(K_CTRL_X, true, false, false, false, @hk_cb_cut);
+        reg_handler(K_CTRL_C, true, false, false, false, @hk_cb_copy);
+        reg_handler(K_CTRL_V, true, false, false, false, @hk_cb_paste);
 
-        reg_handler(K_CTRL_Y, true, false, false, false, hk_cb_cutline);
-        reg_handler(K_CTRL_U, true, false, false, false, hk_cb_paste);
+        reg_handler(K_CTRL_Y, true, false, false, false, @hk_cb_cutline);
+        reg_handler(K_CTRL_U, true, false, false, false, @hk_cb_paste);
 
-        reg_handler(K_CTRL_L, true, false, false, true, hk_goto_line);
-        reg_handler(K_CTRL_F, true, false, false, true, hk_start_find);
-        reg_handler(K_CTRL_F, true, true, false, true, hk_start_find);
-        reg_handler(K_CTRL_K, true, false, false, true, hk_find_again);
+        reg_handler(K_CTRL_L, true, false, false, true, @hk_goto_line);
+        reg_handler(K_CTRL_F, true, false, false, true, @hk_start_find);
+        reg_handler(K_CTRL_F, true, true, false, true, @hk_start_find);
+        reg_handler(K_CTRL_K, true, false, false, true, @hk_find_again);
 
-        reg_handler(K_INS, false, true, false, false, hk_cb_paste);
-        reg_handler(K_DEL, false, true, false, false, hk_cb_cut);
+        reg_handler(K_INS, false, true, false, false, @hk_cb_paste);
+        reg_handler(K_DEL, false, true, false, false, @hk_cb_cut);
 end.

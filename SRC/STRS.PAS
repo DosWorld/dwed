@@ -63,6 +63,8 @@ function find_num(r : EditorStr; num : longint) : EditorStr;
 function append(r : EditorStr; var pos : integer; p : pchar) : EditorStr;
 function split(r : EditorStr; pos : integer) : EditorStr;
 
+function is_nil(r : EditorStr) : boolean;
+
 implementation
 
 uses strsd, lfn;
@@ -383,6 +385,11 @@ begin
         else r := Dos2EditorStr(strsd.split(EditorStr2Dos(r), pos));
         end;
         split := r;
+end;
+
+function is_nil(r : EditorStr) : boolean;
+begin
+        is_nil := r = nil;
 end;
 
 end.

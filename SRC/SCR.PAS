@@ -40,9 +40,9 @@ procedure hprint(x, y:integer; clr : byte; c : char; len : integer);
 procedure vprint(x, y:integer; clr : byte; c : char; len : integer);
 procedure chcolor(x, y:integer; clr : byte; len: integer);
 
-procedure push_buf;
-procedure pop_buf;
-procedure pick_buf;
+procedure push;
+procedure pop;
+procedure pick;
 procedure show;
 
 procedure locate(x, y:integer);
@@ -56,9 +56,6 @@ function get_cursor_end:byte;
 procedure set_cursor(start_line, end_line : byte);
 
 procedure set_blink(on : boolean);
-
-procedure push;
-procedure pop;
 
 function getwidth:integer;
 function getheight:integer;
@@ -281,29 +278,6 @@ asm
         pop        es
 end;
 
-procedure push;
-var     p : PScr;
-begin
-        getmem(p, screen_size + sizeof(TScr) - 1);
-        p^.size := screen_size;
-        p^.prev := last_scr;
-        p^.x := getx;
-        p^.y := gety;
-        move(mem[vseg:0], p^.buf, p^.size);
-        last_scr := p;
-end;
-
-procedure pop;
-var p : PScr;
-begin
-        if last_scr = nil then exit;
-        move(last_scr^.buf, mem[vseg:0], last_scr^.size);
-        p := last_scr;
-        last_scr := last_scr^.prev;
-        scr.locate(p^.x, p^.y);
-        freemem(p, p^.size + sizeof(TScr) - 1);
-end;
-
 procedure locate(x, y : integer);assembler;
 asm
         push       ds
@@ -328,7 +302,7 @@ begin
         gety := mem[0:(mem[0:$462] shl 1) + $451] and $ff;
 end;
 
-procedure push_buf;
+procedure push;
 var     p : PScr;
 begin
         getmem(p, screen_size + sizeof(TScr) - 1);
@@ -340,7 +314,7 @@ begin
         last_scr_buf := p;
 end;
 
-procedure pop_buf;
+procedure pop;
 var p : PScr;
 begin
         if last_scr_buf = nil then exit;
@@ -351,7 +325,7 @@ begin
         freemem(p, p^.size + sizeof(TScr) - 1);
 end;
 
-procedure pick_buf;
+procedure pick;
 begin
         if last_scr_buf = nil then exit;
         move(last_scr_buf^.buf, screen[0], last_scr_buf^.size);

@@ -121,7 +121,7 @@ var t : PHelpTopicList;
     topicname : string;
     i, pos    : integer;
 begin
-        topic_list := from_memory(@helpbin);
+        topic_list := from_memory(Pointer(@helpbin));
         maxlen := 0;
         totallen := 0;
         t := topic_list;

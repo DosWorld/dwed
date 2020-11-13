@@ -72,7 +72,7 @@ var key : word;
         hi_key : byte;
 begin
         scr.cursor_off;
-        scr.push_buf;
+        scr.push;
         scrui.box(x, y, w, h, mclr);
         if length(title) <> 0 then scr.print(x + 1, y, mclr, '['+#$FE+'] ' + title + ' ');
         inc(x);
@@ -130,7 +130,7 @@ begin
                         if total - h > selItem then inc(selItem, h) else selItem := total;
                 end else break;
         end;
-        scr.pop_buf;
+        scr.pop;
         vmenu := key;
 end;
 
@@ -143,9 +143,9 @@ var key : word;
         hi_key : byte;
 begin
         lineId := '';
-        scr.push_buf;
+        scr.push;
         while true do begin
-                scr.pick_buf;
+                scr.pick;
                 scr.show;
                 key := getkey;
                 if is_shift or is_ctrl or is_alt then break;
@@ -156,7 +156,7 @@ begin
                 end else if hi_key = hi(K_RIGHT) then begin
                 end else break;
         end;
-        scr.pop_buf;
+        scr.pop;
         hmenu := key;
 end;
 

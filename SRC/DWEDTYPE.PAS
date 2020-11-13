@@ -112,14 +112,15 @@ TEvent = record
         is_alt         : boolean;
 end;
 
+{$F+}
 TEventProc = function(var ctx : TEditorContext; e : PEvent) : integer;
-PEventProc =^ TEventProc;
+{$F-}
 
 PEventHandler =^ TEventHandler;
 TEventHandler = record
         event           : TEvent;
         reset_selection : boolean;
-        proc            : TEventProc;
+        proc            : pointer;
         next            : PEventHandler;
 end;
 

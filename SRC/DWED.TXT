@@ -90,9 +90,9 @@ have clipboard shared between file.
 
 ~Alt~+~F5~  - Show DOS screen.
 ///1SYNTAX-HL
-        Syntax ~h~i~g~h~t~l~i~g~h~t~.
+        Syntax ~h~i~g~h~l~i~g~h~t~.
 
-~DWED~ support syntax hightlight for next languages:
+~DWED~ support syntax highlight for next languages:
 
 ~Assembler~   .asm
 ~Sphinx C--~  .c-- .h-- .cmm .hmm
@@ -103,7 +103,7 @@ have clipboard shared between file.
 
  and ~MS-DOS Shell Scripting~ .bat
 
-~Ctrl~+~Alt~+~H~ - to change hightlight scheme.
+~Ctrl~+~Alt~+~H~ - to change highlight scheme.
 ///1CMD-LINE
         Command-line parameters magic.
 

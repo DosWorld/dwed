@@ -27,6 +27,7 @@ unit strutil;
 interface
 
 function basename(s:string):string;
+function getpathname(s:string):string;
 function change_ext(s:string; new_ext:string):string;
 function get_filename_ext(s:string):string;
 
@@ -46,6 +47,8 @@ function hexdw(dw : longint):string;
 function hexp(p : pchar):string;
 
 function binb(b : byte):string;
+function bindw(l : longint):string;
+
 function octb(b : byte):string;
 
 function is_digit(c : char):boolean;
@@ -65,6 +68,7 @@ function itoa(i : integer):string;
 function wtoa(w : word):string;
 function ltoa(l : longint):string;
 function atol(s : string; default_val : longint) : longint;
+function ahtob(str : string) : byte;
 
 implementation
 
@@ -131,19 +135,35 @@ begin
         basename := r;
 end;
 
+function getpathname(s:string):string;
+var r:string;
+        i : integer;
+begin
+        i := length(s);
+        for i:=length(s) downto 0 do
+        begin
+                case s[i] of
+                ':','\','/': break;
+                end;
+        end;
+        if i = 0 then r := '' else r := copy(s, 1, i);
+        getpathname := r;
+end;
+
 function change_ext(s:string; new_ext:string):string;
 var r : string;
-        i, l : integer;
+        i, p, l : integer;
 begin
         l := length(s);
         for i := l downto 0 do begin
                 case s[i] of
                 '.': break;
-                '/', '\', ':': begin i:=0; break; end;
+                '/', '\', ':': begin p:=0; break; end;
                 end;
+                p := i;
         end;
-        if i = 0 then r := s else begin
-                r := copy(s, 1, i - 1);
+        if p = 0 then r := s else begin
+                r := copy(s, 1, p - 1);
         end;
         change_ext := r + new_ext;
 end;
@@ -193,6 +213,11 @@ begin
         s[0] := #8;
         for i := 7 downto 0 do if (b and (1 shl i)) <> 0 then s[8-i] := '1' else s[8-i] := '0';
         binb := s;
+end;
+
+function bindw(l : longint):string;
+begin
+        bindw := concat(binb(l shr 24), binb(l shr 16), binb(l shr 8), binb(l));
 end;
 
 function octb(b : byte):string;
@@ -322,6 +347,26 @@ begin
      val(s, res, err_pos);
      if err_pos <> 0 then res := default_val;
      atol := res;
+end;
+
+function ahtob(str : string) : byte;
+var r : byte;
+        i        : integer;
+        c        : char;
+        k        : byte;
+begin
+        r := 0;
+        if length(str) = 1 then str := '0' + str;
+        str := upstr(str);
+        if length(str) > 2 then str := copy(str, 1, 2);
+        for i := 1 to 2 do begin
+                c := str[i];
+                k := 0;
+                if c in ['0'..'9'] then k := ord(c) - ord('0')
+                else if c in ['A'..'F'] then k := ord(c) - ord('A') + 10;
+                r := (r shl 4) or (k and $0F);
+        end;
+        ahtob := r;
 end;
 
 end.
