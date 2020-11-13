@@ -135,6 +135,18 @@ So, if you want decrease this delay - you can use next
         ~Tetris~ (Video-Game)
 
 Every text-editor ~must have~ a buildin Tetris. ~TBD~
+///1CONFIG
+        Config file
+
+~Dwed~ have config file 'DWED.CFG'. At first, try to
+load from current dir and then - from dir with exe.
+Format is text - ~key~=~value~ in each line.
+
+Colors is coded as hex. For example:
+
+        ~color.text~ = ~70~
+
+it is mean ~7~ - foreground color and ~0~ - background.
 ///1LICENSE
         The MIT License (MIT)
         Copyright (c) 2020 DosWorld
@@ -142,3 +154,4 @@ Every text-editor ~must have~ a buildin Tetris. ~TBD~
 Full text of license you can read at
 
         ~htttps://mit-license.org/~
+

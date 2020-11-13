@@ -77,15 +77,20 @@ begin
                 config.tab_size := 8;
                 config.color.top    := $70;
                 config.color.top_hl := $74;
-                config.color.text := $87;
-                config.color.text_hl := $83;
+                config.color.text := $07;
+                config.color.text_hl := $03;
                 config.color.text_sel := $17;
                 config.color.menu := $1b;
                 config.color.menu_sel := $30;
-                config.color.help_menu := $87;
-                config.color.help_menu_sel := $07;
-                config.color.help := $87;
-                config.color.help_hl := $83;
+                config.color.help_menu := $07;
+                config.color.help_menu_sel := $70;
+                config.color.help := $07;
+                config.color.help_hl := $03;
+                config.udef_f5 := '';
+                config.udef_f6 := '';
+                config.udef_f7 := '';
+                config.udef_f8 := '';
+                config.udef_f9 := '';
                 getmem(clipboard, CB_SIZE);
                 clipboard[0] := #0;
                 search := '';
@@ -109,6 +114,11 @@ begin
         else if key = 'COLOR.HELP_MENU_SEL' then ctx.config.color.help_menu_sel := ahtob(value)
         else if key = 'COLOR.HELP' then ctx.config.color.help := ahtob(value)
         else if key = 'COLOR.HELP_HL' then ctx.config.color.help_hl := ahtob(value)
+        else if key = 'USR.DEF.F5' then ctx.config.udef_f5 := value
+        else if key = 'USR.DEF.F6' then ctx.config.udef_f6 := value
+        else if key = 'USR.DEF.F7' then ctx.config.udef_f7 := value
+        else if key = 'USR.DEF.F8' then ctx.config.udef_f8 := value
+        else if key = 'USR.DEF.F9' then ctx.config.udef_f9 := value
         else begin writeln('Unknown parameter ', key, '. Press Enter...'); readln; end;
 end;
 
