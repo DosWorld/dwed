@@ -10,6 +10,7 @@ Main features:
 * Support internal clipboard (size up to 32k)
 * Support unix-like text files for open
 * Dont require DPMI-server or 80286 CPU
+* Support Long File Names (LFN)
 
 Restrictions:
 

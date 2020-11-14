@@ -146,7 +146,7 @@ var f : text;
         str        : string;
         key, value : string;
 begin
-        assign(f, lfn.lfn2dos(fname));
+        lfn.assign_text(f, fname);
         {$I-}
         System.reset(f);
         i := ioresult;

@@ -132,7 +132,7 @@ begin
         ppercent := -1;
         pos := 0;
         root := nil; last := nil;
-        assign(f, lfn2dos(fname));
+        lfn.assign(f, fname);
         {$I-}
         reset(f, 1);
         errCode := ioresult;
@@ -199,7 +199,7 @@ var
         len     : word;
         s       : string;
 begin
-        assign(f, lfn2dos(fname));
+        lfn.assign(f, fname);
         {$I-}
         rewrite(f, 1);
         errCode := ioresult;

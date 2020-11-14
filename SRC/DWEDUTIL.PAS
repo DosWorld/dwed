@@ -388,7 +388,7 @@ function save_clipboard(var ctx : TEditorContext; fname:string) : integer;
 var f : file;
         r        : integer;
 begin
-        assign(f, lfn2dos(fname));
+        lfn.assign(f, fname);
         {$I-}
         rewrite(f, 1);
         r := ioresult;
@@ -406,7 +406,7 @@ var f : file;
         r        : integer;
         readed   : word;
 begin
-        assign(f, lfn2dos(fname));
+        lfn.assign(f, fname);
         {$I-}
         System.reset(f, 1);
         r := ioresult;

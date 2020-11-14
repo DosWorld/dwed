@@ -33,8 +33,8 @@ SourceType = (SRC_C, SRC_CMM, SRC_PAS, SRC_BAS, SRC_ASM, SRC_BAT, SRC_MD,
                 SRC_DISABLE);
 
 function find_SourceType_by_ext(ext : string): SourceType;
-procedure hight_light(st: SourceType; width : integer; hlclr, tclr : byte; scr:pchar);
-procedure hight_light_braket(width, posit : integer; c : char; scr : pchar);
+procedure high_light(st: SourceType; width : integer; hlclr, tclr : byte; scr:pchar);
+procedure high_light_braket(width, posit : integer; c : char; scr : pchar);
 procedure change_hl(var st : SourceType; color, color_sel : byte);
 
 implementation
@@ -242,7 +242,7 @@ begin
         end;
 end;
 
-procedure hight_light(st: SourceType; width:integer; hlclr, tclr:byte; scr:pchar);
+procedure high_light(st: SourceType; width:integer; hlclr, tclr:byte; scr:pchar);
 var lng : PLangDesc;
 begin
         if st = SRC_DISABLE then exit;
@@ -275,7 +275,7 @@ begin
         get_direction := c in ['(', '{', '['];
 end;
 
-procedure hight_light_braket(width, posit : integer; c : char; scr : pchar);
+procedure high_light_braket(width, posit : integer; c : char; scr : pchar);
 var fchar    : char;
     pair     : char;
     cchar    : char;

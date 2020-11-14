@@ -90,21 +90,8 @@ asm
         popf
 end;
 
-procedure newInt21;assembler;
+procedure write_hook;assembler;
 asm
-        pushf
-        push       ax
-        call       cmp_name
-        or         al, al
-        pop        ax
-        jz         @cont3
-        popf
-        mov        ax, $9915
-        jmp        @ret_val
-@cont3: cmp        ah, $40 { write file}
-        jne        @cont4
-        cmp        bx, $9915        
-        jne        @cont4
         push       di
         push       si
         push       es
@@ -121,19 +108,70 @@ asm
         pop        es
         pop        si
         pop        di
+end;
 
+procedure read_hook;assembler;
+asm
+        push       di
+        push       si
+        push       es
+        push       ds
+
+        push       ds
+        pop        es
+        mov        di, dx
+        mov        si, offset temp
+        mov        dx, seg temp
+        mov        ds, dx
+        xor        cx,cx
+        mov        cl, byte ptr [si]
+        push       ax
+        cld
+        rep        movsb
+        pop        cx
+
+        pop        ds
+        pop        es
+        pop        si
+        pop        di
+end;
+
+procedure newInt21;assembler;
+asm
+        pushf
+        push       ax
+        call       cmp_name
+        or         al, al
+        pop        ax
+        jz         @cont3
+        popf
+        mov        ax, $9915
+        jmp        @ret_val
+@cont3: cmp        ah, $40 { write file}
+        jne        @cont4
+        cmp        bx, $9915        
+        jne        @cont4
+        call       write_hook
         popf
         mov        ax, cx
         jmp        @ret_val
-@cont4:
-        cmp        ah, $3e { close file }
+@cont4: cmp        ah, $3F { read file }
         jne        @cont5
         cmp        bx, $9915        
         jne        @cont5
+        call       read_hook
+        popf
+        mov        ax, cx
+        jmp        @ret_val
+@cont5:
+        cmp        ah, $3e { close file }
+        jne        @cont6
+        cmp        bx, $9915        
+        jne        @cont6
         popf
         mov        ax, $0
         jmp        @ret_val
-@cont5:
+@cont6:
         popf
         push       ds
         push       ax

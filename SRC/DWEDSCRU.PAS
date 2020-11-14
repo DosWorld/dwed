@@ -89,7 +89,7 @@ begin
                                 scr.chcolor(0, i, text_sel_color, len);
                         end;
                 end;
-                hight_light(ctx.current^.st, w
+                high_light(ctx.current^.st, w
                         , ctx.config.color.text_hl
                         , text_color
                         , @scr.screen[(w * i) shl 1]);
@@ -142,11 +142,11 @@ begin
                 if len > 0 then scr.chcolor(x, ctx.current^.scry + 1, ctx.current^.config^.color.text_sel, len);
         end;
         with ctx do begin
-                hight_light(current^.st, config.width
+                high_light(current^.st, config.width
                 , config.color.text_hl
                 , config.color.text
                 , @scr.screen[(config.width * (current^.scry + 1)) shl 1]);
-                hight_light_braket(config.width
+                high_light_braket(config.width
                 , current^.editor.x - 1 - current^.scrx
                 , #$B2
                 , @scr.screen[(config.width * (current^.scry + 1)) shl 1]);

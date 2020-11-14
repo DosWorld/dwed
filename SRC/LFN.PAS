@@ -27,37 +27,44 @@ unit lfn;
 interface
 
 function check : boolean;
-function lfn2dos(fname : string) : string;
+procedure assign(var f : file; fname : string);
+procedure assign_text(var t : text; fname : string);
 
 implementation
 
 function check : boolean;assembler;
 asm
         mov     ax, $7100
+        stc
         int     $21
-        mov     al, 0
-        jc      @nolfn
-        dec     al
+        or      al, al
+        jz      @nolfn
 @nolfn:
 end;
 
+
+var lfnbuf1, lfnbuf2 :string;
+
 function lfn2dos(fname : string) : string;
-var spath : string;
-        nfname : string;
-        err : boolean;
-        i : integer;
+var
+    err : boolean;
+    i   : integer;
 begin
         if lfn.check then begin
-                nfname := fname + #0;
+                lfnbuf1 := fname + #0;
                 asm
                         push    ds
                         push    es
-                        lea     si, nfname
-                        lea     di, spath
+                        mov     si, offset lfnbuf1
+                        mov     di, offset lfnbuf2
                         inc     si
                         inc     di
                         mov     ax, $7160
                         mov     cx, 1
+                        stc
+                        push    ds
+                        pop     es
+                        stc
                         int     $21
                         pop     es
                         pop     ds
@@ -68,15 +75,26 @@ begin
                         mov     err,al
                 end;
                 if not err then begin
-                        fname := '';
-                        while spath[i] <> #0 do begin
-                                fname := fname + spath[i];
+                        lfnbuf1 := '';
+                        i := 1;
+                        while lfnbuf2[i] <> #0 do begin
+                                lfnbuf1 := lfnbuf1 + lfnbuf2[i];
                                 inc(i);
                         end;
+                        fname := lfnbuf1;
                 end;
         end;
-{       writeln(fname);}
         lfn2dos := fname;
+end;
+
+procedure assign(var f : file; fname : string);
+begin
+        System.assign(f, lfn2dos(fname));
+end;
+
+procedure assign_text(var t : text; fname : string);
+begin
+        System.assign(t, lfn2dos(fname));
 end;
 
 end.
