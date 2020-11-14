@@ -170,7 +170,7 @@ var     ctx        : TEditorContext;
         errCode    : integer;
 begin
         if not dwedlnch.is_installed then begin
-                writeln('This is overlay.');
+                writeln('This program cannot be run in DOS mode.');
                 halt(1);
         end;
         strs.init(DOS);
