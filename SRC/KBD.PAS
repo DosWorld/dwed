@@ -65,8 +65,12 @@ K_INS            = $5200;
 K_F1             = $3B00;
 K_F2             = $3C00;
 K_F3             = $3D00;
+K_F5             = $3F00;
 K_F6             = $4000;
 K_F7             = $4100;
+K_F8             = $4200;
+K_F9             = $4300;
+K_F10            = $4400;
 
 K_SHIFT_F2       = $5500;
 
@@ -105,9 +109,15 @@ function is_shift:boolean;
 
 implementation
 
+var have_ext_kb : boolean;
+
 function getkey:word;assembler;
 asm
         xor        ah, ah
+        cmp        have_ext_kb, 0
+        je         @cont
+        mov        ah, $10
+@cont:
         int        $16
 end;
 
@@ -158,4 +168,12 @@ begin
         while haskey do getkey;
 end;
 
+function get_kbd_funct:byte;assembler;
+asm
+        mov        ax, $0900
+        int        $16
+end;
+
+begin
+        have_ext_kb := (get_kbd_funct and $20) <> 0;
 end.

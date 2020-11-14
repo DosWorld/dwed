@@ -64,8 +64,6 @@ TConfig = record
         color         : TColorConfig;
         tab_size      : integer;
         udef_f5       : string;
-        udef_f6       : string;
-        udef_f7       : string;
         udef_f8       : string;
         udef_f9       : string;
 end;

@@ -37,8 +37,9 @@ type
 RadixType = (RADIX2, RADIX10, RADIX16);
 
 const addons_menu : pchar =
-' ASCII-Table        Ctrl+Alt+A ' {+#$0A+
-' Calculator         Ctrl+Alt+C ' };
+' ASCII-Table        Ctrl+Alt+A ' + #$0A +
+' Calculator         Ctrl+Alt+C '
+;
 
 procedure addons_window(var ctx : TEditorContext);
 var sitem : integer;
@@ -70,21 +71,13 @@ var i : integer;
 begin
         line_len := length(ctx.current^.editor.line);
         str_len := length(str);
-        if ctx.ins then begin
-                if line_len + str_len <= 255 then begin
-                        System.insert(str, ctx.current^.editor.line, ctx.current^.editor.x);
-                        ctx.current^.editor.chg := true;
-                        ctx.current^.chg := true;
-                        inc(ctx.current^.editor.x, str_len);
-                end;
-                exit;
-        end;
-        for i := 1 to str_len do begin
-                if length(ctx.current^.editor.line) < ctx.current^.editor.x + 1 then continue;
-                ctx.current^.editor.line[ctx.current^.editor.x + i - 1] := str[i];
-                ctx.current^.editor.chg := true;
-                ctx.current^.chg := true;
-        end;
+        if line_len + str_len > 255 then str_len := 255 - line_len;
+        str := copy(str, 1, str_len);
+
+        System.insert(str, ctx.current^.editor.line, ctx.current^.editor.x);
+        ctx.current^.editor.chg := true;
+        ctx.current^.chg := true;
+        inc(ctx.current^.editor.x, str_len);
 end;
 
 const ascii_tbl_sel : byte = 0;
@@ -137,40 +130,14 @@ begin
                 K_RIGHT: inc(ascii_tbl_sel);
                 K_ENTER: begin
                         if kbd.is_shift then begin
-                                if ctx.ins then begin
-                                        if length(ctx.current^.editor.line) +2 >= 255 then continue;
-                                        System.insert(hexb(ascii_tbl_sel), ctx.current^.editor.line, ctx.current^.editor.x);
-                                        ctx.current^.editor.chg := true;
-                                        ctx.current^.chg := true;
-                                end else begin
-                                        if length(ctx.current^.editor.line) < ctx.current^.editor.x + 1 then continue;
-                                        hval := hexb(ascii_tbl_sel);
-                                        ctx.current^.editor.line[ctx.current^.editor.x] := hval[1];
-                                        ctx.current^.editor.line[ctx.current^.editor.x + 1] := hval[2];
-                                        ctx.current^.editor.chg := true;
-                                        ctx.current^.chg := true;
-                                end;
-                                inc(ctx.current^.editor.x, 2);
+                                insert_str(ctx, '' + hexb(ascii_tbl_sel));
                                 break;
                         end else begin
                                 if (ascii_tbl_sel = 9)
                                   or (ascii_tbl_sel = 0)
                                   or (ascii_tbl_sel = $0a)
                                   or (ascii_tbl_sel = $0d) then continue;
-                                if ctx.ins then begin
-                                        if length(ctx.current^.editor.line) = 255 then continue;
-                                        System.insert('' + chr(ascii_tbl_sel),
-                                             ctx.current^.editor.line,
-                                             ctx.current^.editor.x);
-                                        ctx.current^.editor.chg := true;
-                                        ctx.current^.chg := true;
-                                end else begin
-                                        if length(ctx.current^.editor.line) < ctx.current^.editor.x then continue;
-                                        ctx.current^.editor.line[ctx.current^.editor.x] := chr(ascii_tbl_sel);
-                                        ctx.current^.editor.chg := true;
-                                        ctx.current^.chg := true;
-                                end;
-                                inc(ctx.current^.editor.x);
+                                insert_str(ctx, '' + chr(ascii_tbl_sel));
                                 break;
                         end;
                 end;
@@ -191,32 +158,58 @@ var x, y, i : integer;
         ch         : char;
         insertStr  : string;
 begin
-        x := 1; y := 2;
+        scr.set_cursor(scr.cursor_start, scr.cursor_end);
+        x := (scr.getwidth - 41) shr 1;
+        y := (scr.getheight - 10) shr 1;
         insertStr := '';
-        scrui.box(x, y, 44, 22, $1b);
-        for i := 1 to 20 do scr.hprint(x + 1, y + i, $1b, ' ', 42);
-        scr.printhl(x + 4, y + 1, $1b, $1e, 'Dec~:');
-        scr.printhl(x + 4, y + 2, $1b, $1e, 'Hex~:');
-        scr.printhl(x + 4, y + 3, $1b, $1e, 'Bin~:');
-        scr.hprint(x + 1, y + 4, $1b, #$C4 , 42);
-        scr.printhl(x + 2, y + 5, $1b, $1e, '~+~ Add ' + #$B3 + ' ~-~ Sub ' + #$B3 + ' ~*~ Mul ' + #$B3 + ' ~/~: Div');
-        scr.printhl(x + 2, y + 6, $1b, $1e, '~&~ And ' + #$B3 + ' ~|~ Or  ' + #$B3 + ' ~^~ Xor ' + #$B3 + ' ~!~: Not');
-        scr.printhl(x + 2, y + 7, $1b, $1e, '~M~ Mod ' + #$B3 + ' ~=~ Evl ' + #$B3 + ' ~C~ Clr ' + #$B3 + ' ');
-        scr.hprint(x + 1, y + 8, $1b, #$C4 , 42);
-        scr.printhl(x + 2, y + 9, $1b, $1e, '~TAB~ Chg radix '+#$B3+' ~Shift~+~'+#$11+#$D9+'~ Enter value');
+        scrui.box(x, y, 41, 10, $1b);
+        for i := 1 to 8 do scr.hprint(x + 1, y + i, $1b, ' ', 39);
+        scr.printhl(x + 2, y + 1, $1b, $1e, 'Dec~:');
+        scr.printhl(x + 2, y + 2, $1b, $1e, 'Hex~:');
+        scr.printhl(x + 2, y + 3, $1b, $1e, 'Bin~:');
+        scr.hprint(x + 1, y + 4, $1b, #$C4 , 39);
+        scr.printhl(x + 2, y + 5, $1b, $1e, '~+~ Add   ~-~ Sub   ~*~ Mul   ~/~ Div   ~M~ Mod');
+        scr.printhl(x + 2, y + 6, $1b, $1e, '~&~ And   ~|~ Or    ~^~ Xor   ~!~ Not   ~N~ Neg');
+        scr.hprint(x + 1, y + 7, $1b, #$C4 , 39);
+        scr.printhl(x + 2, y + 8, $1b, $1e, '~C~ Clr   ~'+#$1D+'~ Rdx    ~Shift~+~'+#$11+#$D9+'~ Enter value');
         while true do begin
-                scr.vprint(x + 2, y + 1,  $1b, ' ', 3);
-                if radix = RADIX10 then begin scr.print(x + 2, y + 1, $1e, '' + #$10); locate(x + 41, y + 1); end
-                else if radix = RADIX16 then begin scr.print(x + 2, y + 2, $1e, '' + #$10); locate(x + 41, y + 2); end
-                else if radix = RADIX2  then begin scr.print(x + 2, y + 3, $1e, '' + #$10); locate(x + 41, y + 3); end;
-                scr.print(x + 9, y + 1, $1b, lpad(ltoa(calc_op1), 32));
-                scr.print(x + 9, y + 2, $1b, lpad(hexdw(calc_op1), 32));
-                scr.print(x + 9, y + 3, $1b, lpad(bindw(calc_op1), 32));
+                scr.vprint(x + 6, y + 1,  $1b, ' ', 3);
+                if radix = RADIX10 then begin scr.print(x + 6, y + 1, $1e, '' + #$10); locate(x + 39, y + 1); end
+                else if radix = RADIX16 then begin scr.print(x + 6, y + 2, $1e, '' + #$10); locate(x + 39, y + 2); end
+                else if radix = RADIX2  then begin scr.print(x + 6, y + 3, $1e, '' + #$10); locate(x + 39, y + 3); end;
+                scr.print(x + 7, y + 1, $1b, lpad(ltoa(calc_op1), 32));
+                scr.print(x + 7, y + 2, $1b, lpad(hexdw(calc_op1), 32));
+                scr.print(x + 7, y + 3, $1b, lpad(bindw(calc_op1), 32));
+
+                scr.chcolor(x + 7 + 20, y + 1, $1A, 3);
+                scr.chcolor(x + 7 + 26, y + 1, $1A, 3);
+
+                scr.chcolor(x + 7 + 24, y + 2, $1E, 2);
+                scr.chcolor(x + 7 + 28, y + 2, $1E, 2);
+                scr.chcolor(x + 7, y + 3, $1E, 8);
+                scr.chcolor(x + 7 + 16, y + 3, $1E, 8);
                 scr.show;
                 key := kbd.getkey;
                 case key of
                 K_ESC: begin insertStr := ''; break; end;
                 K_ENTER: begin
+                        if not kbd.is_shift then begin
+                                case calc_op of
+                                '+': calc_op1 := calc_op2 + calc_op1;
+                                '-': calc_op1 := calc_op2 - calc_op1;
+                                '*': calc_op1 := calc_op2 * calc_op1;
+                                '/': calc_op1 := calc_op2 div calc_op1;
+                                'M': calc_op1 := calc_op2 mod calc_op1;
+                                '&': calc_op1 := calc_op2 and calc_op1;
+                                '|': calc_op1 := calc_op2 or calc_op1;
+                                '^': calc_op1 := calc_op2 xor calc_op1;
+                                end;
+                        end else begin
+                                if radix = RADIX10 then insert_str(ctx, ltoa(calc_op1))
+                                else if radix = RADIX16 then insert_str(ctx, hexdw(calc_op1))
+                                else if radix = RADIX2 then insert_str(ctx, bindw(calc_op1));
+                                break;
+                        end;
                 end;
                 K_TAB: begin
                         if radix = RADIX10 then radix := RADIX16
@@ -233,17 +226,9 @@ begin
                 case ch of
                 'C': begin calc_op1 := 0; continue; end;
                 '+','-','*','/','M','&','|','^': begin calc_op := ch; calc_op2 := calc_op1; calc_op1 := 0; continue; end;
+                'N': calc_op1 := -calc_op1;
+                '!': calc_op1 := calc_op1 xor $FFFFFFFF;
                 '=': begin
-                                case calc_op of
-                                '+': calc_op1 := calc_op2 + calc_op1;
-                                '-': calc_op1 := calc_op2 - calc_op1;
-                                '*': calc_op1 := calc_op2 * calc_op1;
-                                '/': calc_op1 := calc_op2 div calc_op1;
-                                'M': calc_op1 := calc_op2 mod calc_op1;
-                                '&': calc_op1 := calc_op2 and calc_op1;
-                                '|': calc_op1 := calc_op2 or calc_op1;
-                                '^': calc_op1 := calc_op2 xor calc_op1;
-                                end;
                         end;
                 end;
                 case radix of

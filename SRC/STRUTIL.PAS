@@ -185,29 +185,29 @@ begin
         strhash := h;
 end;
 
-function hexb(b:byte):string;
+function hexb(b : byte):string;
 const a:string[16] = '0123456789ABCDEF';
 begin
         hexb := a[((b shr 4) and $0f) + 1] + a[(b and $0f) + 1];
 end;
 
-function hexw(w:word):string;
+function hexw(w : word):string;
 begin
         hexw := hexb(hi(w)) + hexb(lo(w));
 end;
 
-function hexdw(dw:longint):string;
+function hexdw(dw : longint):string;
 begin
         hexdw := hexw((dw shr 16) and $ffff) + hexw(dw and $ffff);
 end;
 
-function hexp(p:pchar):string;
+function hexp(p : pchar):string;
 begin
         hexp := hexw(seg(p[0])) + ':' + hexw(ofs(p[0]));
 end;
 
 function binb(b:byte):string;
-var s : string[12];
+var s : string[8];
         i : integer;
 begin
         s[0] := #8;

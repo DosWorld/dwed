@@ -412,6 +412,8 @@ begin
         dwedhl.add_lang(SRC_CMM, '|C--|H--|CMM|HMM|', false, ',.()+*-:=<>#$@^%?;!~&|\{}[]"/'+#$27
                              , '.c-- SPHINX C-- Source');
 
+        dwedhl.add_keyword(SRC_CMM, 'TRUE');
+        dwedhl.add_keyword(SRC_CMM, 'FALSE');
         dwedhl.add_keyword(SRC_CMM, 'static');
         dwedhl.add_keyword(SRC_CMM, 'pragma');
         dwedhl.add_keyword(SRC_CMM, 'inline');
@@ -430,9 +432,26 @@ begin
         dwedhl.add_keyword(SRC_CMM, 'NULL');
         dwedhl.add_keyword(SRC_CMM, 'interrupt');
 
-        dwedhl.add_keyword(SRC_CMM, 'cs');
-        dwedhl.add_keyword(SRC_CMM, 'es');
-        dwedhl.add_keyword(SRC_CMM, 'ds');
+        dwedhl.add_keyword(SRC_CMM, 'CS');
+        dwedhl.add_keyword(SRC_CMM, 'ES');
+        dwedhl.add_keyword(SRC_CMM, 'DS');
+        dwedhl.add_keyword(SRC_CMM, 'SS');
+        dwedhl.add_keyword(SRC_CMM, 'AX');
+        dwedhl.add_keyword(SRC_CMM, 'BX');
+        dwedhl.add_keyword(SRC_CMM, 'CX');
+        dwedhl.add_keyword(SRC_CMM, 'DX');
+        dwedhl.add_keyword(SRC_CMM, 'DI');
+        dwedhl.add_keyword(SRC_CMM, 'SI');
+        dwedhl.add_keyword(SRC_CMM, 'AL');
+        dwedhl.add_keyword(SRC_CMM, 'AH');
+        dwedhl.add_keyword(SRC_CMM, 'BL');
+        dwedhl.add_keyword(SRC_CMM, 'BH');
+        dwedhl.add_keyword(SRC_CMM, 'CL');
+        dwedhl.add_keyword(SRC_CMM, 'CH');
+        dwedhl.add_keyword(SRC_CMM, 'DL');
+        dwedhl.add_keyword(SRC_CMM, 'DH');
+        dwedhl.add_keyword(SRC_CMM, 'BP');
+        dwedhl.add_keyword(SRC_CMM, 'SP');
         dwedhl.add_keyword(SRC_CMM, 'break');
         dwedhl.add_keyword(SRC_CMM, 'qword');
         dwedhl.add_keyword(SRC_CMM, 'dword');

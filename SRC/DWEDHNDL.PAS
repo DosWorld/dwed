@@ -1052,6 +1052,12 @@ begin
         calculator(ctx);
         hk_calc := SCRU_FULL;
 end;
+
+function hk_userdef(var ctx:TEditorContext; event:PEvent):integer;
+begin
+        hk_userdef := SCRU_NONE;
+end;
+
 begin
         reg_handler(K_ESC, false, false, false, false, @hk_esc);
         reg_handler(K_ALT_F10, false, false, true, false, @hk_addons);
@@ -1063,8 +1069,11 @@ begin
         reg_handler(K_F1, false, false, false, false, @hk_help);
         reg_handler(K_F2, false, false, false, false, @hk_save);
         reg_handler(K_F3, false, false, false, false, @hk_load);
+        reg_handler(K_F5, false, false, false, false, @hk_userdef);
         reg_handler(K_F6, false, false, false, false, @hk_nextwin);
         reg_handler(K_F7, false, false, false, true, @hk_start_find);
+        reg_handler(K_F8, false, false, false, false, @hk_userdef);
+        reg_handler(K_F9, false, false, false, false, @hk_userdef);
 
         reg_handler(K_ALT_F2, false, false, true, false, @hk_cb_save);
         reg_handler(K_ALT_F3, false, false, true, false, @hk_cb_load);
