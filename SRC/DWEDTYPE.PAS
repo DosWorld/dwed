@@ -117,6 +117,7 @@ end;
 
 {$F+}
 TEventProc = function(var ctx : TEditorContext; e : PEvent) : integer;
+TPercentUpdateProc = procedure(value, total : longint);
 {$F-}
 
 PEventHandler =^ TEventHandler;

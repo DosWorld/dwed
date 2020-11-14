@@ -60,7 +60,9 @@ procedure go_win_list(var ctx:TEditorContext);
 function mk_short_name(fname : string) : string;
 
 procedure new_file(var ctx : TEditorContext; fname : string);
-function load_file(var ctx : TEditorContext; fname : string; var errCode : integer) : integer;
+function load_file(var ctx : TEditorContext; fname : string; var errCode : integer; percent_proc : pointer) : integer;
+
+procedure file_progress(value, total : longint);
 
 procedure handle_error(var ctx : TEditorContext; errCode:integer);
 
@@ -614,13 +616,13 @@ begin
         load_ed(ctx);
 end;
 
-function load_file(var ctx : TEditorContext; fname : string; var errCode : integer) : integer;
+function load_file(var ctx : TEditorContext; fname : string; var errCode : integer; percent_proc : pointer) : integer;
 var p : PFileContext;
         r : integer;
 begin
         getmem(p, sizeof(TFileContext));
         p^.fname := fname;
-        p^.rline := strs.from_file(fname, ctx.config.tab_size, errCode);
+        p^.rline := strs.from_file(fname, ctx.config.tab_size, errCode, percent_proc);
         reset_file(p);
         p^.next := ctx.all;
         p^.config := @ctx.config;
@@ -693,6 +695,20 @@ begin
                 end;
         end;
         scr.pop;
+end;
+
+{$F+}
+procedure file_progress(value, total : longint);
+var percent, w : integer;
+begin
+        percent := (value * 100) div total;
+        if percent < 0 then percent := 0;
+        if percent > 100 then percent := 100;
+        scr.hprint(0, scr.getheight - 1, $70, #$B2, scr.getwidth);
+        if percent = 0 then w := 0 else w := ((scr.getwidth - 5) * percent) div 100;
+        scr.hprint(5, scr.getheight - 1, $70, #$B0, w);
+        scr.print(0, scr.getheight - 1, $70, lpad(itoa(percent) + '%', 4) + ' ');
+        scr.show;
 end;
 
 end.

@@ -170,7 +170,7 @@ var     ctx        : TEditorContext;
         errCode    : integer;
 begin
         if not dwedlnch.is_installed then begin
-                writeln('This program cannot be run in DOS mode.');
+                writeln('This is overlay. Run DWED.EXE or join to the Dark Side.');
                 halt(1);
         end;
         strs.init(DOS);
@@ -190,7 +190,7 @@ begin
         for i := 1 to pCount do begin
                 param := ParamStr(i);
                 if not has_switch(param) then begin
-                        load_file(ctx, param, errCode);
+                        load_file(ctx, param, errCode, @file_progress);
                         if errCode <> 0 then handle_error(ctx, errCode);
                 end;
         end;

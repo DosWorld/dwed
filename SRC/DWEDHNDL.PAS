@@ -1035,7 +1035,7 @@ begin
                 if key = K_ENTER then begin start_load := true; break; end;
         end;
         if start_load then begin
-                load_file(ctx, fname, errCode);
+                load_file(ctx, fname, errCode, @file_progress);
                 if errCode <> 0 then handle_error(ctx, errCode);
                 r := SCRU_FULL;
         end;

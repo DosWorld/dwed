@@ -36,14 +36,14 @@ procedure init(mType : MemoryType);
 
 function new : EditorStr;
 
-function from_file(fname : string; tab_size : integer; var errCode : integer) : EditorStr;
+function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : EditorStr;
 procedure to_file(fname : string; r : EditorStr; var errCode : integer);
 
 function create(next, prev : EditorStr; body : string) : EditorStr;
 procedure free(r : EditorStr);
 
-function put(r : EditorStr; var body : string) : EditorStr;
-procedure get(r : EditorStr; var dest : string);
+function put(var r : EditorStr; var body : string) : EditorStr;
+procedure get(var r : EditorStr; var dest : string);
 function delete(r : EditorStr; num_from, num_to : longint) : EditorStr;
 function merge(r : EditorStr) : EditorStr;
 
@@ -67,7 +67,7 @@ function is_nil(r : EditorStr) : boolean;
 
 implementation
 
-uses strsd, lfn;
+uses strsd, lfn, dwedtype;
 
 const memType : MemoryType = DOS;
 const BUF_SIZE = 4 * 1024;
@@ -78,7 +78,7 @@ begin
 end;
 
 {$F-}
-function EditorStr2Dos(r : EditorStr) : pointer;
+function EditorStr2Dos(var r : EditorStr) : pointer;
 begin
         EditorStr2Dos := r;
 end;
@@ -89,7 +89,7 @@ begin
         Dos2EditorStr := r;
 end;
 
-function put(r : EditorStr; var body : string) : EditorStr;
+function put(var r : EditorStr; var body : string) : EditorStr;
 begin
         case memType of
         DOS: r := Dos2EditorStr(strsd.put(EditorStr2Dos(r), body));
@@ -111,18 +111,25 @@ begin
         create := next;
 end;
 
-function from_file(fname : string; tab_size : integer; var errCode : integer) : EditorStr;
+function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : EditorStr;
 var     root, cur, last : Pointer;
-        f       : file;
-        buf     : array[0..BUF_SIZE-1] of char;
-        readed  : word;
-        pos     : word;
-        c       : char;
-        strbuf  : array[0..4096] of char;
-        strbufpos       :word;
-        s       : string;
-        i        : integer;
+        f          : file;
+        buf        : array[0..BUF_SIZE-1] of char;
+        readed     : word;
+        pos        : word;
+        c          : char;
+        strbuf     : array[0..4096] of char;
+        strbufpos  : word;
+        s          : string;
+        i          : integer;
+        total      : longint;
+        position   : longint;
+        percent    : integer;
+        ppercent   : integer;
+        scrup      : TPercentUpdateProc;
 begin
+        scrup := TPercentUpdateProc(scrupdate);
+        ppercent := -1;
         pos := 0;
         root := nil; last := nil;
         assign(f, lfn2dos(fname));
@@ -130,7 +137,10 @@ begin
         reset(f, 1);
         errCode := ioresult;
         {$I+}
+        position := 0;
         if errCode = 0 then begin
+                total := filesize(f);
+                seek(f, 0);
                 blockread(f, buf[0], BUF_SIZE, readed);
                 strbufpos := 0;
                 while readed <> 0 do begin
@@ -158,10 +168,17 @@ begin
                                 end;
                                 inc(pos);
                         end;
+                        inc(position, readed);
+                        if scrupdate <> nil then begin
+                                percent := (position * 100) div total;
+                                if percent <> ppercent then begin
+                                        scrup(position, total);
+                                        ppercent := percent;
+                                end;
+                        end;
                         blockread(f, buf[0], BUF_SIZE, readed);
                         pos := 0;
                 end;
-        
                 if strbufpos > 255 then strbufpos := 255;
                 move(strbuf[0], s[1], strbufpos);
                 s[0] := chr(strbufpos);
@@ -223,7 +240,7 @@ begin
         new := r;
 end;
 
-procedure get(r : EditorStr; var dest : string);
+procedure get(var r : EditorStr; var dest : string);
 begin
         case memType of
         DOS: strsd.get(EditorStr2Dos(r), dest);
