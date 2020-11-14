@@ -54,6 +54,9 @@ Inspired by
 	By: Alexander Dudarenko & Dmitry Kohmanyuk.
 
 Published at Softpanorama in 1993 (SP53A), now here is my remake for dwed.
+### Calculator addon
+![Image Calculator addon](https://github.com/DosWorld/dwed/raw/main/DWED-CLC.PNG)
+
 # Build
 
 To build binaries, you need Borland Pascal 7.0 in path and my small make. Then - type
