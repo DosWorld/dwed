@@ -76,7 +76,7 @@ begin
         xofs := ctx.current^.scrx;
         while (h <> nil) do begin
                 if compare_event(e, h^.event) then begin
-		        proc := TEventProc(h^.proc);
+                        proc := TEventProc(h^.proc);
                         r := proc(ctx, @e);
                         if h^.reset_selection and ctx.current^.editor.selection then begin
                                 ctx.current^.editor.selection := false;
@@ -142,6 +142,7 @@ begin
                         selection := true;
                         sel_x := x;
                 end;
+                commit(ctx);
                 editor.sel_row := strs.get_num(cline);
         end;
 end;

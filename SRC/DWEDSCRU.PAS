@@ -71,18 +71,18 @@ begin
 
         for i := 1 to h - 1 do begin
                 clinenum := strs.get_num(p);
-                if selection and line_full_in_sel(clinenum, sb_y, se_y) then color := text_sel_color else color := text_color;
                 strs.get(p, s);
                 get_str_part(ctx, s, s);
-                scr.cln(0, i, color);
-                scr.print(0, i, color, s);
-                if selection and ((sb_y = clinenum) or (se_y = clinenum)) then begin
-                        if (sb_y = clinenum) and (sb_x - 1 <= scrx + w) then begin
-                                x1 := sb_x - scrx - 1;
-                                if x1 < w then begin
-                                        len := w - x1;
-                                        scr.chcolor(x1, i, text_sel_color, len);
-                                end;
+                scr.cln(0, i, text_color);
+                scr.print(0, i, text_color, s);
+                if selection then begin
+                        if p = ctx.current^.cline then begin
+                        end else if line_full_in_sel(clinenum, sb_y, se_y) then scr.chcolor(0, i, text_sel_color, w)
+                        else  if (sb_y = clinenum) and (sb_x - 1 <= scrx + w) then begin
+                                x1 := sb_x - 1;
+                                if x1 < scrx then x1 := scrx;
+                                dec(x1, scrx);
+                                scr.chcolor(x1, i, text_sel_color, w - x1);
                         end else if (se_y = clinenum) and (se_x - 1 >= scrx) then begin
                                 len := se_x - 1 - scrx;
                                 if len > w then len := w;
@@ -101,7 +101,7 @@ procedure update_cline(var ctx : TEditorContext);
 var
         sb_y, se_y, clinenum : longint;
         sb_x, se_x     : integer;
-        x, len         : integer;
+        x, xe, len     : integer;
         line           : string;
 begin
         with ctx.current^ do begin
@@ -119,10 +119,12 @@ begin
                         if ( sb_x - 1 < ctx.current^.scrx + ctx.current^.config^.width)
                          and (se_x - 1 >= ctx.current^.scrx) then begin
                                 x := sb_x - 1;
+                                xe := se_x - 1;
                                 if x < ctx.current^.scrx then x := ctx.current^.scrx;
-                                len := se_x - x - 1;
                                 dec(x, ctx.current^.scrx);
-                                if x + len > ctx.current^.config^.width then len := ctx.current^.config^.width - x;
+                                dec(xe, ctx.current^.scrx);
+                                if xe > ctx.current^.config^.width then xe := ctx.current^.config^.width;
+                                len := xe - x;
                         end;
                 end else if (clinenum = sb_y) then begin
                                 x := sb_x - 1;
