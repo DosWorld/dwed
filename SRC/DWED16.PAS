@@ -21,10 +21,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$B-,S-,R-,I-}
+{$M 4096, 0, 0}
 
-uses dwedmain, strutil;
+uses dwedlnch;
+
+const exename : string = 'DWEDOVLP.EXE';
 
 begin
-        dwed_main(getpathname(paramstr(0)));
+        launcher(exename);
 end.

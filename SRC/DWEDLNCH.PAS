@@ -1,0 +1,202 @@
+unit dwedlnch;
+
+interface
+
+procedure launcher(var exename:string);
+function is_installed : boolean;
+
+implementation
+
+uses dos, strutil;
+
+var
+        cmd             : string;
+        oldInt21        : pointer;
+        requested_cmd   : string[255];
+        path            : string;
+        temp            : string;
+        code            : integer;
+
+procedure cmp_name;assembler;
+asm
+        pushf
+        xchg       bx, dx
+        xor        al, al
+        cmp        ah, $3D { open }
+        je         @cmp_names
+        cmp        ah, $3C { create}
+        je         @cmp_names
+        jmp        @no
+@cmp_names:
+        cmp        byte ptr[BX + 0], 'D'
+        je         @ok1
+        cmp        byte ptr[BX + 0], 'd'
+        je         @ok1
+        jmp        @no
+@ok1: 
+        cmp        byte ptr[BX + 1], 'W'
+        je         @ok2
+        cmp        byte ptr[BX + 1], 'w'
+        je         @ok2
+        jmp        @no
+@ok2:
+        cmp        byte ptr[BX + 2], 'E'
+        je         @ok3
+        cmp        byte ptr[BX + 2], 'e'
+        je         @ok3
+        jmp        @no
+@ok3:
+        cmp        byte ptr[BX + 3], 'D'
+        je         @ok4
+        cmp        byte ptr[BX + 3], 'd'
+        je         @ok4
+        jmp        @no
+@ok4:
+        cmp        byte ptr[BX + 4], ':'
+        jne        @no
+        inc        al
+@no:
+        xchg       bx, dx
+        popf
+end;
+
+procedure newInt21;assembler;
+asm
+        pushf
+        push       ax
+        call       cmp_name
+        or         al, al
+        pop        ax
+        jz         @cont3
+        popf
+        mov        ax, $9915
+        jmp        @ret_val
+@cont3: cmp        ah, $40 { write file}
+        jne        @cont4
+        cmp        bx, $9915        
+        jne        @cont4
+        push       di
+        push       si
+        push       es
+        push       cx
+        mov        si, dx
+        mov        di, offset requested_cmd
+        mov        dx, seg requested_cmd
+        mov        es, dx
+        xor        cx,cx
+        dec        cl
+        cld
+        rep        movsb
+        pop        cx
+        pop        es
+        pop        si
+        pop        di
+
+        popf
+        mov        ax, cx
+        jmp        @ret_val
+@cont4:
+        cmp        ah, $3e { close file }
+        jne        @cont5
+        cmp        bx, $9915        
+        jne        @cont5
+        popf
+        mov        ax, $0
+        jmp        @ret_val
+@cont5:
+        popf
+        push       ds
+        push       ax
+        mov        ax, SEG oldInt21
+        mov        ds, ax
+        mov        ax, word ptr [oldInt21]
+        mov        word ptr cs:[@oInt21], ax
+        mov        ax, word ptr [oldInt21 + 2]
+        mov        word ptr cs:[@oInt21 + 2], ax
+        pop        ax
+        pop        ds
+        jmp        dword ptr cs:[@oInt21]
+@oInt21:
+        dd         0
+@rval:
+        dw         0
+@ret_val:
+        mov        word ptr cs:[@rval], ax
+        pop        ax
+        mov        word ptr cs:[@oInt21], ax
+        pop        ax
+        mov        word ptr cs:[@oInt21 + 2], ax
+        popf
+        clc
+        pushf
+        mov        ax, word ptr cs:[@oInt21 + 2]
+        push       ax
+        mov        ax, word ptr cs:[@oInt21]
+        push       ax
+        mov        ax, word ptr cs:[@rval]
+        iret
+end;
+
+procedure init;
+begin
+        getIntVec($21, oldInt21);
+        setIntVec($21, @newInt21);
+        cmd := '';
+end;
+
+procedure done;
+begin
+        setIntVec($21, oldInt21);
+end;
+
+function is_installed : boolean;
+var f : text;
+    i : integer;
+begin
+     assign(f, 'DWED:');
+     {$I-}
+     rewrite(f);
+     i := ioresult;
+     {$I+}
+     if i = 0 then close(f);
+     is_installed := i = 0;
+end;
+
+procedure launcher(var exename:string);
+var params : string;
+        i        : integer;
+begin
+        if is_installed then begin
+                writeln('DWED cycle execution detected.');
+                halt(1);
+        end;
+        randomize;
+        params := '';
+        for i := 1 to paramCount do begin
+                if i <> 1 then params := params + ' ';
+                params := params + paramStr(i);
+        end;
+        path := getpathname(paramstr(0));
+        temp := getenv('DWED_HOME');
+        if length(temp) = 0 then temp := getenv('TEMP');
+        if length(temp) = 0 then temp := getenv('TMP');
+        if length(temp) = 0 then temp := getenv('HOME');
+        temp := concat(temp, hexb(random($100)),
+                hexb(random($100)),
+                hexb(random($100)),
+                hexb(random($100)),
+                '.0',
+                hexb(random($100)));
+        while true do begin
+                init;
+                exec(path + exename, params);
+                code := DosError;
+                done;
+                if (code = 254) and (length(cmd) <> 0) then begin
+                        exec(getenv('COMSPEC'), cmd);
+                end else break;
+        end;
+        halt(0);
+end;
+
+end.

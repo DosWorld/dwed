@@ -30,7 +30,7 @@ procedure dwed_main(exe_path : string);
 
 implementation
 
-uses scr, kbd, strs, strutil, lfn, dwedtype, dwedhndl, dwedutil, dwedhl, dwedscru;
+uses scr, kbd, strs, strutil, lfn, dwedtype, dwedhndl, dwedutil, dwedhl, dwedscru, dwedlnch;
 
 procedure read_event(var event : TEvent);
 begin
@@ -169,6 +169,10 @@ var     ctx        : TEditorContext;
         key, value : string;
         errCode    : integer;
 begin
+        if not dwedlnch.is_installed then begin
+                writeln('This is overlay.');
+                halt(1);
+        end;
         strs.init(DOS);
         reset_context(ctx);
         if not load_config(ctx, 'DWED.CFG') then load_config(ctx, exe_path + 'DWED.CFG');
