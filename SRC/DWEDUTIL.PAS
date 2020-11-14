@@ -362,7 +362,8 @@ procedure get_sel_coord(
         var sb_y : longint;
         var se_x : integer;
         var se_y : longint);
-var x, y : integer;
+var x : integer;
+        y        : longint;
 begin
         commit(ctx);
         if not ctx.current^.editor.selection then exit;

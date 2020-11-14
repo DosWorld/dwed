@@ -1,27 +1,32 @@
-all : dwed.exe dwed16.exe
-# dwed386.exe
+all : dwed.exe dwed16.exe dwedovl.exe dwedovlp.exe
 
-dwed.exe: dwed.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas lfn.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas
-	tpc -M dwed.pas
+dwed.exe: dwed.pas dwedlnch.pas
+        tpc -M dwed.pas
 
-dwed16.exe: dwed.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas lfn.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas
-	bpc -CP -M dwed16.pas
+dwed16.exe: dwed16.pas dwedlnch.pas
+        tpc -M dwed16.pas
+
+dwedovl.exe: dwedovl.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas lfn.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas dwedlnch.pas
+        tpc -M dwedovl.pas
+
+dwedovlp.exe: dwedovl16.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas lfn.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas dwedlnch.pas
+        bpc -CP -M dwedovlp.pas
 
 upx: dwed.exe
-	upx -9 --8086 dwed.exe
+        upx -9 --8086 dwed.exe
 
 dwed.hlp: dwed.txt hlpc.exe
-	hlpc dwed.txt dwed.hlp
+        hlpc dwed.txt dwed.hlp
 
 hlpc.exe: hlpc.pas help.pas
-	tpc -M hlpc.pas
+        tpc -M hlpc.pas
 
 dwedhelp.obj: dwed.hlp
-	bin2obj dwed.hlp dwedhelp.obj HELPBIN
+        bin2obj dwed.hlp dwedhelp.obj HELPBIN
 
 clean:
-	del *.tpu
-	del *.tpp
-	del *.a
-	del *.so
-	del *.bak
+        del *.tpu
+        del *.tpp
+        del *.a
+        del *.so
+        del *.bak
