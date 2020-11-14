@@ -45,10 +45,21 @@ end;
 procedure edit(var ctx : TEditorContext);
 var k, i, scru  :integer;
         event   : TEvent;
+        hint    : boolean;
 begin
         scru := SCRU_FULL;
+        hint := true;
         while scru <> SCRU_QUIT do begin
                 dwedscru.update(ctx, scru);
+                if hint then begin
+                        scr.cln(0, 0, ctx.current^.config^.color.top);
+                        scr.printhl(2, 0,
+                                ctx.current^.config^.color.top,
+                                ctx.current^.config^.color.top_hl,
+                                'Welcome!  Press ~F1~ for help');
+                        scr.show;
+                        hint := false;
+                end;
                 scru := SCRU_NONE;
 
                 if not kbd.haskey then begin
