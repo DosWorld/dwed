@@ -88,7 +88,7 @@ var        x, y, i, j : integer;
         color   : byte;
         key     : word;
         cb      : byte;
-        hval    : string[3];
+        ch      : char;
 begin
         x := (scr.getwidth - 50) shr 1; y := (scr.getheight - 22) shr 1;
         scrui.box(x, y, 50, 22, $1b);
@@ -123,7 +123,8 @@ begin
                         '  ~Shift~+~'+#$11+#$D9+'~ Enter hex code'
                         );
                 scr.show;
-                case kbd.getkey of
+                key := kbd.getkey;
+                case key of
                 K_UP: dec(ascii_tbl_sel, 16);
                 K_DOWN: inc(ascii_tbl_sel, 16);
                 K_LEFT: dec(ascii_tbl_sel);
@@ -143,6 +144,9 @@ begin
                 end;
                 K_ESC: break;
                 end;
+                ch := upcase(chr(lo(key)));
+                if ch in ['0'..'9'] then ascii_tbl_sel := (ascii_tbl_sel shl 4) or ((lo(key) - ord('0')) and $0F)
+                else if ch in ['A'..'F'] then ascii_tbl_sel := (ascii_tbl_sel shl 4) or ((lo(key) - ord('A') + 10) and $0F);
         end;
 end;
 
@@ -228,8 +232,6 @@ begin
                 '+','-','*','/','M','&','|','^': begin calc_op := ch; calc_op2 := calc_op1; calc_op1 := 0; continue; end;
                 'N': calc_op1 := -calc_op1;
                 '!': calc_op1 := calc_op1 xor $FFFFFFFF;
-                '=': begin
-                        end;
                 end;
                 case radix of
                 RADIX2 : begin
