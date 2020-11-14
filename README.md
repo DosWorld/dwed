@@ -14,7 +14,7 @@ Main features:
 Restrictions:
 
 * This software is writen in Borland Pascal, so string length is limited to 255 chars.
-* DOS-conventional memory will be enought to load file up to ~300k..400k (expect - 300k border).
+* DOS-conventional memory will be enought to load file up to ~300k..400k (expect - 300k border). You can use DPMI-version, if need more memory and you have modern CPU.
 * No Undo/Redo functionality. The reason is the same as why i dont build AST for syntax hightlight - here is no memory for it.
 
 # How to run
@@ -25,9 +25,11 @@ Use:
 
 Command line example:
 
-	C:\dwed.exe filename1 .. filenameN
+	C:\DWED\dwed.exe filename1 .. filenameN
+or
 
-or you can use without parameters.
+	C:\DWED\dwed16.exe filename1 .. filenameN
+
 # Screenshots
 
 ### Text file hightlight
