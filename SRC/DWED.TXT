@@ -5,7 +5,7 @@
 internal cliboard and syntax highlight support.
 
 Designed for ~IBM-XT~-grade PC with Intel ~8086~/~88~ CPU
-and works in Real Mode ~without~ DPMI.
+and can work in Real Mode ~without~ DPMI.
 
         (c) ~DosWorld~ 2020  MIT License
 

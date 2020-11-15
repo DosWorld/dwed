@@ -117,22 +117,20 @@ end;
 
 function find_char(c : char; p : pchar):integer;assembler;
 asm
-        mov        ah, byte ptr [c]
-        mov        si, word ptr [p]
-        mov        bx, word ptr [p + 2]
         push       ds
-        mov        ds, bx
-        xor        cx, cx
-        xor        bx, bx
+        mov        ah, byte ptr [c]
+        lds        si, [p]
+        mov        cx, $FFFF
+        mov        bx, si
         cld
 @cont:
         lodsb
         or         al, al
         jz         @end
-        inc        bx
         cmp        al, ah
         jnz        @cont
-        mov        cx, bx
+        mov        cx, si
+        sub        cx, bx
 @end:
         mov        ax, cx
         pop        ds
@@ -199,12 +197,11 @@ end;
 
 procedure hl(scr:pchar; width:integer; hlclr, tclr:byte; lng : PLangDesc; syschars:pchar);
 var
-        str : string;
-        buf : array[1..255] of char;
-        ch : char;
-        pos : integer;
+        str         : string;
+        ch          : char;
+        pos         : integer;
         wordStarted : boolean;
-        wordStart : pchar;
+        wordStart   : pchar;
 begin
         wordStarted := false;
         while width <> 0 do begin
@@ -217,21 +214,35 @@ begin
                                         pos := 0;
                                 end;
                                 inc(pos);
-                                buf[pos] := ch;
+                                str[pos] := ch;
                         end else begin
                                 if wordStarted and (pos > 1) then begin
-                                        move(buf[1], str[1], pos);
                                         str[0] := chr(pos);
                                         if not lng^.caseSens then str := upstr(str);
                                         if find_keyword(lng^.vocab, str) then
+                                        asm
+                                                push       ds
+                                                mov        al, byte ptr [hlclr]
+                                                mov        bx, word ptr [scr]
+                                                lds        si, wordStart
+                                        @cont:  cmp        si, bx
+                                                jnl        @stop
+                                                mov        byte ptr[si], al
+                                                add        si, 2
+                                                jmp        @cont
+                                        @stop:
+                                                pop        ds
+                                        end;
+{
                                         while wordStart < scr do begin
                                                 wordStart[0] := chr(hlclr);
                                                 inc(wordStart, 2);
                                         end;
+}                                       
                                 end;
                                 wordStarted := false;
-                                if ch > ' ' then begin
-                                        if find_char(ch, syschars) <> 0 then scr[1] := chr(hlclr);
+                                if (ch > ' ') then begin
+                                        if find_char(ch, syschars) >= 0 then scr[1] := chr(hlclr);
                                 end;
                         end;
                 end else begin

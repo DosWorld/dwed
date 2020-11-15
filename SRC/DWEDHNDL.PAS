@@ -400,6 +400,7 @@ begin
                         scr.print(1, 0, config^.color.top, 'Save "' + sfname + '"');
                         scr.show;
                 end;
+                lfn.create(ctx.current^.fname);
                 strs.to_file(newname, ctx.current^.rline, errCode, @file_progress);
                 if errCode <> 0 then handle_error(ctx, errCode) else ctx.current^.chg := false;
                 if errCode = 0 then begin

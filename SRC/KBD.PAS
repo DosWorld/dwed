@@ -135,9 +135,9 @@ end;
 function flags:byte;assembler;
 asm
         push       es
-        xor        ax, ax
+        mov        ax, Seg0040
         mov        es, ax
-        mov        al, byte ptr es:[$417]
+        mov        al, byte ptr es:[$17]
         pop        es
 end;
 

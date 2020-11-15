@@ -88,9 +88,10 @@ var screen_size, line_size : word;
 function getheight:integer;assembler;
 asm
         push       ds
-        xor        ax, ax
+        mov        ax, word ptr [seg0040]
         mov        ds, ax
-        mov        al, byte ptr[$484]
+        mov        al, byte ptr[$0084]
+        xor        ah, ah
         inc        ax
         pop        ds
 end;
@@ -98,9 +99,9 @@ end;
 function getwidth:integer;assembler;
 asm
         push       ds
-        xor        ax, ax
+        mov        ax, word ptr [seg0040]
         mov        ds, ax
-        mov        ax, word ptr[$44a]
+        mov        ax, word ptr[$004a]
         pop        ds
 end;
 
@@ -291,9 +292,9 @@ end;
 procedure locate(x, y : integer);assembler;
 asm
         push       ds
-        xor        ax, ax
+        mov        ax, word ptr [seg0040]
         mov        ds, ax
-        mov        bh, byte ptr [$462]
+        mov        bh, byte ptr [$0062]
         pop        ds
         mov        dl, byte ptr [x]
         mov        dh, byte ptr [y]
@@ -304,12 +305,12 @@ end;
 function getx:integer;
 begin
 
-        getx := mem[0:(mem[0:$462] shl 1) + $450] and $ff;
+        getx := mem[Seg0040:(mem[Seg0040:$62] shl 1) + $50] and $ff;
 end;
 
 function gety:integer;
 begin
-        gety := mem[0:(mem[0:$462] shl 1) + $451] and $ff;
+        gety := mem[Seg0040:(mem[Seg0040:$62] shl 1) + $51] and $ff;
 end;
 
 procedure push;
@@ -395,9 +396,9 @@ end;
 function is_monochrome:boolean;assembler;
 asm
         push       ds
-        xor        ax, ax
+        mov        ax, word ptr [seg0040]
         mov        ds, ax
-        mov        al, byte ptr [$0465]
+        mov        al, byte ptr [$0065]
         pop        ds
         and        al, 4
 end;
