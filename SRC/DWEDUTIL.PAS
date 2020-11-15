@@ -66,9 +66,11 @@ procedure file_progress(value, total : longint);
 
 procedure handle_error(var ctx : TEditorContext; errCode:integer);
 
+function get_instance : string;
+
 implementation
 
-uses kbd, scr, scrui, strs, strutil, lfn, dwedhl;
+uses kbd, scr, scrui, strs, strutil, lfn, dwedhl, dwedlnch;
 
 procedure commit(var ctx : TEditorContext);
 begin
@@ -388,6 +390,7 @@ function save_clipboard(var ctx : TEditorContext; fname:string) : integer;
 var f : file;
         r        : integer;
 begin
+	lfn.create(fname);
         lfn.assign(f, fname);
         {$I-}
         rewrite(f, 1);
@@ -709,6 +712,24 @@ begin
         scr.hprint(5, scr.getheight - 1, $70, #$B0, w);
         scr.print(0, scr.getheight - 1, $70, lpad(itoa(percent) + '%', 4) + ' ');
         scr.show;
+end;
+
+function get_instance : string;
+var f : file;
+        r         : string;
+        i, readed : integer;
+begin
+        System.assign(f, dwedlnch.DEVFILE);
+        {$I-}
+        System.reset(f, 1);
+        i := ioresult;
+        if i = 0 then begin
+                blockread(f, r[0], 256, readed);
+                close(f);
+        end else begin
+                r := '';
+        end;
+        get_instance := r;
 end;
 
 end.

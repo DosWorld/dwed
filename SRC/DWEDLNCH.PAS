@@ -100,8 +100,7 @@ asm
         mov        di, offset requested_cmd
         mov        dx, seg requested_cmd
         mov        es, dx
-        xor        cx,cx
-        dec        cl
+        xor        ch,ch
         cld
         rep        movsb
         pop        cx
@@ -116,6 +115,8 @@ asm
         push       si
         push       es
         push       ds
+        push       dx
+        push       cx
 
         push       ds
         pop        es
@@ -123,13 +124,16 @@ asm
         mov        si, offset temp
         mov        dx, seg temp
         mov        ds, dx
-        xor        cx,cx
+        xor        ch, ch
         mov        cl, byte ptr [si]
-        push       ax
+        inc        cx
+        push       cx
         cld
         rep        movsb
-        pop        cx
+        pop        ax
 
+        pop        cx
+        pop        dx
         pop        ds
         pop        es
         pop        si
@@ -172,6 +176,13 @@ asm
         mov        ax, $0
         jmp        @ret_val
 @cont6:
+        cmp        ah, $42 { seek file }
+        jne        @cont7
+        cmp        bx, $9915        
+        jne        @cont7
+        xor        ax, ax
+        xor        dx, dx
+@cont7:
         popf
         push       ds
         push       ax
@@ -230,9 +241,30 @@ begin
      is_installed := i = 0;
 end;
 
+function rchar : char;
+const chars : string = '0123456789-_qwertyuiopasdfghjklzxcvbnm';
+begin
+        rchar := chars[1 + random(length(chars))];
+end;
+
+function rfname : string;
+var i : integer;
+    r : string;
+begin
+        r := '';
+        for i := 1 to 8 do begin
+                r := r + rchar;
+        end;
+        r := r + '.';
+        for i := 1 to 3 do begin
+                r := r + rchar;
+        end;
+        rfname := r;
+end;
+
 procedure launcher(var exename:string);
 var params : string;
-        i        : integer;
+        i : integer;
 begin
         if is_installed then begin
                 writeln('DWED cycle execution detected.');
@@ -249,12 +281,7 @@ begin
         if length(temp) = 0 then temp := getenv('TEMP');
         if length(temp) = 0 then temp := getenv('TMP');
         if length(temp) = 0 then temp := getenv('HOME');
-        temp := concat(temp, hexb(random($100)),
-                hexb(random($100)),
-                hexb(random($100)),
-                hexb(random($100)),
-                '.0',
-                hexb(random($100)));
+        temp := rfname;
         while true do begin
                 init;
                 exec(path + exename, params);

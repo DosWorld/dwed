@@ -27,6 +27,8 @@ and ~N~ or ~ESC~ - to answer ~NO~.
    ~RTM.EXE~
    ~DPMI16BI.OVL~
    ~DWEDOVLP.EXE~
+
+4. You can store ~DWED.CFG~ in local dir, also.
 ///2NAVIGATION
         Navigation.
 

@@ -199,6 +199,7 @@ var
         len     : word;
         s       : string;
 begin
+        lfn.create(fname);
         lfn.assign(f, fname);
         {$I-}
         rewrite(f, 1);

@@ -27,6 +27,8 @@ unit lfn;
 interface
 
 function check : boolean;
+
+procedure create(fname : string);
 procedure assign(var f : file; fname : string);
 procedure assign_text(var t : text; fname : string);
 
@@ -37,9 +39,6 @@ asm
         mov     ax, $7100
         stc
         int     $21
-        or      al, al
-        jz      @nolfn
-@nolfn:
 end;
 
 
@@ -55,15 +54,12 @@ begin
                 asm
                         push    ds
                         push    es
-                        mov     si, offset lfnbuf1
-                        mov     di, offset lfnbuf2
-                        inc     si
-                        inc     di
+                        mov     ax, seg lfnbuf1
+                        mov     es, ax
+                        mov     si, offset lfnbuf1 + 1
+                        mov     di, offset lfnbuf2 + 1
                         mov     ax, $7160
                         mov     cx, 1
-                        stc
-                        push    ds
-                        pop     es
                         stc
                         int     $21
                         pop     es
@@ -85,6 +81,37 @@ begin
                 end;
         end;
         lfn2dos := fname;
+end;
+
+procedure create(fname : string);
+var f : file;
+begin
+        if lfn.check then begin
+                lfnbuf1 := fname + #0;
+                asm
+                        push       ds
+                        mov        bx, $0002
+                        xor        cx, cx
+                        mov        dx, $11
+                        mov        si, offset lfnbuf1 + 1
+                        mov        ax, seg lfnbuf1
+                        mov        ds, ax
+                        xor        di, di
+                        stc
+                        mov        ax, $716C
+                        int        $21
+                        jc         @end
+                        mov        bx, ax
+                        mov        ah, $3e
+                        int        $21
+                @end:
+                        pop        ds
+                end;
+        end else begin
+                System.assign(f, fname);
+                rewrite(f, 1);
+                close(f);
+        end;
 end;
 
 procedure assign(var f : file; fname : string);
