@@ -479,11 +479,10 @@ end;
 
 procedure delete_selected(var ctx : TEditorContext);
 var
-        sb_y, se_y, clinenum : longint;
-        sb_x, se_x           : integer;
-        bline, eline         : EditorStr;
+        sb_y, se_y        : longint;
+        sb_x, se_x        : integer;
+        bline, eline      : EditorStr;
         lineStr  : string;
-        len      : integer;
         is_last  : boolean;
 begin
         if not ctx.current^.editor.selection then exit;
@@ -534,7 +533,7 @@ var r : PFileContext;
 begin
         scr.cursor_off;        
         i := 0;
-        memlen := 0;
+        memlen := 0; sitem := 0; cctx := 0;
         r := ctx.all;
         while r <> nil do begin
                 if r = ctx.current then begin sitem := i; cctx := i; end;
@@ -622,6 +621,7 @@ function load_file(var ctx : TEditorContext; fname : string; var errCode : integ
 var p : PFileContext;
         r : integer;
 begin
+        r := SCRU_FULL;
         getmem(p, sizeof(TFileContext));
         p^.fname := fname;
         p^.rline := strs.from_file(fname, ctx.config.tab_size, errCode, percent_proc);

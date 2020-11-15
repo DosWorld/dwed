@@ -155,6 +155,7 @@ var r : string;
         i, p, l : integer;
 begin
         l := length(s);
+        p := 0;
         for i := l downto 0 do begin
                 case s[i] of
                 '.': break;

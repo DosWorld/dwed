@@ -22,6 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
 {$G-,B-,S-,R-,I-}
+{$IFDEF FPC}
+{$H-}
+{$ALIGN 1}
+{$ENDIF}
 unit dwedhl;
 
 interface
@@ -177,7 +181,7 @@ begin
         is_alpha := ch in ['a'..'z', 'A'..'Z', '0'..'9', '_'];
 end;
 
-function find_keyword(vocab : PVocabEntry; str:string):boolean;
+function find_keyword(vocab : PVocabEntry; var str:string):boolean;
 var r : boolean;
         hash : word;
 begin

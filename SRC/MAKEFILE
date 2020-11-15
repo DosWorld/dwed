@@ -25,6 +25,7 @@ dwedhelp.obj: dwed.hlp
         bin2obj dwed.hlp dwedhelp.obj HELPBIN
 
 clean:
+        del *.ppu
         del *.tpu
         del *.tpp
         del *.a

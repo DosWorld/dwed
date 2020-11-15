@@ -55,7 +55,6 @@ var h, w, i, x1, len   : integer;
         s              : string;
         sb_y, se_y, clinenum : longint;
         sb_x, se_x     : integer;
-        color          : byte;
         scrx           : integer;
         text_color     : byte;
         text_sel_color : byte;
@@ -112,6 +111,7 @@ begin
                 scr.cln(0, scry + 1, config^.color.text);
                 scr.locate(editor.x - 1 - scrx, scry + 1);
         end;
+        x := 0;
         get_str_part(ctx, ctx.current^.editor.line, line);
         scr.print(0, ctx.current^.scry + 1, ctx.current^.config^.color.text, line);
         scrx := ctx.current^.scrx;

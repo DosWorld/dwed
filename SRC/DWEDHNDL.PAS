@@ -32,7 +32,7 @@ function process_event(var ctx : TEditorContext; var e : TEvent) : integer;
 
 implementation
 
-uses scr, kbd, scrui, strs, strutil, dwedscru, dwedutil, dwedaddo;
+uses scr, kbd, scrui, lfn, strs, strutil, dwedscru, dwedutil, dwedaddo, dwedhl;
 
 {$F+}
 
@@ -72,6 +72,7 @@ var h : PEventHandler;
         xofs : integer;
         proc : TEventProc;
 begin
+        r := SCRU_NONE;
         h := handlers;
         xofs := ctx.current^.scrx;
         while (h <> nil) do begin
@@ -462,7 +463,6 @@ end;
 
 function hk_del(var ctx:TEditorContext; event:PEvent):integer;
 var r : integer;
-        is_first : boolean;
 begin
         r := SCRU_NONE;
         if ctx.current^.editor.selection then begin
@@ -560,6 +560,7 @@ var r          : integer;
     start_find : boolean;
 begin
         r := SCRU_CLINE;
+        lnum := 0;
         lNumStr := '';
         msg := ' Goto line (1-'+ltoa(ctx.current^.total)+') :';
         scr.cln(0, 0, ctx.current^.config^.color.top);
@@ -817,7 +818,6 @@ function hk_start_find(var ctx:TEditorContext; event:PEvent):integer;
 var r : integer;
         sb_y, se_y, clinenum : longint;
         sb_x, se_x     : integer;
-        line           : EditorStr;
         msg            : string;
         searchStr      : string;
         replaceStr     : string;

@@ -23,7 +23,9 @@ SOFTWARE.
 }
 {$G-,B-,F+,S-,R-,I-}
 unit scr;
-
+{$ifdef go32v2}
+{$asmmode intel}
+{$endif}
 interface
 
 var
@@ -80,7 +82,6 @@ end;
 
 const
 
-last_scr        : PScr = nil;
 last_scr_buf    : PScr = nil;
 
 var screen_size, line_size : word;
@@ -138,12 +139,12 @@ asm
         push       es
         call       getwidth
         push       ax
-        mov        ax, word ptr [x]
-        mov        cx, word ptr [y]
+        mov        ax, x
+        mov        cx, y
         call       buf_es_di
         pop        cx
-        sub        cx, word ptr [x]
-        mov        ah, byte ptr [clr]
+        sub        cx, x
+        mov        ah, clr
         mov        al, ' '
         cld
         repz       stosw
@@ -156,9 +157,9 @@ asm
         mov        ax, x
         mov        cx, y
         call       buf_es_di
-        mov        cx, word ptr [len]
-        mov        ah, byte ptr [clr]
-        mov        al, byte ptr [c]
+        mov        cx, len
+        mov        ah, clr
+        mov        al, c
         cld
         repz       stosw
         pop        es
@@ -171,8 +172,8 @@ asm
         mov        cx, y
         call       buf_es_di
         inc        di
-        mov        cx, word ptr [len]
-        mov        al, byte ptr [clr]
+        mov        cx, len
+        mov        al, clr
         cld
         or         cx, cx
         jz         @end
@@ -191,10 +192,10 @@ asm
         mov        ax, x
         mov        cx, y
         call       buf_es_di
-        mov        bx, word ptr [line_size]
-        mov        cx, word ptr [len]
-        mov        ah, byte ptr [clr]
-        mov        al, byte ptr [c]
+        mov        bx, line_size
+        mov        cx, len
+        mov        ah, clr
+        mov        al, c
         or         cx, cx
         jz         @end
 @cont:
@@ -210,18 +211,18 @@ procedure print(x, y:integer; clr : byte; s : string);assembler;
 asm
         push       es
         push       ds
-        mov        ax, word ptr [x]
-        mov        cx, word ptr [y]
+        mov        ax, x
+        mov        cx, y
         call       buf_es_di
-        lea        bx, word ptr s
-        mov        si, word ptr [ss:bx]
-        mov        bx, word ptr [ss:bx+2]
+        lea        bx, s
+        mov        ah, clr
+        mov        si, [ss:bx]
+        mov        bx, [ss:bx+2]
         mov        ds, bx
         lodsb
         or         al, al
         jz         @end
         mov        cl, al
-        mov        ah, byte ptr [ss:clr]
         cld
 @cont:
         lodsb
@@ -302,16 +303,45 @@ asm
         int        $10
 end;
 
-function getx:integer;
-begin
-
-        getx := mem[Seg0040:(mem[Seg0040:$62] shl 1) + $50] and $ff;
+function getx:integer;assembler;
+asm
+        push       ds
+        mov        ax, word ptr [seg0040]
+        mov        ds, ax
+        mov        al, byte ptr [$0062]
+        xor        ah, ah
+        shl        ax, 1
+        add        ax, $50
+        mov        bx, ax
+        mov        al, byte ptr [bx];
+        xor        ah, ah
+        pop        ds
 end;
+{
+begin
+        getx := mem[Seg0040 : (mem[Seg0040:$62] shl 1) + $50] and $ff;
+end;
+}
 
-function gety:integer;
+function gety:integer;assembler;
+asm
+        push       ds
+        mov        ax, word ptr [seg0040]
+        mov        ds, ax
+        mov        al, byte ptr [$0062]
+        xor        ah, ah
+        shl        ax, 1
+        add        ax, $51
+        mov        bx, ax
+        mov        al, byte ptr [bx];
+        xor        ah, ah
+        pop        ds
+end;
+{
 begin
         gety := mem[Seg0040:(mem[Seg0040:$62] shl 1) + $51] and $ff;
 end;
+}
 
 procedure push;
 var     p : PScr;
@@ -412,7 +442,11 @@ begin
         screen_size := (getwidth * getheight) shl 1;
         line_size := getwidth shl 1;
         getmem(screen, screen_size);
+{$ifdef go32v2}
+        move(ptr(vseg, 0), screen[0], screen_size);
+{$else}
         move(mem[vseg:0], screen[0], screen_size);
+{$endif}
 end;
 
 begin

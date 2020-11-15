@@ -22,6 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
 {$A-,G-,B-,S-,R-,I-}
+{$IFDEF FPC}
+{$H-}
+{$ALIGN 1}
+{$ENDIF}
 unit strsd;
 
 interface
@@ -211,8 +215,8 @@ begin
 end;
 
 function delete(r : pointer; num_from, num_to : longint) : pointer;
-var t, d : PString;
-        n : longint;
+var t  : PString;
+    n  : longint;
 begin
         t := r;
         n := 1;
@@ -255,33 +259,34 @@ var     s, src, s1, s2 : string;
         c : char;
         len : integer;
 begin
-        if (r = nil) or (p = nil) then exit;
-        s := '';
-        while p[0] <> #0 do begin
-                c := p[0];
-                case c of
-                #$0A: begin
-                        strsd.get(r, src);
-                        s1 := '';
-                        s2 := '';
-                        len := length(src);
-                        if len > 0 then s1 := copy(src, 1, pos - 1);
-                        if pos < len then s2 := copy(src, pos, len - pos + 1);
-                        s1 := s1 + s;
+        if not ((r = nil) or (p = nil)) then begin
+                s := '';
+                while p[0] <> #0 do begin
+                        c := p[0];
+                        case c of
+                        #$0A: begin
+                                strsd.get(r, src);
+                                s1 := '';
+                                s2 := '';
+                                len := length(src);
+                                if len > 0 then s1 := copy(src, 1, pos - 1);
+                                if pos < len then s2 := copy(src, pos, len - pos + 1);
+                                s1 := s1 + s;
+                                r := strsd.put(r, s1);
+                                r := strsd.create(Pstring(r)^.next, r, s2);
+                                pos := 1;
+                                s := '';
+                        end;
+                        else if c <> #$0d then s := s + c;
+                        end;
+                        inc(p);
+                end;
+                if length(s) <> 0 then begin
+                        strsd.get(r, s1);
+                        insert(s, s1, pos);
+                        inc(pos, length(s));
                         r := strsd.put(r, s1);
-                        r := strsd.create(Pstring(r)^.next, r, s2);
-                        pos := 1;
-                        s := '';
                 end;
-                else if c <> #$0d then s := s + c;
-                end;
-                inc(p);
-        end;
-        if length(s) <> 0 then begin
-                strsd.get(r, s1);
-                insert(s, s1, pos);
-                inc(pos, length(s));
-                r := strsd.put(r, s1);
         end;
         append := r;
 end;

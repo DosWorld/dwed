@@ -65,8 +65,7 @@ begin
 end;
 
 procedure insert_str(var ctx : TEditorContext; str : string);
-var i : integer;
-        line_len : integer;
+var     line_len : integer;
         str_len  : integer;
 begin
         line_len := length(ctx.current^.editor.line);

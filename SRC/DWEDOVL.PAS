@@ -23,6 +23,11 @@ SOFTWARE.
 }
 {$M 16000, 128000, 655360}
 {$G-,B-,S-,R-,I-}
+{$IFDEF FPC}
+{$HUGECODE on}
+{$H+}
+{$ALIGN 1}
+{$ENDIF}
 
 uses dwedmain, strutil;
 
