@@ -4,13 +4,14 @@ Text file editor for MS-DOS and 8086 CPU designed in modern style for a IBM XT-g
 
 Main features:
 
-* Support files over 64k
+* Support files with size over 64k
 * Support syntax hightlight (C/C++/C--, Pascal, Basic, Assembler, Xml/Html, text files etc)
 * Support multiple file editing at the same time
 * Support internal clipboard (size up to 32k)
 * Support unix-like text files for open
 * Dont require DPMI-server or 80286 CPU
 * Support Long File Names (LFN)
+* Support user's color scheme (via config-file)
 
 Restrictions:
 
