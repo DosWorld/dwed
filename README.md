@@ -5,7 +5,7 @@ Text file editor for MS-DOS and 8086 CPU designed in modern style for a IBM XT-g
 Main features:
 
 * Support files with size over 64k
-* Support syntax hightlight (C/C++/C--, Pascal, Basic, Assembler, Xml/Html, text files etc)
+* Support syntax highlight (C/C++/C--, Pascal, Basic, Assembler, Xml/Html, text files etc)
 * Support multiple file editing at the same time
 * Support internal clipboard (size up to 32k)
 * Support unix-like text files for open
@@ -17,7 +17,7 @@ Restrictions:
 
 * This software is writen in Borland Pascal, so string length is limited to 255 chars.
 * DOS-conventional memory will be enought to load file up to ~300k..400k (expect - 300k border). You can use DPMI-version, if you need more memory and you have modern CPU.
-* No Undo/Redo functionality. The reason is the same as why i dont build AST for syntax hightlight - here is no memory for it.
+* No Undo/Redo functionality. The reason is the same as why i dont build AST for syntax highlight - here is no memory for it.
 
 # How to run and use
 Use:
@@ -36,20 +36,20 @@ Use key F1 to get more documentation (hotkeys, tips etc)
 
 # Screenshots
 
-### Text file hightlight
-![Image Screenshot - Txt syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-TXT.PNG)
+### Text file highlight
+![Image Screenshot - Txt syntax highlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-TXT.PNG)
 
-### Turbo Pascal syntax hightlight
-![Image Screenshot - Pascal syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-PAS.PNG)
+### Turbo Pascal syntax highlight
+![Image Screenshot - Pascal syntax highlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-PAS.PNG)
 
-### Power Basic syntax hightlight
-![Image Screenshot - Basic syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-BAS.PNG)
+### Power Basic syntax highlight
+![Image Screenshot - Basic syntax highlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-BAS.PNG)
 
-### C syntax hightlight
-![Image Screenshot - C syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-C.PNG)
+### C syntax highlight
+![Image Screenshot - C syntax highlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-C.PNG)
 
 ### Help mode
-![Image Screenshot - C syntax hightlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-HLP.PNG)
+![Image Screenshot - C syntax highlighjt](https://github.com/DosWorld/dwed/raw/main/DWED-HLP.PNG)
 
 ### ASCII Table addon
 ![Image ASCII Table addon](https://github.com/DosWorld/dwed/raw/main/DWED-ASC.PNG)
