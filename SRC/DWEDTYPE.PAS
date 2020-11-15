@@ -48,6 +48,7 @@ TColorConfig = record
         top_hl        : byte;
         text          : byte;
         text_hl       : byte;
+        text_dl       : byte;
         text_sel      : byte;
         menu          : byte;
         menu_sel      : byte;

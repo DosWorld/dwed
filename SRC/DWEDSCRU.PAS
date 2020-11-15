@@ -41,10 +41,12 @@ end;
 
 procedure get_str_part(var ctx : TEditorContext; var s, res : string);
 var len : integer;
+    w   : integer;
 begin
-        len := length(s);
+        len := ord(s[0]);
+        w := ctx.current^.config^.width;
         if len < ctx.current^.scrx then res := '' else res := copy(s, ctx.current^.scrx + 1, len - ctx.current^.scrx);
-        if ord(res[0]) > ctx.current^.config^.width then res := copy(res, 1, ctx.current^.config^.width);
+        if ord(res[0]) > w then res := copy(res, 1, w);
 end;
 
 procedure update_full(var ctx : TEditorContext);
@@ -103,6 +105,8 @@ var
         sb_x, se_x     : integer;
         x, xe, len     : integer;
         line           : string;
+        scrx           : integer;
+        width          : integer;
 begin
         with ctx.current^ do begin
                 scr.cln(0, scry + 1, config^.color.text);
@@ -110,33 +114,34 @@ begin
         end;
         get_str_part(ctx, ctx.current^.editor.line, line);
         scr.print(0, ctx.current^.scry + 1, ctx.current^.config^.color.text, line);
-
+        scrx := ctx.current^.scrx;
+        width := ctx.current^.config^.width;
         if ctx.current^.editor.selection then begin
                 get_sel_coord(ctx, sb_x, sb_y, se_x, se_y);
                 clinenum := strs.get_num(ctx.current^.cline);
                 len := -1;
                 if (sb_y = se_y) and (clinenum = sb_y) then begin
-                        if ( sb_x - 1 < ctx.current^.scrx + ctx.current^.config^.width)
-                         and (se_x - 1 >= ctx.current^.scrx) then begin
+                        if ( sb_x - 1 < scrx + width)
+                         and (se_x - 1 >= scrx) then begin
                                 x := sb_x - 1;
                                 xe := se_x - 1;
-                                if x < ctx.current^.scrx then x := ctx.current^.scrx;
-                                dec(x, ctx.current^.scrx);
-                                dec(xe, ctx.current^.scrx);
-                                if xe > ctx.current^.config^.width then xe := ctx.current^.config^.width;
+                                if x < scrx then x := scrx;
+                                dec(x, scrx);
+                                dec(xe, scrx);
+                                if xe > width then xe := width;
                                 len := xe - x;
                         end;
                 end else if (clinenum = sb_y) then begin
                                 x := sb_x - 1;
-                                if x < ctx.current^.scrx + ctx.current^.config^.width then begin
-                                        if x < ctx.current^.scrx then x := 0 else dec(x, ctx.current^.scrx);
-                                        len := ctx.current^.config^.width - x;
+                                if x < scrx + width then begin
+                                        if x < scrx then x := 0 else dec(x, scrx);
+                                        len := width - x;
                                 end;
                 end else if (clinenum = se_y) then begin
                         x := 0;
-                        if se_x - 1 > ctx.current^.scrx then begin
-                                len := se_x - 1 - ctx.current^.scrx;
-                                if len > ctx.current^.config^.width then len := ctx.current^.config^.width;
+                        if se_x - 1 > scrx then begin
+                                len := se_x - 1 - scrx;
+                                if len > width then len := width;
                         end;
                 end;
                 if len > 0 then scr.chcolor(x, ctx.current^.scry + 1, ctx.current^.config^.color.text_sel, len);
@@ -158,13 +163,18 @@ var ch, i       : char;
         endline : string;
         fname   : string;
         total   : string;
+        char_code : string;
 begin
         ch := ' ';
         i := 'O';
         if ctx.current^.chg or ctx.current^.editor.chg then ch := '*';
         if ctx.ins then i := 'I';
+        if ctx.current^.editor.x < length(ctx.current^.editor.line) then begin
+                char_code := hexb(ord(ctx.current^.editor.line[ctx.current^.editor.x]));
+        end else char_code := '';
         total := ltoa(ctx.current^.total);
         endline := concat(
+                char_code, '  ',
                 lpad(itoa(ctx.current^.editor.x), 3), ' ',
                 lpad(ltoa(strs.get_num(ctx.current^.cline)), length(total)),
                 '/', total, ' ', ch, i,' ');   

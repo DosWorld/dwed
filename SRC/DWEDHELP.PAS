@@ -111,6 +111,7 @@ begin
                         topic_id := selItem;
                 end;
         end;
+        kbd.reset;
 end;
 
 procedure init;

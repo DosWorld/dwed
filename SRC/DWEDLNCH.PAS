@@ -149,11 +149,11 @@ asm
         pop        ax
         jz         @cont3
         popf
-        mov        ax, $9915
+        mov        ax, $564B
         jmp        @ret_val
 @cont3: cmp        ah, $40 { write file}
         jne        @cont4
-        cmp        bx, $9915        
+        cmp        bx, $564B
         jne        @cont4
         call       write_hook
         popf
@@ -161,7 +161,7 @@ asm
         jmp        @ret_val
 @cont4: cmp        ah, $3F { read file }
         jne        @cont5
-        cmp        bx, $9915        
+        cmp        bx, $564B
         jne        @cont5
         call       read_hook
         popf
@@ -170,7 +170,7 @@ asm
 @cont5:
         cmp        ah, $3e { close file }
         jne        @cont6
-        cmp        bx, $9915        
+        cmp        bx, $564B
         jne        @cont6
         popf
         mov        ax, $0
@@ -178,7 +178,7 @@ asm
 @cont6:
         cmp        ah, $42 { seek file }
         jne        @cont7
-        cmp        bx, $9915        
+        cmp        bx, $564B
         jne        @cont7
         xor        ax, ax
         xor        dx, dx

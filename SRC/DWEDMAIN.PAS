@@ -52,11 +52,10 @@ begin
         while scru <> SCRU_QUIT do begin
                 dwedscru.update(ctx, scru);
                 if hint then begin
-                        scr.cln(0, 0, ctx.current^.config^.color.top);
-                        scr.printhl(2, 0,
-                                ctx.current^.config^.color.top,
-                                ctx.current^.config^.color.top_hl,
-                                'Welcome!  Press ~F1~ for help');
+                        with ctx.current^.config^.color do begin
+                                scr.cln(0, 0, top);
+                                scr.printhl(2, 0, top, top_hl, 'Welcome!  Press ~F1~ for help');
+                        end;
                         scr.show;
                         hint := false;
                 end;
@@ -88,6 +87,7 @@ begin
                 config.tab_size := 8;
                 config.color.top    := $70;
                 config.color.top_hl := $74;
+                config.color.text_dl := $08;
                 config.color.text := $07;
                 config.color.text_hl := $03;
                 config.color.text_sel := $17;
@@ -116,6 +116,7 @@ begin
         else if key = 'COLOR.TOP_HL' then ctx.config.color.top_hl := ahtob(value)
         else if key = 'COLOR.TEXT' then ctx.config.color.text := ahtob(value)
         else if key = 'COLOR.TEXT_HL' then ctx.config.color.text_hl := ahtob(value)
+        else if key = 'COLOR.TEXT_DL' then ctx.config.color.text_dl := ahtob(value)
         else if key = 'COLOR.TEXT_SEL' then ctx.config.color.text_sel := ahtob(value)
         else if key = 'COLOR.MENU' then ctx.config.color.menu := ahtob(value)
         else if key = 'COLOR.MENU_SEL' then ctx.config.color.menu_sel := ahtob(value)

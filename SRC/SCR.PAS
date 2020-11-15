@@ -39,6 +39,7 @@ procedure printhl(x, y : integer; clr, hlclr : byte; s : string);
 procedure hprint(x, y:integer; clr : byte; c : char; len : integer);
 procedure vprint(x, y:integer; clr : byte; c : char; len : integer);
 procedure chcolor(x, y:integer; clr : byte; len: integer);
+function is_monochrome:boolean;
 
 procedure push;
 procedure pop;
@@ -84,14 +85,23 @@ last_scr_buf    : PScr = nil;
 
 var screen_size, line_size : word;
 
-function getheight:integer;
-begin
-        getheight := mem[$000:$484] + 1;
+function getheight:integer;assembler;
+asm
+        push       ds
+        xor        ax, ax
+        mov        ds, ax
+        mov        al, byte ptr[$484]
+        inc        ax
+        pop        ds
 end;
 
-function getwidth:integer;
-begin
-        getwidth := memw[$000:$44a];
+function getwidth:integer;assembler;
+asm
+        push       ds
+        xor        ax, ax
+        mov        ds, ax
+        mov        ax, word ptr[$44a]
+        pop        ds
 end;
 
 { in: ax = x, cx = y }
@@ -187,7 +197,7 @@ asm
         or         cx, cx
         jz         @end
 @cont:
-        mov        word ptr [es:[di]], ax
+        mov        word ptr [es:di], ax
         add        di, bx
         dec        cx
         jnz        @cont
@@ -272,7 +282,7 @@ asm
         mov        ds, ax
         xor        di, di
         cld
-        repz       movsw
+        repz       movsb
 
         pop        ds
         pop        es
@@ -382,10 +392,19 @@ asm
         mov        al, cl
 end;
 
+function is_monochrome:boolean;assembler;
+asm
+        push       ds
+        xor        ax, ax
+        mov        ds, ax
+        mov        al, byte ptr [$0465]
+        pop        ds
+        and        al, 4
+end;
 
 procedure init;
 begin
-        vseg := segb800;
+        if is_monochrome then vseg := segb000 else vseg := segb800;
         set_blink(false);
         cursor_start := get_cursor_start;
         cursor_end := get_cursor_end;

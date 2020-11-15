@@ -252,8 +252,7 @@ begin
                         r := SCRU_FULL;
                 end;
         end else begin
-                if ctx.current^.editor.x > length(ctx.current^.editor.line)
-                        then ctx.current^.editor.x := length(ctx.current^.editor.line);
+                with ctx.current^.editor do if x > length(line) then x := length(line);
                 state := is_space_skip(ctx.current^.editor.line[ctx.current^.editor.x]);
                 while ctx.current^.editor.x > 1 do begin
                         if state <> is_space_skip(ctx.current^.editor.line[ctx.current^.editor.x]) then break;
@@ -390,7 +389,7 @@ function save_clipboard(var ctx : TEditorContext; fname:string) : integer;
 var f : file;
         r        : integer;
 begin
-	lfn.create(fname);
+        lfn.create(fname);
         lfn.assign(f, fname);
         {$I-}
         rewrite(f, 1);
