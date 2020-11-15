@@ -33,7 +33,7 @@ function is_installed : boolean;
 
 implementation
 
-uses dos, strutil;
+uses dos, strutil, sysext;
 
 var
         cmd             : string;
@@ -252,15 +252,15 @@ var i : integer;
     r : string;
 begin
         r := '';
-        for i := 1 to 8 do begin
-                r := r + rchar;
-        end;
+        for i := 1 to 8 do r := r + rchar;
         r := r + '.';
-        for i := 1 to 3 do begin
-                r := r + rchar;
-        end;
+        for i := 1 to 3 do r := r + rchar;
         rfname := r;
 end;
+
+var
+        cur_drive : byte;
+        cur_dir   : string;
 
 procedure launcher(var exename:string);
 var params : string;
@@ -276,13 +276,13 @@ begin
                 if i <> 1 then params := params + ' ';
                 params := params + paramStr(i);
         end;
+        cur_drive := sysext.getCurrentDisk;
+        cur_dir := sysext.getCurrentDir;
         path := getpathname(paramstr(0));
-        temp := getenv('DWED_HOME');
-        if length(temp) = 0 then temp := getenv('TEMP');
-        if length(temp) = 0 then temp := getenv('TMP');
-        if length(temp) = 0 then temp := getenv('HOME');
         temp := rfname;
         while true do begin
+                sysext.setCurrentDisk(cur_drive);
+                sysext.setCurrentDir(cur_dir);
                 init;
                 exec(path + exename, params);
                 code := DosError;

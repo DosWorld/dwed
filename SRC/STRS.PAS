@@ -37,7 +37,7 @@ procedure init(mType : MemoryType);
 function new : EditorStr;
 
 function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : EditorStr;
-procedure to_file(fname : string; r : EditorStr; var errCode : integer);
+procedure to_file(fname : string; r : EditorStr; var errCode : integer; scrupdate : pointer);
 
 function create(next, prev : EditorStr; body : string) : EditorStr;
 procedure free(r : EditorStr);
@@ -191,13 +191,18 @@ begin
         from_file := root;
 end;
 
-procedure to_file(fname : string; r : EditorStr; var errCode : integer);
+procedure to_file(fname : string; r : EditorStr; var errCode : integer; scrupdate : pointer);
 var
         f       : file;
         buf     : array[0..BUF_SIZE-1] of char;
         inbuf   : word;
         len     : word;
         s       : string;
+        total      : longint;
+        position   : longint;
+        percent    : integer;
+        ppercent   : integer;
+        scrup      : TPercentUpdateProc;
 begin
         lfn.create(fname);
         lfn.assign(f, fname);
@@ -207,6 +212,10 @@ begin
         {$I+}
         if errCode <> 0 then exit;
         inbuf := 0;
+        scrup := TPercentUpdateProc(scrupdate);
+        total := renum(r);
+        position := 0;
+        ppercent := -1;
         while r <> nil do begin
                 strs.get(r, s);
                 len := length(s);
@@ -223,6 +232,14 @@ begin
                         inc(inbuf, 1);
                 end;
                 r := strs.go_next(r);
+                if scrupdate <> nil then begin
+                        inc(position);
+                        percent := (position * 100) div total;
+                        if percent <> ppercent then begin
+                                scrup(position, total);
+                                ppercent := percent;
+                        end;
+                end;
         end;
         if inbuf <> 0 then blockwrite(f, buf[0], inbuf);
         truncate(f);
