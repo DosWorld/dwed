@@ -12,7 +12,7 @@ Main features:
 * Dont require DPMI-server or 80286 CPU
 * Support Long File Names (LFN)
 * Support user's color scheme (via config-file)
-* Support user's shell script runing by hotkeys F5, F8, F9.
+* Support user's shell script running by hotkeys F5, F8, F9.
 
 Restrictions:
 
