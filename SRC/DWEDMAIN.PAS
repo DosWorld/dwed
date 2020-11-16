@@ -30,7 +30,7 @@ procedure dwed_main(exe_path : string);
 
 implementation
 
-uses scr, kbd, strs, strutil, lfn, dwedtype, dwedhndl, dwedutil, dwedhl, dwedscru, dwedlnch;
+uses dos, scr, kbd, strs, strutil, lfn, dwedtype, dwedhndl, dwedutil, dwedhl, dwedscru, dwedlnch;
 
 procedure read_event(var event : TEvent);
 begin
@@ -77,6 +77,7 @@ end;
 procedure reset_context(var ctx : TEditorContext);
 var     f      : file;
         readed : integer;
+        path   : string;
 begin
         with ctx do begin
                 all := nil;
@@ -108,12 +109,18 @@ begin
                 help_topic_id := 0;
                 temp := '';
         end;
-        assign(f, dwedlnch.DEVFILE);
+        System.assign(f, dwedlnch.DEVFILE);
         System.reset(f, 1);
         if ioresult = 0 then begin
                 blockread(f, ctx.temp[0], 256, readed);
                 close(f);
         end;
+        path := '';
+        if length(path) = 0 then path := getenv('TEMP');
+        if length(path) = 0 then path := getenv('TMP');
+        if (length(path) <> 0) and (path[length(path)] <> '\') then path := path + '\';
+        ctx.temp := path + ctx.temp;
+        
 end;
 
 procedure process_param(var ctx : TEditorContext; key, value : string);
@@ -242,7 +249,7 @@ begin
                 writeln('This is overlay. Run DWED.EXE or join to the Dark Side.');
                 halt(1);
         end;
-        strs.init(DOS);
+        strs.init(strs.DOS);
         reset_context(ctx);
         if not load_config(ctx, 'DWED.CFG') then load_config(ctx, exe_path + 'DWED.CFG');
         pCount := ParamCount;

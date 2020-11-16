@@ -25,7 +25,6 @@ SOFTWARE.
 
 uses dwedlnch;
 
-{const exename : string = 'A.EXE';}
 const exename : string = 'DWEDOVL.EXE';
 
 begin

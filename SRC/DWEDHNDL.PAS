@@ -1110,7 +1110,7 @@ begin
         end;
 
         if can_run then begin
-                System.assign(t, ctx.temp);
+                lfn.assign_text(t, ctx.temp);
                 rewrite(t);
                 errCode := ioresult;
                 if errCode <> 0 then begin handle_error(ctx, errCode); can_run := false; end else begin
