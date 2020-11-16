@@ -36,7 +36,6 @@ implementation
 uses dos, strutil, sysext;
 
 var
-        cmd             : string;
         oldInt21        : pointer;
         requested_cmd   : string[255];
         path            : string;
@@ -47,6 +46,7 @@ procedure cmp_name;assembler;
 asm
         pushf
         xchg       bx, dx
+        push       bx
         xor        al, al
         cmp        ah, $3D { open }
         je         @cmp_names
@@ -54,38 +54,44 @@ asm
         je         @cmp_names
         jmp        @no
 @cmp_names:
-        cmp        byte ptr[BX + 0], 'D'
+        cmp        byte ptr[BX], 'D'
         je         @ok1
-        cmp        byte ptr[BX + 0], 'd'
+        cmp        byte ptr[BX], 'd'
         je         @ok1
         jmp        @no
-@ok1: 
-        cmp        byte ptr[BX + 1], 'W'
+@ok1:
+        inc        bx
+        cmp        byte ptr[BX], 'W'
         je         @ok2
-        cmp        byte ptr[BX + 1], 'w'
+        cmp        byte ptr[BX], 'w'
         je         @ok2
         jmp        @no
 @ok2:
-        cmp        byte ptr[BX + 2], 'E'
+        inc        bx
+        cmp        byte ptr[BX], 'E'
         je         @ok3
-        cmp        byte ptr[BX + 2], 'e'
+        cmp        byte ptr[BX], 'e'
         je         @ok3
         jmp        @no
 @ok3:
-        cmp        byte ptr[BX + 3], 'D'
+        inc        bx
+        cmp        byte ptr[BX], 'D'
         je         @ok4
-        cmp        byte ptr[BX + 3], 'd'
+        cmp        byte ptr[BX], 'd'
         je         @ok4
         jmp        @no
 @ok4:
-        cmp        byte ptr[BX + 4], ':'
+        inc        bx
+        cmp        byte ptr[BX], ':'
         jne        @no
 
-        cmp        byte ptr[BX + 5], 0
+        inc        bx
+        cmp        byte ptr[BX], 0
         jne        @no
 
         inc        al
 @no:
+        pop        bx
         xchg       bx, dx
         popf
 end;
@@ -220,7 +226,7 @@ procedure init;
 begin
         getIntVec($21, oldInt21);
         setIntVec($21, @newInt21);
-        cmd := '';
+        requested_cmd := '';
 end;
 
 procedure done;
@@ -285,13 +291,19 @@ begin
                 sysext.setCurrentDir(cur_dir);
                 init;
                 exec(path + exename, params);
-                code := DosError;
+                code := 1;
+                if DosError = 0 then code := DosExitCode;
                 done;
-                if (code = 254) and (length(cmd) <> 0) then begin
-                        exec(getenv('COMSPEC'), cmd);
+                if (code = 254) and (length(requested_cmd) <> 0) then begin
+                        writeln(requested_cmd);
+                        exec(getenv('COMSPEC'), '/C ' + requested_cmd);
+                        asm
+                                xor        ax, ax
+                                int        $16
+                        end
                 end else break;
         end;
-        halt(0);
+        halt(code);
 end;
 
 end.

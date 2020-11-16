@@ -113,6 +113,26 @@ have clipboard shared between file.
 
 If you want load few file - you can specify all of them
 into command line.
+
+You can also pass some configuration parameters. For
+example if you have line into ~DWED.CFG~ like this:
+
+        abc ~=~ 4
+
+You can pass this value via command-line:
+
+        ~DWED.EXE~ ~/~abc~=~4
+or
+        ~DWED.EXE~ ~-~abc~=~4
+///1RUN_USR_SHELL
+        Run user's shell scripts.
+
+To run user's shell scripts used keys ~F5~, ~F8~, ~F9~.
+To configure actions, put into ~DWED.CFG~ lines like:
+
+~usr.def.f5~ = make clean
+~usr.def.f8~ = make all
+~usr.def.f9~ = make run
 ///1EXT-MEM
         Ex~t~ended~/~Ex~p~anded Memory.
 
@@ -142,8 +162,8 @@ Every text-editor ~must have~ a buildin Tetris. ~TBD~
 ///1CONFIG
         Config file
 
-~Dwed~ have config file 'DWED.CFG'. At first, try to
-load from current dir and then - from dir with exe.
+~DWED~ have config file ~DWED.CFG~. At first, try to
+load from current dir and then - from dir with ~DWED.EXE~.
 Format is text - ~key~=~value~ in each line.
 
 Colors is coded as hex. For example:
@@ -151,6 +171,26 @@ Colors is coded as hex. For example:
         ~color.text~ = ~70~
 
 it is mean ~7~ - foreground color and ~0~ - background.
+///2ALL_OPTIONS
+        All configuration options.
+
+~tab_size~ = 8
+~color.top~ = 70
+~color.top_hl~ = 74
+~color.text~ = 07
+~color.text_hl~ = 03
+~color.text_dl~ = 08
+~color.text_sel~ = 17
+~color.menu~ = 1b
+~color.menu_sel~ = 30
+~color.help_menu~ = 07
+~color.help_menu_sel~ = 70
+~color.help~ = 07
+~color.help_hl~ = 03
+~usr.def.f5~ = make clean
+~usr.def.f8~ = make all
+~usr.def.f9~ = make run
+
 ///1LICENSE
         The MIT License (MIT)
         Copyright (c) 2020 DosWorld

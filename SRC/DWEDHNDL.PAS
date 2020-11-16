@@ -32,7 +32,7 @@ function process_event(var ctx : TEditorContext; var e : TEvent) : integer;
 
 implementation
 
-uses scr, kbd, scrui, lfn, strs, strutil, dwedscru, dwedutil, dwedaddo, dwedhl;
+uses scr, kbd, scrui, lfn, strs, strutil, dwedscru, dwedutil, dwedaddo, dwedhl, dwedlnch;
 
 {$F+}
 
@@ -1055,9 +1055,93 @@ begin
         hk_calc := SCRU_FULL;
 end;
 
-function hk_userdef(var ctx:TEditorContext; event:PEvent):integer;
+procedure serialize_fctx(var t:text; current:PFileContext);
 begin
-        hk_userdef := SCRU_NONE;
+        if current = nil then exit;
+        if current^.next <> nil then serialize_fctx(t, current^.next);
+        writeln(t, current^.editor.x,
+        ',', current^.scrx, 
+        ',', current^.scry, 
+        ',', strs.get_num(current^.cline),
+        ',', current^.fname 
+        );
+end;
+
+function hk_userdef(var ctx:TEditorContext; event:PEvent):integer;
+var     cmd       : string;
+        r         : integer;
+        f         : file;
+        t         : text;
+        writed    : word;
+        can_run   : boolean;
+        srcctx    : PFileContext;
+        errCode   : integer;
+begin
+        cmd := '';
+        r := SCRU_NONE;
+        can_run := true;
+        case event^.key of
+        K_F5: cmd := ctx.config.udef_f5;
+        K_F8: cmd := ctx.config.udef_f8;
+        K_F9: cmd := ctx.config.udef_f9;
+        end;
+        cmd := trim(cmd);
+        if length(cmd) = 0 then can_run := false;
+
+        if can_run then begin
+                srcctx := ctx.current;
+                ctx.current := ctx.all;
+                while (ctx.current <> nil) do begin
+                        commit(ctx);
+                        if ctx.current^.chg then begin
+                                scr.cln(0, 0, ctx.config.color.top);
+                                scr.printhl(1, 0,
+                                        ctx.config.color.top,
+                                        ctx.config.color.top_hl,
+                                        'You have ~unsaved~ file "~' + ctx.current^.sfname + '~"'
+                                        );
+                                scr.show;
+                                can_run := false;
+                                break;
+                        end;
+                        ctx.current := ctx.current^.next;
+                end;
+                ctx.current := srcctx;
+        end;
+
+        if can_run then begin
+                System.assign(t, ctx.temp);
+                rewrite(t);
+                errCode := ioresult;
+                if errCode <> 0 then begin handle_error(ctx, errCode); can_run := false; end else begin
+                        serialize_fctx(t, ctx.all);
+                        close(t);
+                end;
+        end;
+
+        if can_run then begin
+                while (ctx.all <> nil) do begin
+                        strs.free(ctx.all^.rline);
+                        ctx.all^.rline := nil;
+                        ctx.all^.cline := nil;
+                        srcctx := ctx.all;
+                        ctx.all := ctx.all^.next;
+                        freemem(srcctx, sizeof(TFileContext));
+                end;
+        end;
+
+        if can_run then begin 
+                System.assign(f, dwedlnch.DEVFILE);
+                rewrite(f, 1);
+                errCode := ioresult;
+                if errCode <> 0 then begin handle_error(ctx, errCode); can_run := false; end else begin
+                        blockwrite(f, cmd[0], length(cmd) + 1, writed);
+                        close(f);
+                        ctx.exit_code := 254;
+                end;
+        end;
+        if can_run then r := SCRU_QUIT;
+        hk_userdef := r;
 end;
 
 begin

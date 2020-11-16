@@ -31,6 +31,8 @@ function check : boolean;
 procedure create(fname : string);
 procedure assign(var f : file; fname : string);
 procedure assign_text(var t : text; fname : string);
+function file_exists(fname : string):boolean;
+procedure file_delete(fname : string);
 
 implementation
 
@@ -81,6 +83,75 @@ begin
                 end;
         end;
         lfn2dos := fname;
+end;
+
+procedure file_delete(fname : string);
+begin
+        lfnbuf1 := fname + #0;
+        if lfn.check then begin
+                asm
+                        push       ds
+                        xor        cx, cx
+                        mov        dx, offset lfnbuf1 + 1
+                        mov        ax, seg lfnbuf1
+                        mov        ds, ax
+                        xor        si, si
+                        stc
+                        mov        ax, $7141
+                        int        $21
+                        pop        ds
+                end;
+        end else asm
+                        push       ds
+                        xor        cx, cx
+                        mov        dx, offset lfnbuf1 + 1
+                        mov        ax, seg lfnbuf1
+                        mov        ds, ax
+                        stc
+                        mov        ah, $41
+                        int        $21
+                        pop        ds
+        end;
+end;
+
+function file_exists(fname : string):boolean;
+var f : file;
+    r : boolean;
+begin
+        r := false;
+        if lfn.check then begin
+                lfnbuf1 := fname + #0;
+                asm
+                        push       ds
+                        mov        bx, $0002
+                        xor        cx, cx
+                        mov        dx, $1
+                        mov        si, offset lfnbuf1 + 1
+                        mov        ax, seg lfnbuf1
+                        mov        ds, ax
+                        xor        di, di
+                        stc
+                        mov        ax, $716C
+                        int        $21
+                        mov        al, 0
+                        jc         @end
+                        mov        bx, ax
+                        mov        ah, $3e
+                        int        $21
+                        mov        al, 1
+                @end:
+                        pop        ds
+                        mov        r, al
+                end;
+        end else begin
+                System.assign(f, fname);
+                reset(f, 1);
+                if ioresult = 0 then begin
+                        r := true;
+                        close(f);
+                end;
+        end;
+        file_exists := r;
 end;
 
 procedure create(fname : string);

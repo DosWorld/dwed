@@ -22,10 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
 {$A-,G-,S-,R-,I-}
-{$IFDEF FPC}
-{$H-}
-{$ALIGN 1}
-{$ENDIF}
 unit dwedtype;
 
 interface
@@ -42,7 +38,7 @@ SCRU_FULL   = 5;
 
 const
 
-CB_SIZE = 1 * 1024;
+CB_SIZE = 32 * 1024;
 
 type
 
@@ -88,7 +84,6 @@ TFileContext = record
         sfname       : string;
         st           : SourceType;
         chg          : boolean;
-        scrofs       : longint;
         total        : longint;
         scrx, scry   : integer;
         next         : PFileContext;
@@ -102,6 +97,7 @@ end;
 PEditorContext =^ TEditorContext;
 TEditorContext = record
         ins            : boolean;
+        exit_code      : byte;
         current        : PFileContext;
         all            : PFileContext;
         clipboard      : pchar;
@@ -110,6 +106,7 @@ TEditorContext = record
         replace        : string[64];
         config         : TConfig;
         help_topic_id  : integer;
+        temp           : string;
 end;
 
 PEvent =^ TEvent;

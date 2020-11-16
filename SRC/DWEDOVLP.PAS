@@ -22,12 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
 {$B-,S-,R-,I-}
-{$IFDEF FPC}
-{$HUGECODE on}
-{$H+}
-{$ALIGN 1}
-{$ENDIF}
-
 uses dwedmain, strutil;
 
 begin

@@ -1,6 +1,6 @@
 # DWED
 
-Text file editor for MS-DOS and 8086 CPU designed in modern style for a IBM XT-grade PC.
+Text file editor and IDE for MS-DOS and 8086 CPU designed in modern style for a IBM XT-grade PC.
 
 Main features:
 
@@ -12,6 +12,7 @@ Main features:
 * Dont require DPMI-server or 80286 CPU
 * Support Long File Names (LFN)
 * Support user's color scheme (via config-file)
+* Support user's shell script run by hotkeys
 
 Restrictions:
 

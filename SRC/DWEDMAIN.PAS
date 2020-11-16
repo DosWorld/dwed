@@ -42,22 +42,20 @@ begin
         end;
 end;
 
-procedure edit(var ctx : TEditorContext);
+procedure edit(var ctx : TEditorContext; welcome_msg : boolean);
 var k, i, scru  :integer;
         event   : TEvent;
-        hint    : boolean;
 begin
         scru := SCRU_FULL;
-        hint := true;
         while scru <> SCRU_QUIT do begin
                 dwedscru.update(ctx, scru);
-                if hint then begin
+                if welcome_msg then begin
                         with ctx.current^.config^.color do begin
                                 scr.cln(0, 0, top);
                                 scr.printhl(2, 0, top, top_hl, 'Welcome!  Press ~F1~ for help');
                         end;
                         scr.show;
-                        hint := false;
+                        welcome_msg := false;
                 end;
                 scru := SCRU_NONE;
 
@@ -77,11 +75,14 @@ begin
 end;
 
 procedure reset_context(var ctx : TEditorContext);
+var     f      : file;
+        readed : integer;
 begin
         with ctx do begin
                 all := nil;
                 current := nil;
                 ins := true;
+                exit_code := 0;
                 config.width := scr.getwidth;
                 config.height := scr.getheight;
                 config.tab_size := 8;
@@ -105,6 +106,13 @@ begin
                 search := '';
                 replace := '';
                 help_topic_id := 0;
+                temp := '';
+        end;
+        assign(f, dwedlnch.DEVFILE);
+        System.reset(f, 1);
+        if ioresult = 0 then begin
+                blockread(f, ctx.temp[0], 256, readed);
+                close(f);
         end;
 end;
 
@@ -174,12 +182,61 @@ begin
         load_config := i = 0;
 end;
 
+procedure parse_temp(var ctx : TEditorContext);
+var   f : text;
+      s, ss   : string;
+      i, p    : integer;
+      errCode : integer;
+      x, scrx, scry   : integer;
+      cline_num       : longint;
+      fname   : string;
+begin
+        assign_text(f, ctx.temp);
+        System.reset(f);
+        if ioresult = 0 then while not eof(f) do begin
+                readln(f, s);
+                i := 1;
+                p := 1;
+                while (s[p] <> ',') and (p < length(s)) do inc(p);
+                ss := copy(s, i, p - i);
+                x := atoi(ss, 1);
+                inc(p); i := p;
+
+                while (s[p] <> ',') and (p < length(s)) do inc(p);
+                ss := copy(s, i, p - i);
+                scrx := atoi(ss, 0);
+                inc(p); i := p;
+
+                while (s[p] <> ',') and (p < length(s)) do inc(p);
+                ss := copy(s, i, p - i);
+                scry := atoi(ss, 0);
+                inc(p); i := p;
+
+                while (s[p] <> ',') and (p < length(s)) do inc(p);
+                ss := copy(s, i, p - i);
+                cline_num := atol(ss, 1);
+                inc(p);
+                fname := copy(s, p, length(s) - p + 1);
+                load_file(ctx, fname, errCode, @file_progress);
+                if errCode <> 0 then handle_error(ctx, errCode) else begin
+                        ctx.current^.editor.x := x;
+                        ctx.current^.scrx := scrx;
+                        ctx.current^.scry := scry;
+                        ctx.current^.cline := strs.find_num(ctx.current^.rline, cline_num);
+                        load_ed(ctx);
+                        norm_xy(ctx, 0);
+                end;
+        end;
+        close(f);
+end;
+
 procedure dwed_main(exe_path : string);
-var     ctx        : TEditorContext;
-        i, pCount  : integer;
-        param      : string;
-        key, value : string;
-        errCode    : integer;
+var     ctx         : TEditorContext;
+        i, pCount   : integer;
+        param       : string;
+        key, value  : string;
+        errCode     : integer;
+        welcome_msg : boolean;
 begin
         if not dwedlnch.is_installed then begin
                 writeln('This is overlay. Run DWED.EXE or join to the Dark Side.');
@@ -199,19 +256,26 @@ begin
         end;
         scr.push;
         scr.cls(7);
-        for i := 1 to pCount do begin
-                param := ParamStr(i);
-                if not has_switch(param) then begin
-                        load_file(ctx, param, errCode, @file_progress);
-                        if errCode <> 0 then handle_error(ctx, errCode);
+        if lfn.file_exists(ctx.temp) then begin
+                welcome_msg := false;
+                parse_temp(ctx);
+                lfn.file_delete(ctx.temp);
+        end else begin
+                welcome_msg := true;
+                for i := 1 to pCount do begin
+                        param := ParamStr(i);
+                        if not has_switch(param) then begin
+                                load_file(ctx, param, errCode, @file_progress);
+                                if errCode <> 0 then handle_error(ctx, errCode);
+                        end;
                 end;
         end;
         if ctx.all = nil then new_file(ctx, 'NONAME.TXT');
-        edit(ctx);
+        edit(ctx, welcome_msg);
         scr.pop;
         scr.show;
         scr.set_cursor(scr.cursor_start, scr.cursor_end);
-        halt(0);
+        halt(ctx.exit_code);
 end;
 
 end.

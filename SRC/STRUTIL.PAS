@@ -67,6 +67,7 @@ function lpad(s : string; len : integer):string;
 function itoa(i : integer):string;
 function wtoa(w : word):string;
 function ltoa(l : longint):string;
+function atoi(s : string; default_val : integer) : integer;
 function atol(s : string; default_val : longint) : longint;
 function ahtob(str : string) : byte;
 
@@ -348,6 +349,14 @@ begin
      val(s, res, err_pos);
      if err_pos <> 0 then res := default_val;
      atol := res;
+end;
+
+function atoi(s : string; default_val : integer) : integer;
+var res : integer; err_pos : integer;
+begin
+     val(s, res, err_pos);
+     if err_pos <> 0 then res := default_val;
+     atoi := res;
 end;
 
 function ahtob(str : string) : byte;
