@@ -60,8 +60,9 @@ begin
 end;
 
 function pnext(var ctx : ParamsContext) : string;
-var res : string;
-    i : integer;
+var res       : string;
+    rres      : string;
+    i         : integer;
     cur, prev : char;
     inquote   : boolean;
 begin
@@ -78,14 +79,12 @@ begin
                 inc(ctx.pos);
                 prev := cur;
         end;
-        res := copy(ctx.line, i, ctx.pos - i);
-        if length(res) > 0 then begin
-                if res[1] = '"' then begin
-                        res := copy(res, 2, length(res) - 2);
-                end;
+        rres := '';
+        for i := 1 to length(res) do begin
+                if res[i] <> '"' then rres := rres + res[i];
         end;
 
-        pnext := res;
+        pnext := rres;
 end;
 
 {

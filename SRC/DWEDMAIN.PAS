@@ -158,8 +158,8 @@ begin
                 end;
         end;
         if (length(key) = 0) and (length(value) = 0) then key := param;
-        key := unquote(upstr(trim(key)));
-        value := unquote(trim(value));
+        key := upstr(trim(key));
+        value := trim(value);
 end;
 
 function has_switch(var s : string) : boolean;
