@@ -39,14 +39,16 @@ begin
         line_full_in_sel := (num > y1) and (num < y2);
 end;
 
-procedure get_str_part(var ctx : TEditorContext; var s, res : string);
+procedure get_str_part(var ctx : TEditorContext; var s : string);
 var len : integer;
     w   : integer;
 begin
         len := ord(s[0]);
         w := ctx.current^.config^.width;
-        if len < ctx.current^.scrx then res := '' else res := copy(s, ctx.current^.scrx + 1, len - ctx.current^.scrx);
-        if ord(res[0]) > w then res := copy(res, 1, w);
+        if len < ctx.current^.scrx then s := '' else begin
+                if ctx.current^.scrx <> 0 then s := copy(s, ctx.current^.scrx + 1, len - ctx.current^.scrx);
+        end;
+        if ord(s[0]) > w then s := copy(s, 1, w);
 end;
 
 procedure update_full(var ctx : TEditorContext);
@@ -73,7 +75,7 @@ begin
         for i := 1 to h - 1 do begin
                 clinenum := strs.get_num(p);
                 strs.get(p, s);
-                get_str_part(ctx, s, s);
+                get_str_part(ctx, s);
                 scr.cln(0, i, text_color);
                 scr.print(0, i, text_color, s);
                 if selection then begin
@@ -112,7 +114,8 @@ begin
                 scr.locate(editor.x - 1 - scrx, scry + 1);
         end;
         x := 0;
-        get_str_part(ctx, ctx.current^.editor.line, line);
+        line := ctx.current^.editor.line;
+        get_str_part(ctx, line);
         scr.print(0, ctx.current^.scry + 1, ctx.current^.config^.color.text, line);
         scrx := ctx.current^.scrx;
         width := ctx.current^.config^.width;

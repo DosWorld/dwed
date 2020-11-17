@@ -48,10 +48,16 @@ TEvent = record
 end;
 
 procedure wait_event(var e : TEvent);
+function has_event:boolean;
 
 implementation
 
 uses mouse, kbd;
+
+function has_event:boolean;
+begin
+        has_event := kbd.haskey;
+end;
 
 procedure wait_event(var e : TEvent);
 var state    : byte;
@@ -60,6 +66,9 @@ var state    : byte;
 begin
         e.key := 0;
         e.etype := NONE;
+        e.is_ctrl := false;
+        e.is_alt := false;
+        e.is_shift := false;
         if mouse.mavail then begin
                 state := mouse.mbuttons;
                 e.mouse_x := mouse.mgetx;
@@ -76,9 +85,6 @@ begin
                 if kbd.haskey then begin
                         e.etype := KEYBOARD;
                         e.key := kbd.getkey;
-                        e.is_ctrl := kbd.is_ctrl;
-                        e.is_alt := kbd.is_alt;
-                        e.is_shift := kbd.is_shift;
                         break;
                 end;
                 if mouse.mavail then begin
@@ -101,6 +107,11 @@ begin
                                 e.etype := MOUSE_MOVE;
                         end;
                 end;
+        end;
+        if e.etype <> MOUSE_MOVE then begin
+                e.is_ctrl := kbd.is_ctrl;
+                e.is_alt := kbd.is_alt;
+                e.is_shift := kbd.is_shift;
         end;
 end;
 

@@ -26,7 +26,7 @@ unit dwedaddo;
 
 interface
 
-uses scr, scrui, kbd, strs, strutil, lfn, dwedtype;
+uses scr, scrui, kbd, strs, strutil, lfn, dwedtype, event;
 
 procedure addons_window(var ctx : TEditorContext);
 procedure ascii_table(var ctx : TEditorContext);
@@ -88,6 +88,7 @@ var        x, y, i, j : integer;
         key     : word;
         cb      : byte;
         ch      : char;
+        e       : TEvent;
 begin
         x := (scr.getwidth - 50) shr 1; y := (scr.getheight - 22) shr 1;
         scrui.box(x, y, 50, 22, $1b);
@@ -122,8 +123,11 @@ begin
                         '  ~Shift~+~'+#$11+#$D9+'~ Enter hex code'
                         );
                 scr.show;
-                key := kbd.getkey;
-                case key of
+                while true do begin
+                        wait_event(e);
+                        if e.etype = KEYBOARD then break;
+                end;
+                case e.key of
                 K_UP: dec(ascii_tbl_sel, 16);
                 K_DOWN: inc(ascii_tbl_sel, 16);
                 K_LEFT: dec(ascii_tbl_sel);
@@ -143,7 +147,7 @@ begin
                 end;
                 K_ESC: break;
                 end;
-                ch := upcase(chr(lo(key)));
+                ch := upcase(chr(lo(e.key)));
                 if ch in ['0'..'9'] then ascii_tbl_sel := (ascii_tbl_sel shl 4) or ((lo(key) - ord('0')) and $0F)
                 else if ch in ['A'..'F'] then ascii_tbl_sel := (ascii_tbl_sel shl 4) or ((lo(key) - ord('A') + 10) and $0F);
         end;
@@ -160,6 +164,7 @@ var x, y, i : integer;
         key        : word;
         ch         : char;
         insertStr  : string;
+        e          : TEvent;
 begin
         scr.set_cursor(scr.cursor_start, scr.cursor_end);
         x := (scr.getwidth - 41) shr 1;
@@ -192,8 +197,11 @@ begin
                 scr.chcolor(x + 7, y + 3, $1E, 8);
                 scr.chcolor(x + 7 + 16, y + 3, $1E, 8);
                 scr.show;
-                key := kbd.getkey;
-                case key of
+                while true do begin
+                        wait_event(e);
+                        if e.etype = KEYBOARD then break;
+                end;
+                case e.key of
                 K_ESC: begin insertStr := ''; break; end;
                 K_ENTER: begin
                         if not kbd.is_shift then begin
@@ -225,7 +233,7 @@ begin
                         else if radix = RADIX16 then calc_op1 := calc_op1 shr 8;
                 end;
                 end;
-                ch := upcase(chr(lo(key)));
+                ch := upcase(chr(lo(e.key)));
                 case ch of
                 'C': begin calc_op1 := 0; continue; end;
                 '+','-','*','/','M','&','|','^': begin calc_op := ch; calc_op2 := calc_op1; calc_op1 := 0; continue; end;

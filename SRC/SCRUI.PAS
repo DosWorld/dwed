@@ -64,14 +64,14 @@ begin
 end;
 
 function vmenu(x, y, w, h :integer; mclr, sclr:byte; title : string; mtext:pchar; var selItem:integer):word;
-var key : word;
-        i, total : integer;
-        scr_ofs : integer;
-        scr_y : integer;
-        tmp : pchar;
-        s : string;
-        c : byte;
-        hi_key : byte;
+var     i, total : integer;
+        scr_ofs  : integer;
+        scr_y    : integer;
+        tmp      : pchar;
+        s        : string;
+        c        : byte;
+        hi_key   : byte;
+        e        : TEvent;
 begin
         scr.cursor_off;
         scr.push;
@@ -115,9 +115,12 @@ begin
                 end;
                 scr.show;
                 kbd.reset;
-                key := getkey;
-                if is_shift or is_ctrl or is_alt then break;
-                hi_key := hi(key);
+                while true do begin
+                        wait_event(e);
+                        if e.etype = KEYBOARD then break;
+                end;
+                if e.is_shift or e.is_ctrl or e.is_alt then break;
+                hi_key := hi(e.key);
                 if hi_key = hi(K_UP) then begin
                         if selItem <> 0 then dec(selItem);
                 end else if hi_key = hi(K_HOME) then begin
@@ -133,7 +136,7 @@ begin
                 end else break;
         end;
         scr.pop;
-        vmenu := key;
+        vmenu := e.key;
 end;
 
 function hmenu(y : integer;

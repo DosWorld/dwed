@@ -48,9 +48,18 @@ begin
                         welcome_msg := false;
                 end;
                 scru := SCRU_NONE;
-
-                wait_event(event);
-                scru := process_event(ctx, event);
+                i := 0;
+                if has_event then begin
+                        while (has_event) and (i < 8) do begin
+                                wait_event(event);
+                                k := process_event(ctx, event);
+                                if k > scru then scru := k;
+                                inc(i);
+                        end;
+                end else begin
+                        wait_event(event);
+                        scru := process_event(ctx, event);
+                end;
         end;
 end;
 
