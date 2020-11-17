@@ -148,6 +148,7 @@ end;
 procedure split(var param, key, value : string);
 var        i : integer;
 begin
+        param := unquote(param);
         key := '';
         value := '';
         for i := 1 to length(param) do begin
@@ -158,7 +159,7 @@ begin
                 end;
         end;
         if (length(key) = 0) and (length(value) = 0) then key := param;
-        key := upstr(trim(key));
+        key := unquote(upstr(trim(key)));
         value := unquote(trim(value));
 end;
 
