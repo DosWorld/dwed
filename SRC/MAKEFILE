@@ -6,10 +6,10 @@ dwed.exe: dwed.pas dwedlnch.pas sysext.pas
 dwed16.exe: dwed16.pas dwedlnch.pas sysext.pas
         tpc -M dwed16.pas
 
-dwedovl.exe: dwedovl.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas lfn.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas dwedlnch.pas sysext.pas dwedpar.pas
+dwedovl.exe: dwedovl.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas lfn.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas dwedlnch.pas sysext.pas dwedpar.pas mouse.pas event.pas
         tpc -M dwedovl.pas
 
-dwedovlp.exe: dwedovl16.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas lfn.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas dwedlnch.pas sysext.pas dwedpar.pas
+dwedovlp.exe: dwedovl16.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas lfn.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas dwedlnch.pas sysext.pas dwedpar.pas mouse.pas event.pas
         bpc -CP -M dwedovlp.pas
 
 upx: dwed.exe

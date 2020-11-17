@@ -66,6 +66,8 @@ function gety:integer;
 
 implementation
 
+uses mouse;
+
 const vseg : word = 0;
 
 type
@@ -271,8 +273,11 @@ end;
 
 procedure show;assembler;
 asm
+        call       mhide
+
         push       es
         push       ds
+
 
         mov        ax, word ptr [vseg]
         mov        es, ax
@@ -284,8 +289,11 @@ asm
         cld
         repz       movsb
 
+
         pop        ds
         pop        es
+
+        call       mshow
 end;
 
 procedure locate(x, y : integer);assembler;

@@ -26,7 +26,7 @@ unit dwedtype;
 
 interface
 
-uses strs, dwedhl;
+uses strs, dwedhl, event;
 
 const
 
@@ -107,14 +107,6 @@ TEditorContext = record
         config         : TConfig;
         help_topic_id  : integer;
         temp           : string;
-end;
-
-PEvent =^ TEvent;
-TEvent = record
-        key            : word;
-        is_ctrl        : boolean;
-        is_shift       : boolean;
-        is_alt         : boolean;
 end;
 
 {$F+}

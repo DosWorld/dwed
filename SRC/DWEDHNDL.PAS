@@ -26,7 +26,7 @@ unit dwedhndl;
 
 interface
 
-uses dwedtype, dwedhelp;
+uses dwedtype, dwedhelp, event;
 
 function process_event(var ctx : TEditorContext; var e : TEvent) : integer;
 
@@ -73,23 +73,25 @@ var h : PEventHandler;
         proc : TEventProc;
 begin
         r := SCRU_NONE;
-        h := handlers;
-        xofs := ctx.current^.scrx;
-        while (h <> nil) do begin
-                if compare_event(e, h^.event) then begin
-                        proc := TEventProc(h^.proc);
-                        r := proc(ctx, @e);
-                        if h^.reset_selection and ctx.current^.editor.selection then begin
-                                ctx.current^.editor.selection := false;
-                                r := SCRU_FULL;
+        if e.etype = KEYBOARD then begin
+                h := handlers;
+                xofs := ctx.current^.scrx;
+                while (h <> nil) do begin
+                        if compare_event(e, h^.event) then begin
+                                proc := TEventProc(h^.proc);
+                                r := proc(ctx, @e);
+                                if h^.reset_selection and ctx.current^.editor.selection then begin
+                                        ctx.current^.editor.selection := false;
+                                        r := SCRU_FULL;
+                                end;
+                                break;
                         end;
-                        break;
+                        h := h^.next;
                 end;
-                h := h^.next;
+                if h = nil then r := hk_default(ctx, @e);
+                r := norm_xy(ctx, r);
+                if xofs <> ctx.current^.scrx then r := SCRU_FULL;
         end;
-        if h = nil then r := hk_default(ctx, @e);
-        r := norm_xy(ctx, r);
-        if xofs <> ctx.current^.scrx then r := SCRU_FULL;
         process_event := r;
 end;
 

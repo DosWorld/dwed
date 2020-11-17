@@ -30,17 +30,7 @@ procedure dwed_main(exe_path : string);
 
 implementation
 
-uses dos, scr, kbd, strs, strutil, lfn, dwedtype, dwedhndl, dwedutil, dwedhl, dwedscru, dwedlnch, dwedpar;
-
-procedure read_event(var event : TEvent);
-begin
-        with event do begin
-                key := kbd.getkey;
-                is_shift := kbd.is_shift;
-                is_alt := kbd.is_alt;
-                is_ctrl := kbd.is_ctrl;
-        end;
-end;
+uses dos, scr, kbd, strs, strutil, lfn, dwedtype, dwedhndl, dwedutil, dwedhl, dwedscru, dwedlnch, dwedpar, event;
 
 procedure edit(var ctx : TEditorContext; welcome_msg : boolean);
 var k, i, scru  :integer;
@@ -59,18 +49,8 @@ begin
                 end;
                 scru := SCRU_NONE;
 
-                if not kbd.haskey then begin
-                        read_event(event);
-                        scru := process_event(ctx, event);
-                end else begin
-                        i := 0;
-                        while kbd.haskey and (i < 8) do begin
-                                read_event(event);
-                                k := process_event(ctx, event);
-                                if k > scru then scru := k;
-                                inc(i);
-                        end;
-                end;
+                wait_event(event);
+                scru := process_event(ctx, event);
         end;
 end;
 
