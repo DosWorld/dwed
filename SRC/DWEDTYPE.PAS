@@ -130,6 +130,8 @@ TEventHandler = record
         next            : PEventHandler;
 end;
 
+PString = ^String;
+
 implementation
 
 end.

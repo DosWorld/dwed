@@ -30,7 +30,7 @@ procedure dwed_main(exe_path : string);
 
 implementation
 
-uses dos, scr, kbd, strs, strutil, lfn, dwedtype, dwedhndl, dwedutil, dwedhl, dwedscru, dwedlnch;
+uses dos, scr, kbd, strs, strutil, lfn, dwedtype, dwedhndl, dwedutil, dwedhl, dwedscru, dwedlnch, dwedpar;
 
 procedure read_event(var event : TEvent);
 begin
@@ -159,7 +159,7 @@ begin
         end;
         if (length(key) = 0) and (length(value) = 0) then key := param;
         key := upstr(trim(key));
-        value := trim(value);
+        value := unquote(trim(value));
 end;
 
 function has_switch(var s : string) : boolean;
@@ -244,6 +244,7 @@ var     ctx         : TEditorContext;
         key, value  : string;
         errCode     : integer;
         welcome_msg : boolean;
+        params      : ParamsContext;
 begin
         if not dwedlnch.is_installed then begin
                 writeln('This is overlay. Run DWED.EXE or join to the Dark Side.');
@@ -252,9 +253,9 @@ begin
         strs.init(strs.DOS);
         reset_context(ctx);
         if not load_config(ctx, 'DWED.CFG') then load_config(ctx, exe_path + 'DWED.CFG');
-        pCount := ParamCount;
-        for i := 1 to pCount do begin
-                param := ParamStr(i);
+        dwedpar.pinit(params, trim(PString(ptr(PrefixSeg, $80))^));
+        while phas_next(params) do begin
+                param := pnext(params);
                 if has_switch(param) then begin
                         System.delete(param, 1, 1);
                         split(param, key, value);
@@ -269,13 +270,15 @@ begin
                 lfn.file_delete(ctx.temp);
         end else begin
                 welcome_msg := true;
-                for i := 1 to pCount do begin
+                dwedpar.pinit(params, trim(PString(ptr(PrefixSeg, $80))^));
                         param := ParamStr(i);
-                        if not has_switch(param) then begin
-                                load_file(ctx, param, errCode, @file_progress);
-                                if errCode <> 0 then handle_error(ctx, errCode);
+                        while phas_next(params) do begin
+                                param := unquote(pnext(params));
+                                if not has_switch(param) then begin
+                                        load_file(ctx, param, errCode, @file_progress);
+                                        if errCode <> 0 then handle_error(ctx, errCode);
+                                end;
                         end;
-                end;
         end;
         if ctx.all = nil then new_file(ctx, 'NONAME.TXT');
         edit(ctx, welcome_msg);

@@ -71,6 +71,8 @@ function atoi(s : string; default_val : integer) : integer;
 function atol(s : string; default_val : longint) : longint;
 function ahtob(str : string) : byte;
 
+function unquote(str : string) : string;
+
 implementation
 
 function get_filename_ext(s : string):string;
@@ -377,6 +379,16 @@ begin
                 r := (r shl 4) or (k and $0F);
         end;
         ahtob := r;
+end;
+
+function unquote(str : string) : string;
+begin
+        if length(str) > 0 then begin
+                if str[1] = '"' then begin
+                        str := copy(str, 2, length(str) - 2);
+                end;
+        end;
+        unquote := str;
 end;
 
 end.

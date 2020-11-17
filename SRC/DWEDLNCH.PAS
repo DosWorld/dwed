@@ -35,6 +35,9 @@ implementation
 
 uses dos, strutil, sysext;
 
+Type
+PString = ^String;
+
 var
         oldInt21        : pointer;
         requested_cmd   : string[255];
@@ -232,6 +235,7 @@ end;
 procedure done;
 begin
         setIntVec($21, oldInt21);
+        requested_cmd := trim(requested_cmd);
 end;
 
 function is_installed : boolean;
@@ -269,19 +273,15 @@ var
         cur_dir   : string;
 
 procedure launcher(var exename:string);
-var params : string;
-        i : integer;
+var params   : string;
+    i        : integer;
 begin
         if is_installed then begin
                 writeln('DWED cycle execution detected.');
                 halt(1);
         end;
         randomize;
-        params := '';
-        for i := 1 to paramCount do begin
-                if i <> 1 then params := params + ' ';
-                params := params + paramStr(i);
-        end;
+        params := trim(PString(ptr(PrefixSeg, $80))^);
         cur_drive := sysext.getCurrentDisk;
         cur_dir := sysext.getCurrentDir;
         path := getpathname(paramstr(0));
