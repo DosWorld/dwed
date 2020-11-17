@@ -93,6 +93,7 @@ K_CTRL_G         = $2207;
 K_CTRL_L         = $260C;
 K_CTRL_F         = $2106;
 K_CTRL_K         = $250B;
+K_CTRL_O         = $180F;
 
 K_CTRL_ALT_A     = $1E00;
 K_CTRL_ALT_C     = $2E00;

@@ -4,6 +4,8 @@
 ~DWED~ is a fullfeatured multifile text-editor with
 internal cliboard and syntax highlight support.
 
+You can use ~DWED~ as ~IDE~ for programming.
+
 Designed for ~IBM-XT~-grade PC with Intel ~8086~/~88~ CPU
 and can work in Real Mode ~without~ DPMI.
 

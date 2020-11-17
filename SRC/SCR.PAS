@@ -23,9 +23,7 @@ SOFTWARE.
 }
 {$G-,B-,F+,S-,R-,I-}
 unit scr;
-{$ifdef go32v2}
-{$asmmode intel}
-{$endif}
+
 interface
 
 var
@@ -442,11 +440,7 @@ begin
         screen_size := (getwidth * getheight) shl 1;
         line_size := getwidth shl 1;
         getmem(screen, screen_size);
-{$ifdef go32v2}
-        move(ptr(vseg, 0), screen[0], screen_size);
-{$else}
         move(mem[vseg:0], screen[0], screen_size);
-{$endif}
 end;
 
 begin
