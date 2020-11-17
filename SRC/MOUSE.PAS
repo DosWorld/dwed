@@ -100,6 +100,8 @@ asm
         mov       ax, 3
         int       $33
         mov       ax, cx
+        mov       cl ,3
+        shr       ax, cl
 @nomouse:
 end;
 
@@ -111,6 +113,8 @@ asm
         mov       ax, 3
         int       $33
         mov       ax, dx
+        mov       cl ,3
+        shr       ax, cl
 @nomouse:
 end;
 

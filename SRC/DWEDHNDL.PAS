@@ -381,7 +381,6 @@ end;
 function hk_save_as(var ctx:TEditorContext; event:PEvent):integer;
 var    errCode    : integer;
        newname    : string;
-       key        : word;
        start_save : boolean;
        msg        : string;
 begin
@@ -393,9 +392,11 @@ begin
         scr.print(0, 0, ctx.current^.config^.color.top, msg);
         while true do begin
                 scr.show;
-                key := scrui.editstr(length(msg) + 1, 0, ctx.current^.config^.color.top, newname, 32, 255);
-                if key = K_ESC then begin start_save := false; break; end;
-                if key = K_ENTER then begin start_save := true; break; end;
+                scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, newname, 32, 255);
+                if event^.etype = KEYBOARD then begin
+                        if event^.key = K_ESC then begin start_save := false; break; end;
+                        if event^.key = K_ENTER then begin start_save := true; break; end;
+                end else if event^.etype <> MOUSE_MOVE then begin start_save := false; break; end;
         end;
         if start_save then begin
                 scr.cln(0, 0, ctx.current^.config^.color.top);
@@ -555,7 +556,6 @@ var r          : integer;
     msg        : string;
     lnum       : longint;
     newLine    : EditorStr;
-    key        : word;
     start_find : boolean;
 begin
         r := SCRU_CLINE;
@@ -565,9 +565,11 @@ begin
         scr.cln(0, 0, ctx.current^.config^.color.top);
         scr.print(0, 0, ctx.current^.config^.color.top, msg);
         while true do begin
-                key := scrui.editstr(length(msg) + 1, 0, ctx.current^.config^.color.top, lNumStr, 12, 12);
-                if key = K_ESC then begin start_find := false; break; end;
-                if key = K_ENTER then begin start_find := true; break; end;
+                scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, lNumStr, 12, 12);
+                if event^.etype = KEYBOARD then begin
+                        if event^.key = K_ESC then begin start_find := false; break; end;
+                        if event^.key = K_ENTER then begin start_find := true; break; end;
+                end else if event^.etype <> MOUSE_MOVE then begin start_find := false; break; end;
         end;
         if start_find then begin
                 lnum := atol(lNumStr, -1);
@@ -821,7 +823,6 @@ var r : integer;
         searchStr      : string;
         replaceStr     : string;
         start_find     : boolean;
-        key            : word;
         searchCaseSens : boolean;
 begin
         searchCaseSens := event^.is_shift;
@@ -841,9 +842,11 @@ begin
         scr.print(0, 0,ctx.current^.config^.color.top, msg); 
         scr.show;
         while true do begin
-                key := scrui.editstr(length(msg) + 1, 0, ctx.current^.config^.color.top, searchStr, 32, 64);
-                if key = K_ESC then begin start_find := false; break; end;
-                if key = K_ENTER then begin start_find := true; break; end;
+                scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, searchStr, 32, 64);
+                if event^.etype = KEYBOARD then begin
+                        if event^.key = K_ESC then begin start_find := false; break; end;
+                        if event^.key = K_ENTER then begin start_find := true; break; end;
+                end else if event^.etype <> MOUSE_MOVE then begin start_find := false; break; end;
         end;
         searchStr := trim(searchStr);
         if length(searchStr) = 0 then start_find := false;
@@ -852,9 +855,11 @@ begin
                 scr.cln(0, 0, ctx.current^.config^.color.top);
                 scr.print(0, 0, ctx.current^.config^.color.top, msg);
                 while true do begin
-                        key := scrui.editstr(length(msg) + 1, 0, ctx.current^.config^.color.top, replaceStr, 32, 64);
-                        if key = K_ESC then begin start_find := false; break; end;
-                        if key = K_ENTER then begin break; end;
+                        scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, replaceStr, 32, 64);
+                        if event^.etype = KEYBOARD then begin
+                                if event^.key = K_ESC then begin start_find := false; break; end;
+                                if event^.key = K_ENTER then begin break; end;
+                        end else if event^.etype <> MOUSE_MOVE then begin start_find := false; break; end;
                 end;
         end;
         if start_find then begin
@@ -898,7 +903,6 @@ function hk_cb_save(var ctx:TEditorContext; event:PEvent):integer;
 var fname : string;
         msg        : string;
         start_save : boolean;
-        key        : word;
         errCode    : integer;
 begin
         commit(ctx);
@@ -908,9 +912,11 @@ begin
         scr.print(0, 0, ctx.current^.config^.color.top, msg);
         while true do begin
                 scr.show;
-                key := scrui.editstr(length(msg) + 1, 0, ctx.current^.config^.color.top, fname, 32, 255);
-                if key = K_ESC then begin start_save := false; break; end;
-                if key = K_ENTER then begin start_save := true; break; end;
+                scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, fname, 32, 255);
+                if event^.etype = KEYBOARD then begin
+                if event^.key = K_ESC then begin start_save := false; break; end;
+                if event^.key = K_ENTER then begin start_save := true; break; end;
+                end else if event^.etype <> MOUSE_MOVE then begin start_save := false; break; end;
         end;
         if start_save then begin
                 errCode := save_clipboard(ctx, fname);
@@ -923,7 +929,6 @@ function hk_cb_load(var ctx:TEditorContext; event:PEvent):integer;
 var fname : string;
         msg        : string;
         start_load : boolean;
-        key        : word;
         errCode    : integer;
 begin
         commit(ctx);
@@ -933,9 +938,11 @@ begin
         scr.print(0, 0, ctx.current^.config^.color.top, msg);
         while true do begin
                 scr.show;
-                key := scrui.editstr(length(msg) + 1, 0, ctx.current^.config^.color.top, fname, 32, 255);
-                if key = K_ESC then begin start_load := false; break; end;
-                if key = K_ENTER then begin start_load := true; break; end;
+                scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, fname, 32, 255);
+                if event^.etype = KEYBOARD then begin
+                        if event^.key = K_ESC then begin start_load := false; break; end;
+                        if event^.key = K_ENTER then begin start_load := true; break; end;
+                end else if event^.etype <> MOUSE_MOVE then begin start_load := false; break; end;
         end;
         errCode := 0;
         if start_load then load_clipboard(ctx, fname);
@@ -1018,7 +1025,6 @@ function hk_load(var ctx:TEditorContext; event:PEvent):integer;
 var r : integer;
         msg        : string;
         fname      : string;
-        key        : word;
         start_load : boolean;
         errCode    : integer;
 begin
@@ -1030,9 +1036,11 @@ begin
         scr.print(0, 0, ctx.current^.config^.color.top, msg);
         while true do begin
                 scr.show;
-                key := scrui.editstr(length(msg) + 1, 0, ctx.current^.config^.color.top, fname, 32, 255);
-                if key = K_ESC then begin start_load := false; break; end;
-                if key = K_ENTER then begin start_load := true; break; end;
+                scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, fname, 32, 255);
+                if event^.etype = KEYBOARD then begin
+                        if event^.key = K_ESC then begin start_load := false; break; end;
+                        if event^.key = K_ENTER then begin start_load := true; break; end;
+                end else if event^.etype <> MOUSE_MOVE then begin start_load := false; break; end;
         end;
         if start_load then begin
                 load_file(ctx, fname, errCode, @file_progress);

@@ -26,6 +26,8 @@ unit scrui;
 
 interface
 
+uses event;
+
 type
 ANSWER = (YES, NO, CANCEL, RETRY, IGNORE, ALL, MAYBE, IDONTKNOWN, ASKMETOMORROW);
 
@@ -37,7 +39,7 @@ function hmenu(y : integer;
         var selx:integer; var sely:integer;
         var lineId : String):word;
 
-function editstr(x, y : integer; clr:byte; var str : string; vislen, maxlen:integer):word;
+procedure editstr(var e : TEvent; x, y : integer; clr:byte; var str : string; vislen, maxlen:integer);
 
 function yes_no : ANSWER;
 function yes_no_cancel:ANSWER;
@@ -160,9 +162,8 @@ begin
         hmenu := key;
 end;
 
-function editstr(x, y : integer; clr:byte; var str : string; vislen, maxlen:integer):word;
-var key : word;
-    visstr : string;
+procedure editstr(var e : TEvent; x, y : integer; clr:byte; var str : string; vislen, maxlen:integer);
+var visstr : string;
     save_cursor_start : byte;
     save_cursor_end   : byte;
     pos : integer;
@@ -183,42 +184,52 @@ begin
                 scr.print(x, y, clr, visstr);
                 scr.show;
                 kbd.reset;
-                key := getkey;
-                case key of
-                K_BS:   if (length(str) <> 0) and (pos > 1) then begin
-                                delete(str, pos - 1, 1);
-                                dec(pos);
+                wait_event(e);
+                if e.etype = KEYBOARD then begin
+                        case e.key of
+                        K_BS:   if (length(str) <> 0) and (pos > 1) then begin
+                                        delete(str, pos - 1, 1);
+                                        dec(pos);
+                                end;
+                        K_DEL:  if (length(str) + 1 <> pos) then begin
+                                        delete(str, pos, 1);
+                                end;
+                        K_HOME: begin
+                                pos := 1;
+                                ofs_x := 0;
                         end;
-                K_DEL:  if (length(str) + 1 <> pos) then begin
-                                delete(str, pos, 1);
+                        K_END: begin
+                                pos := length(str) + 1;
+                                ofs_x := 0;
                         end;
-                K_HOME: begin
-                        pos := 1;
-                        ofs_x := 0;
-                end;
-                K_END: begin
-                        pos := length(str) + 1;
-                        ofs_x := 0;
-                end;
-                K_LEFT: begin
-                        if pos > 1 then dec(pos);
-                end;
-                K_RIGHT: begin
-                        if pos <= length(str) then inc(pos);
-                end;
-                K_ENTER: break;
-                K_ESC: break;
-                K_TAB: break;
-                K_SHIFT_TAB: break;
-                else if lo(key) >= 32 then
-                        if length(str) <> maxlen then begin
-                                System.insert(chr(lo(key)), str, pos);
-                                inc(pos);
+                        K_LEFT: begin
+                                if pos > 1 then dec(pos);
                         end;
-                end;
+                        K_RIGHT: begin
+                                if pos <= length(str) then inc(pos);
+                        end;
+                        K_ENTER: break;
+                        K_ESC: break;
+                        K_TAB: break;
+                        K_SHIFT_TAB: break;
+                        else if lo(e.key) >= 32 then
+                                if length(str) <> maxlen then begin
+                                        System.insert(chr(lo(e.key)), str, pos);
+                                        inc(pos);
+                                end;
+                        end;
+                end else if (e.etype = MOUSE_PRESS_B1)
+                        and (e.mouse_y = y)
+                        and (e.mouse_x >= x) and (e.mouse_x < x + vislen)
+                        then begin
+                                pos := ofs_x + (e.mouse_x - x) + 1;
+                end else if (e.etype = MOUSE_RELEASE_B1)
+                        and (e.mouse_y = y)
+                        and (e.mouse_x >= x) and (e.mouse_x < x + vislen)
+                        then begin
+                end else if e.etype <> MOUSE_MOVE then break;
         end;
         scr.set_cursor(save_cursor_start, save_cursor_end);
-        editstr := key;
 end;
 
 function yes_no : ANSWER;
