@@ -79,6 +79,12 @@ begin
                 prev := cur;
         end;
         res := copy(ctx.line, i, ctx.pos - i);
+        if length(res) > 0 then begin
+                if res[1] = '"' then begin
+                        res := copy(res, 2, length(res) - 2);
+                end;
+        end;
+
         pnext := res;
 end;
 

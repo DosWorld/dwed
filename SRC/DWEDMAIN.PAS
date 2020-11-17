@@ -148,7 +148,6 @@ end;
 procedure split(var param, key, value : string);
 var        i : integer;
 begin
-        param := unquote(param);
         key := '';
         value := '';
         for i := 1 to length(param) do begin
@@ -274,7 +273,7 @@ begin
                 welcome_msg := true;
                 dwedpar.preset(params);
                 while phas_next(params) do begin
-                        param := unquote(pnext(params));
+                        param := pnext(params);
                         if not has_switch(param) then begin
                                 load_file(ctx, param, errCode, @file_progress);
                                 if errCode <> 0 then handle_error(ctx, errCode);
