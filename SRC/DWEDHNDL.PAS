@@ -55,6 +55,8 @@ begin
 end;
 
 function hk_default(var ctx : TEditorContext; event : PEvent) : integer;forward;
+function handle_mouse(var ctx : TEditorContext; event : PEvent) : integer;forward;
+procedure check_begin_selection(var ctx:TEditorContext);forward;
 
 {$F-}
 function compare_event(var e1, e2 : TEvent) : boolean;
@@ -89,13 +91,66 @@ begin
                         h := h^.next;
                 end;
                 if h = nil then r := hk_default(ctx, @e);
-                r := norm_xy(ctx, r);
                 if xofs <> ctx.current^.scrx then r := SCRU_FULL;
+        end else if e.etype in [MOUSE_MOVE,
+                MOUSE_PRESS_B1, MOUSE_PRESS_B2,
+                MOUSE_RELEASE_B1, MOUSE_RELEASE_B2 ] then begin
+                r := handle_mouse(ctx, @e);
         end;
+        if r <> SCRU_NONE then r := norm_xy(ctx, r);
         process_event := r;
 end;
 
 {$F+}
+
+function goto_mouse(var ctx : TEditorContext; event : PEvent) : integer;
+var  r : integer;
+     step  : integer;
+     line  : EditorStr;
+     steps : integer;
+begin
+        commit(ctx);
+        dec(event^.mouse_y);
+        if ctx.current^.scry > event^.mouse_y then step := -1 else step := 1;
+        steps := 0;
+        while ctx.current^.scry <> event^.mouse_y do begin
+                if step < 1 then line := strs.go_prev(ctx.current^.cline)
+                else line := strs.go_next(ctx.current^.cline);
+                if line = nil then break;
+                inc(steps);
+                ctx.current^.cline := line;
+                inc(ctx.current^.scry, step);
+        end;
+        ctx.current^.editor.x := event^.mouse_x + ctx.current^.scrx + 1;
+        if steps = 0 then r := SCRU_CLINE else begin
+                load_ed(ctx);
+                r := SCRU_FULL;
+        end;
+        goto_mouse := r;
+end;
+
+function handle_mouse(var ctx : TEditorContext; event : PEvent) : integer;
+var  r : integer;
+begin
+        r := SCRU_NONE;
+        if event^.etype = MOUSE_PRESS_B1 then begin
+                commit(ctx);
+                r := goto_mouse(ctx, event);
+                if (ctx.current^.editor.selection) then begin 
+                        ctx.current^.editor.selection := false;
+                        r := SCRU_FULL;
+                end;
+        end else if (event^.etype = MOUSE_MOVE) and event^.mouse_left then begin
+                if not ctx.current^.editor.selection then begin
+                        check_begin_selection(ctx);
+                end else begin
+                        r := goto_mouse(ctx, event);
+                        r := SCRU_FULL;
+                end;
+
+        end;
+        handle_mouse := r;
+end;
 
 function hk_up(var ctx : TEditorContext; event : PEvent) : integer;
 begin
