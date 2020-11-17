@@ -35,6 +35,7 @@ ParamsContext=record
 end;
 
 procedure pinit(var ctx : ParamsContext; cmdParams : string);
+procedure preset(var ctx : ParamsContext);
 function phas_next(var ctx : ParamsContext) : boolean;
 function pnext(var ctx : ParamsContext) : string;
 
@@ -45,6 +46,11 @@ begin
         ctx.pos := 1;
         ctx.line := cmdParams;
         ctx.len := length(ctx.line);
+end;
+
+procedure preset(var ctx : ParamsContext);
+begin
+        ctx.pos := 1;
 end;
 
 function phas_next(var ctx : ParamsContext) : boolean;

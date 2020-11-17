@@ -251,9 +251,10 @@ begin
                 halt(1);
         end;
         strs.init(strs.DOS);
+        dwedpar.pinit(params, trim(PString(ptr(PrefixSeg, $80))^));
         reset_context(ctx);
         if not load_config(ctx, 'DWED.CFG') then load_config(ctx, exe_path + 'DWED.CFG');
-        dwedpar.pinit(params, trim(PString(ptr(PrefixSeg, $80))^));
+        dwedpar.preset(params);
         while phas_next(params) do begin
                 param := pnext(params);
                 if has_switch(param) then begin
@@ -270,15 +271,14 @@ begin
                 lfn.file_delete(ctx.temp);
         end else begin
                 welcome_msg := true;
-                dwedpar.pinit(params, trim(PString(ptr(PrefixSeg, $80))^));
-                        param := ParamStr(i);
-                        while phas_next(params) do begin
-                                param := unquote(pnext(params));
-                                if not has_switch(param) then begin
-                                        load_file(ctx, param, errCode, @file_progress);
-                                        if errCode <> 0 then handle_error(ctx, errCode);
-                                end;
+                dwedpar.preset(params);
+                while phas_next(params) do begin
+                        param := unquote(pnext(params));
+                        if not has_switch(param) then begin
+                                load_file(ctx, param, errCode, @file_progress);
+                                if errCode <> 0 then handle_error(ctx, errCode);
                         end;
+                end;
         end;
         if ctx.all = nil then new_file(ctx, 'NONAME.TXT');
         edit(ctx, welcome_msg);
