@@ -356,6 +356,7 @@ begin
                                         scr.cln(0, 0, config^.color.top);
                                         scr.print(1, 0, config^.color.top, 'Save "' + sfname + '"');
                                         scr.show;
+                                        lfn.create(fname);
                                         strs.to_file(fname, rline, errCode, @file_progress);
                                         if errCode <> 0 then begin
                                                 handle_error(ctx, errCode);
@@ -396,12 +397,10 @@ begin
                 if key = K_ENTER then begin start_save := true; break; end;
         end;
         if start_save then begin
-                with ctx.current^ do begin
-                        scr.cln(0, 0, config^.color.top);
-                        scr.print(1, 0, config^.color.top, 'Save "' + sfname + '"');
-                        scr.show;
-                end;
-                lfn.create(ctx.current^.fname);
+                scr.cln(0, 0, ctx.current^.config^.color.top);
+                scr.print(1, 0, ctx.current^.config^.color.top, 'Save "' + newname + '"');
+                scr.show;
+                lfn.create(newname);
                 strs.to_file(newname, ctx.current^.rline, errCode, @file_progress);
                 if errCode <> 0 then handle_error(ctx, errCode) else ctx.current^.chg := false;
                 if errCode = 0 then begin
