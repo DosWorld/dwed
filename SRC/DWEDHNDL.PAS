@@ -135,10 +135,18 @@ begin
         r := SCRU_NONE;
         if event^.etype = MOUSE_PRESS_B1 then begin
                 commit(ctx);
-                r := goto_mouse(ctx, event);
                 if (ctx.current^.editor.selection) then begin 
+                        r := goto_mouse(ctx, event);
                         ctx.current^.editor.selection := false;
                         r := SCRU_FULL;
+                end else begin
+                        if event^.is_shift then begin
+                                check_begin_selection(ctx);
+                                r := goto_mouse(ctx, event);
+                                r := SCRU_FULL;
+                        end else begin
+                                r := goto_mouse(ctx, event);
+                        end;
                 end;
         end else if (event^.etype = MOUSE_MOVE) and event^.mouse_left then begin
                 if not ctx.current^.editor.selection then begin
