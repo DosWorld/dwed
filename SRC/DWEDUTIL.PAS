@@ -228,14 +228,13 @@ begin
         go_char_right := r;
 end;
 
-function is_space_skip(c : char) : boolean;
+function is_split_chr(c : char):boolean;
 begin
-        is_space_skip := not ((c in ['a'..'z', 'A'..'Z', '0'..'9', '_']) or (c > #$7f));
+        is_split_chr := c in ['(', ')', '[', ']', '.', ',', ' '];
 end;
 
 function go_word_left(var ctx : TEditorContext) : integer;
 var r : integer;
-        state : boolean;
 begin
         r := SCRU_NONE;
         if ctx.current^.editor.x = 1 then begin
@@ -251,10 +250,19 @@ begin
                 end;
         end else begin
                 with ctx.current^.editor do if x > length(line) then x := length(line);
-                state := is_space_skip(ctx.current^.editor.line[ctx.current^.editor.x]);
-                while ctx.current^.editor.x > 1 do begin
-                        if state <> is_space_skip(ctx.current^.editor.line[ctx.current^.editor.x]) then break;
-                        dec(ctx.current^.editor.x);
+                dec(ctx.current^.editor.x);
+                if ctx.current^.editor.x > 1 then begin
+                        while (ctx.current^.editor.x > 1)
+                                and (ctx.current^.editor.line[ctx.current^.editor.x] <= ' ')
+                                do begin
+                                dec(ctx.current^.editor.x);
+                        end;
+                        while (ctx.current^.editor.x > 1)
+                                and (ctx.current^.editor.line[ctx.current^.editor.x] > ' ')
+                                do begin
+                                if is_split_chr(ctx.current^.editor.line[ctx.current^.editor.x]) then break;
+                                dec(ctx.current^.editor.x);
+                        end;
                 end;
                 r := SCRU_CLINE;
         end;
@@ -280,10 +288,25 @@ begin
         end else begin
                 if ctx.current^.editor.x > length(ctx.current^.editor.line)
                         then ctx.current^.editor.x := length(ctx.current^.editor.line);
-                state := is_space_skip(ctx.current^.editor.line[ctx.current^.editor.x]);
-                while ctx.current^.editor.x < length(ctx.current^.editor.line) + 1 do begin
-                        if state <> is_space_skip(ctx.current^.editor.line[ctx.current^.editor.x]) then break;
-                        inc(ctx.current^.editor.x);
+                inc(ctx.current^.editor.x);
+                if ctx.current^.editor.x < length(ctx.current^.editor.line) then begin
+                        if ctx.current^.editor.line[ctx.current^.editor.x] <= ' ' then begin
+                                while (ctx.current^.editor.x < length(ctx.current^.editor.line))
+                                        and (ctx.current^.editor.line[ctx.current^.editor.x] <= ' ')
+                                        do inc(ctx.current^.editor.x); 
+                        end else begin
+                                while (ctx.current^.editor.x < length(ctx.current^.editor.line))
+                                        and (ctx.current^.editor.line[ctx.current^.editor.x] > ' ')
+                                        do begin
+                                        if is_split_chr(ctx.current^.editor.line[ctx.current^.editor.x]) then break;
+                                        inc(ctx.current^.editor.x);
+                                end;
+                                while (ctx.current^.editor.x < length(ctx.current^.editor.line))
+                                        and (ctx.current^.editor.line[ctx.current^.editor.x] <= ' ')
+                                        do begin
+                                        inc(ctx.current^.editor.x);
+                                end;
+                        end;
                 end;
                 r := SCRU_CLINE;
         end;
