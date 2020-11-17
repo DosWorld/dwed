@@ -79,6 +79,7 @@ begin
                 inc(ctx.pos);
                 prev := cur;
         end;
+        res := copy(ctx.line, i, ctx.pos - i);
         rres := '';
         for i := 1 to length(res) do begin
                 if res[i] <> '"' then rres := rres + res[i];
