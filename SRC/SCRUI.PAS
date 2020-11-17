@@ -165,30 +165,57 @@ var key : word;
     visstr : string;
     save_cursor_start : byte;
     save_cursor_end   : byte;
+    pos : integer;
+    ofs_x : integer;
 begin
         save_cursor_start := scr.get_cursor_start;
         save_cursor_end := scr.get_cursor_end;
         scr.set_cursor(scr.cursor_start, scr.cursor_end);
+        pos := length(str) + 1;
+        ofs_x := 0;
         while true do begin
-                visstr := str;
-                if length(visstr) > vislen then visstr := copy(visstr, length(visstr) - vislen, vislen);
-                locate(x + length(visstr), y);
+                if pos - ofs_x > vislen then ofs_x := pos - vislen - 1;
+                if ofs_x + 1 > pos then ofs_x := pos - 1;
+                if ofs_x < 0 then ofs_x := 0;
+                visstr := copy(str, ofs_x + 1, vislen);
+                locate(x + pos - ofs_x - 1, y);
                 visstr := rpad(visstr, vislen);
                 scr.print(x, y, clr, visstr);
                 scr.show;
                 kbd.reset;
                 key := getkey;
-                if (key = K_BS) then begin
-                        if  length(str)<>0 then str := copy(str, 1, length(str) - 1);
-                end else if lo(key) >= 32 then begin
-                        if length(str) <> maxlen then begin
-                                str := str + chr(lo(key));
+                case key of
+                K_BS:   if (length(str) <> 0) and (pos > 1) then begin
+                                delete(str, pos - 1, 1);
+                                dec(pos);
                         end;
-                end else if (key = K_ENTER)
-                        or (key = K_ESC)
-                        or (key = K_TAB)
-                        or (key = K_SHIFT_TAB)
-                        then break;
+                K_DEL:  if (length(str) + 1 <> pos) then begin
+                                delete(str, pos, 1);
+                        end;
+                K_HOME: begin
+                        pos := 1;
+                        ofs_x := 0;
+                end;
+                K_END: begin
+                        pos := length(str) + 1;
+                        ofs_x := 0;
+                end;
+                K_LEFT: begin
+                        if pos > 1 then dec(pos);
+                end;
+                K_RIGHT: begin
+                        if pos <= length(str) then inc(pos);
+                end;
+                K_ENTER: break;
+                K_ESC: break;
+                K_TAB: break;
+                K_SHIFT_TAB: break;
+                else if lo(key) >= 32 then
+                        if length(str) <> maxlen then begin
+                                System.insert(chr(lo(key)), str, pos);
+                                inc(pos);
+                        end;
+                end;
         end;
         scr.set_cursor(save_cursor_start, save_cursor_end);
         editstr := key;
