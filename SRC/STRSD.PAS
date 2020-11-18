@@ -258,20 +258,21 @@ begin
         lnum := 0;
         if not ((r = nil) or (p = nil)) then begin
                 s := '';
+                strsd.get(r, src);
                 while p[0] <> #0 do begin
                         c := p[0];
                         case c of
                         #$0A: begin
                                 inc(lnum);
-                                strsd.get(r, src);
                                 s1 := '';
                                 s2 := '';
                                 len := length(src);
                                 if len > 0 then s1 := copy(src, 1, pos - 1);
-                                if pos < len then s2 := copy(src, pos, len - pos + 1);
+                                if pos <= len then s2 := copy(src, pos, len - pos + 1);
                                 s1 := s1 + s;
                                 r := strsd.put(r, s1);
                                 r := strsd.create(Pstring(r)^.next, r, s2);
+                                src := s2;
                                 pos := 1;
                                 s := '';
                         end;
@@ -281,7 +282,7 @@ begin
                 end;
                 if length(s) <> 0 then begin
                         strsd.get(r, s1);
-                        insert(s, s1, pos);
+                        System.insert(s, s1, pos);
                         inc(pos, length(s));
                         r := strsd.put(r, s1);
                 end;
