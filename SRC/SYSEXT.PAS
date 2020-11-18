@@ -33,9 +33,6 @@ procedure setCurrentDisk(disk : byte);
 function getCurrentDir:string;
 procedure setCurrentDir(dir : string);
 
-function checkDriveExist(disk : byte):boolean;
-function getAllDrives:string;
-
 implementation
 
 var buf : string;
@@ -94,30 +91,6 @@ begin
                 mov        ah, $3b
                 int        $21
         end;
-end;
-
-function checkDriveExist(disk : byte):boolean;assembler;
-asm
-        mov        dl, byte ptr [disk]
-        inc        dl
-        mov        ah, $36
-        int        $21
-        xor        cl, cl
-        cmp        ax, $FFFF
-        dec        cl
-@nodrive:
-        mov        al, bl
-end;
-
-function getAllDrives:string;
-var r : string;
-    i : integer;
-begin
-        r := '';
-        for i := ord('A') to ord('Z') do begin
-                if checkDriveExist(i - ord('A')) then r := r + chr(i);
-        end;
-        getAllDrives := r;
 end;
 
 end.
