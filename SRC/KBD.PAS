@@ -176,5 +176,5 @@ asm
 end;
 
 begin
-        have_ext_kb := (get_kbd_funct and $20) <> 0;
+        have_ext_kb := false; { (get_kbd_funct and $20) <> 0;}
 end.
