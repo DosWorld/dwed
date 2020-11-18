@@ -43,18 +43,20 @@ const addons_menu : pchar =
 
 procedure addons_window(var ctx : TEditorContext);
 var sitem : integer;
-    key : word;
+    e     : TEvent;
 begin
         scr.push;
         sitem := 0;
         while true do begin
-                key := scrui.vmenu(1, 2, 33, scr.getheight - 3,
+                scrui.vmenu(e, 1, 2, 33, scr.getheight - 3,
                         ctx.config.color.menu,
                         ctx.config.color.menu_sel,
                         'Addons',
                         addons_menu, sitem);
-                if key = K_ESC then begin sitem := -1; break; end;
-                if (key = K_ENTER) or (lo(key) = 32) then break;
+                if e.etype in [MOUSE_PRESS_B1, MOUSE_PRESS_B2] then begin sitem := -1; break; end;
+                if e.etype <> KEYBOARD then continue;
+                if e.key = K_ESC then begin sitem := -1; break; end;
+                if (e.key = K_ENTER) or (lo(e.key) = 32) then break;
         end;
         scr.pop;
         if sitem = -1 then exit;
@@ -85,7 +87,6 @@ procedure ascii_table(var ctx : TEditorContext);
 var        x, y, i, j : integer;
         b       : boolean;
         color   : byte;
-        key     : word;
         cb      : byte;
         ch      : char;
         e       : TEvent;
@@ -146,10 +147,16 @@ begin
                         end;
                 end;
                 K_ESC: break;
+                else begin
+                        ch := upcase(chr(lo(e.key)));
+                        if ch in ['0'..'9'] then
+                                ascii_tbl_sel := (ascii_tbl_sel shl 4)
+                                        or ((ord(ch) - ord('0')) and $0F)
+                        else if ch in ['A'..'F'] then
+                                ascii_tbl_sel := (ascii_tbl_sel shl 4)
+                                        or ((ord(ch) - ord('A') + 10) and $0F);
                 end;
-                ch := upcase(chr(lo(e.key)));
-                if ch in ['0'..'9'] then ascii_tbl_sel := (ascii_tbl_sel shl 4) or ((lo(key) - ord('0')) and $0F)
-                else if ch in ['A'..'F'] then ascii_tbl_sel := (ascii_tbl_sel shl 4) or ((lo(key) - ord('A') + 10) and $0F);
+                end;
         end;
 end;
 

@@ -449,6 +449,7 @@ begin
         line_size := getwidth shl 1;
         getmem(screen, screen_size);
         move(mem[vseg:0], screen[0], screen_size);
+	mouse.mshow;
 end;
 
 begin

@@ -32,7 +32,7 @@ type
 ANSWER = (YES, NO, CANCEL, RETRY, IGNORE, ALL, MAYBE, IDONTKNOWN, ASKMETOMORROW);
 
 procedure box(x, y, w, h :integer; clr:byte);
-function vmenu(x, y, w, h :integer; mclr, sclr:byte; title : string; mtext:pchar; var selItem:integer):word;
+procedure vmenu(var e : TEvent;x, y, w, h :integer; mclr, sclr:byte; title : string; mtext:pchar; var selItem:integer);
 function hmenu(y : integer;
         mclr, sclr : byte;
         mtext : pchar;
@@ -44,6 +44,7 @@ procedure editstr(var e : TEvent; x, y : integer; clr:byte; var str : string; vi
 function yes_no : ANSWER;
 function yes_no_cancel:ANSWER;
 procedure msg_box(color : byte; title, content, bottom : string);
+function in_bound(x1, y1, x2, y2 : integer; x, y : integer):boolean;
 
 implementation
 
@@ -63,7 +64,13 @@ begin
         scr.hprint(x + w - 1, y + h - 1, clr, #$D9, 1);
 end;
 
-function vmenu(x, y, w, h :integer; mclr, sclr:byte; title : string; mtext:pchar; var selItem:integer):word;
+function in_bound(x1, y1, x2, y2 : integer; x, y : integer):boolean;
+begin
+        in_bound := (x1 <= x) and (x <= x2)
+                        and (y1 <= y) and (y <= y2);
+end;
+
+procedure vmenu(var e : TEvent;x, y, w, h :integer; mclr, sclr:byte; title : string; mtext:pchar; var selItem:integer);
 var     i, total : integer;
         scr_ofs  : integer;
         scr_y    : integer;
@@ -71,7 +78,6 @@ var     i, total : integer;
         s        : string;
         c        : byte;
         hi_key   : byte;
-        e        : TEvent;
 begin
         scr.cursor_off;
         scr.push;
@@ -118,7 +124,21 @@ begin
                 while true do begin
                         wait_event(e);
                         if e.etype = KEYBOARD then break;
+                        if e.etype = MOUSE_PRESS_B1 then begin
+                                if in_bound(x, y, x + w, y + h,
+                                   e.mouse_x, e.mouse_y)
+                                   and (scr_ofs + (e.mouse_y - y) <= total) then begin
+                                   e.etype := KEYBOARD;
+                                   e.key := K_ENTER;
+                                   selItem := scr_ofs + (e.mouse_y - y);
+                                   break;
+                                end else if in_bound(x - 1, y - 1, x + w + 1, y + h - 1,
+                                   e.mouse_x, e.mouse_y) then begin
+                                   continue;
+                                end else break;
+                        end;
                 end;
+                if e.etype <> KEYBOARD then break;
                 if e.is_shift or e.is_ctrl or e.is_alt then break;
                 hi_key := hi(e.key);
                 if hi_key = hi(K_UP) then begin
@@ -136,7 +156,6 @@ begin
                 end else break;
         end;
         scr.pop;
-        vmenu := e.key;
 end;
 
 function hmenu(y : integer;

@@ -33,7 +33,7 @@ procedure dwed_help(var topic_id:integer;
 
 implementation
 
-uses scr, scrui, kbd, strutil, help;
+uses scr, scrui, kbd, strutil, help, event;
 
 procedure helpbin;external;
 {$L dwedhelp.obj}
@@ -57,11 +57,11 @@ procedure dwed_help(var topic_id:integer;
         help_clr,
         help_hl_clr : byte);
 var r : PHelpTopicList;
-        w         : word;
         y, i      : integer;
         p         : pchar;
         helpStr   : string;
         selItem   : integer;
+        e         : TEvent;
 begin
         scr.cursor_off;
         r := nil;
@@ -103,11 +103,14 @@ begin
                                 scr.printhl(width + 5, y, help_clr, help_hl_clr, helpStr);
                         end;
                 end;
-                w := scrui.vmenu(0, 1, width + 4, scr.getheight - 1,
-                        help_menu_clr, help_menu_sel_clr,
-                        'Help', topic_menu, selItem);
-                if (w = K_ESC) or (w = K_BS) then break;
-                if (w = K_ENTER) or (lo(w) = 32) then begin
+                while true do begin
+                        scrui.vmenu(e, 0, 1, width + 4, scr.getheight - 1,
+                                help_menu_clr, help_menu_sel_clr,
+                                'Help', topic_menu, selItem);
+                        if e.etype = KEYBOARD then break;
+                end;
+                if (e.key = K_ESC) or (e.key = K_BS) then break;
+                if (e.key = K_ENTER) or (lo(e.key) = 32) then begin
                         topic_id := selItem;
                 end;
         end;

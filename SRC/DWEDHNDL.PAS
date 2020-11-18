@@ -57,6 +57,9 @@ end;
 function hk_default(var ctx : TEditorContext; event : PEvent) : integer;forward;
 function handle_mouse(var ctx : TEditorContext; event : PEvent) : integer;forward;
 procedure check_begin_selection(var ctx:TEditorContext);forward;
+function hk_cb_paste(var ctx:TEditorContext; event:PEvent):integer;forward;
+function hk_cb_copy(var ctx:TEditorContext; event:PEvent):integer;forward;
+function hk_cb_cut(var ctx:TEditorContext; event:PEvent):integer;forward;
 
 {$F-}
 function compare_event(var e1, e2 : TEvent) : boolean;
@@ -129,8 +132,19 @@ begin
         goto_mouse := r;
 end;
 
+const
+MM_T1 : string[8] = ' Paste ' + #0;
+MM_T2 : string[24] = ' Cut '+#$0a+' Copy ' + #0;
+MM_T3 : string[24] = ' Cut '+#$0a+' Copy '+#$0a+' Paste ' + #0;
+
 function handle_mouse(var ctx : TEditorContext; event : PEvent) : integer;
-var  r : integer;
+var  r       : integer;
+     mt      : integer;
+     menu    : string;
+     have_cb : boolean;
+     key     : word;
+     selItem : integer;
+     x, y    : integer;
 begin
         r := SCRU_NONE;
         if event^.etype = MOUSE_PRESS_B1 then begin
@@ -155,7 +169,53 @@ begin
                         r := goto_mouse(ctx, event);
                         r := SCRU_FULL;
                 end;
-
+        end else if event^.etype = MOUSE_PRESS_B2 then begin
+                mt := -1;
+                have_cb := strlen(ctx.clipboard) <> 0;
+                if ctx.current^.editor.selection then begin
+                        if have_cb then begin
+                                menu := MM_T3;
+                                mt := 3;
+                        end else begin
+                                menu := MM_T2;
+                                mt := 2;
+                        end;
+                end else if have_cb then begin
+                        menu := MM_T1;
+                        mt := 1;
+                end;
+                if mt > 0 then begin
+                        selItem := 0;
+                        x := event^.mouse_x; y := event^.mouse_y;
+                        if y + 5 > ctx.config.height then y := ctx.config.height - 5;
+                        if x + 10 > ctx.config.width then x := ctx.config.width - 10;
+                        while true do begin
+                                vmenu(event^, x, y, 10, mt + 2,
+                                        ctx.config.color.menu,
+                                        ctx.config.color.menu_sel,
+                                        '', @menu[1], selItem);
+                                if event^.etype in [MOUSE_PRESS_B1, MOUSE_PRESS_B2] then begin selItem := -1; break; end;
+                                if event^.etype <> KEYBOARD then continue;
+                                if event^.key = K_ESC then break;
+                                if event^.key = K_ENTER then break;
+                        end;
+                        if event^.key = K_ENTER then begin
+                                if ((mt = 1) and (selItem = 0))
+                                or ((mt = 3) and (selItem = 2))
+                                then begin
+                                        hk_cb_paste(ctx, event)
+                                end else if ((mt = 2) and (selItem = 0))
+                                or ((mt = 3) and (selItem = 0))
+                                then begin
+                                        hk_cb_cut(ctx, event)
+                                end else if ((mt = 2) and (selItem = 1))
+                                or ((mt = 3) and (selItem = 1))
+                                then begin
+                                        hk_cb_copy(ctx, event)
+                                end;
+                        end;
+                        r := SCRU_FULL;
+                end;
         end;
         handle_mouse := r;
 end;

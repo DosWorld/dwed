@@ -39,7 +39,7 @@ procedure change_hl(var st : SourceType; color, color_sel : byte);
 
 implementation
 
-uses scr, scrui, kbd, strutil;
+uses scr, scrui, kbd, strutil, event;
 
 type
 
@@ -67,8 +67,8 @@ var hl_menu : pchar;
 procedure change_hl(var st : SourceType; color, color_sel : byte);
 var
         i, sitem   : integer;
-        w          : word;
         r          : PLangDesc;
+        e          : TEvent;
 begin
 
         r := langs;
@@ -81,11 +81,12 @@ begin
 
         scr.cursor_off;        
         while true do begin
-                w := scrui.vmenu(1, 2, 40, scr.getheight - 3,
+                scrui.vmenu(e, 1, 2, 40, scr.getheight - 3,
                         color, color_sel,
                         'Syntax highlight scheme', hl_menu, sitem);
-                if w = K_ESC then break;
-                if (w = K_ENTER) or (lo(w) = 32) then begin
+                if e.etype <> KEYBOARD then continue;
+                if e.key = K_ESC then break;
+                if (e.key = K_ENTER) or (lo(e.key) = 32) then begin
                         i := 0;
                         r := langs;
                         while r <> nil do begin

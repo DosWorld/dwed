@@ -68,7 +68,7 @@ procedure handle_error(var ctx : TEditorContext; errCode:integer);
 
 implementation
 
-uses kbd, scr, scrui, strs, strutil, lfn, dwedhl, dwedlnch;
+uses kbd, scr, scrui, strs, strutil, lfn, dwedhl, dwedlnch, event;
 
 procedure commit(var ctx : TEditorContext);
 begin
@@ -550,7 +550,7 @@ var r : PFileContext;
         i, sitem, cctx  : integer;
         memlen          : integer;
         p               : pchar;
-        w               : word;
+        e               : TEvent;
 begin
         scr.cursor_off;        
         i := 0;
@@ -577,13 +577,13 @@ begin
         p[i] := #0;
 
         while true do begin
-                w := scrui.vmenu(1, 2, 32, scr.getheight - 3,
+                scrui.vmenu(e, 1, 2, 32, scr.getheight - 3,
                         ctx.config.color.menu,
                         ctx.config.color.menu_sel,
                         'Opened files',
                         p, sitem);
-                if w = K_ESC then break;
-                if (w = K_ENTER) or (lo(w) = 32) then begin
+                if e.key = K_ESC then break;
+                if (e.key = K_ENTER) or (lo(e.key) = 32) then begin
                         if (sitem <> cctx) then begin
                                 i := 0;
                                 r := ctx.all;
