@@ -173,7 +173,7 @@ var x, y, i : integer;
         insertStr  : string;
         e          : TEvent;
 begin
-        scr.set_cursor(scr.cursor_start, scr.cursor_end);
+        scr.set_cursor(scr.cursor);
         x := (scr.getwidth - 41) shr 1;
         y := (scr.getheight - 10) shr 1;
         insertStr := '';

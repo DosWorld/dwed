@@ -88,16 +88,4 @@ begin
         pnext := rres;
 end;
 
-{
-Test-case
-var c : ParamsContext;
-    i : integer;
-begin
-        pinit(c, ' test1 aa="test o test" test2 ');
-        i := 0;
-        while phas_next(c) do begin
-                writeln(i, ' ', pnext(c));
-                inc(i);
-        end;
-}
 end.

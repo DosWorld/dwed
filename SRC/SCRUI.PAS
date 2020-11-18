@@ -186,14 +186,12 @@ end;
 
 procedure editstr(var e : TEvent; x, y : integer; clr:byte; var str : string; vislen, maxlen:integer);
 var visstr : string;
-    save_cursor_start : byte;
-    save_cursor_end   : byte;
+    save_cursor : word;
     pos : integer;
     ofs_x : integer;
 begin
-        save_cursor_start := scr.get_cursor_start;
-        save_cursor_end := scr.get_cursor_end;
-        scr.set_cursor(scr.cursor_start, scr.cursor_end);
+        save_cursor := scr.get_cursor;
+        scr.set_cursor(scr.cursor);
         pos := length(str) + 1;
         ofs_x := 0;
         while true do begin
@@ -251,7 +249,7 @@ begin
                         then begin
                 end else if e.etype <> MOUSE_MOVE then break;
         end;
-        scr.set_cursor(save_cursor_start, save_cursor_end);
+        scr.set_cursor(save_cursor);
 end;
 
 function yes_no : ANSWER;

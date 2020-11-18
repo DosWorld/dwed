@@ -273,7 +273,7 @@ begin
         edit(ctx, welcome_msg);
         scr.pop;
         scr.show;
-        scr.set_cursor(scr.cursor_start, scr.cursor_end);
+        scr.set_cursor(scr.cursor);
         halt(ctx.exit_code);
 end;
 

@@ -28,10 +28,8 @@ interface
 
 var
         screen        : pchar;
-        cursor_start  : byte;
-        cursor_end    : byte;
+        cursor        : word;
 
-procedure init;
 procedure cls(clr : byte);
 procedure cln(x, y : integer; clr : byte);
 procedure print(x, y : integer; clr : byte; s : string);
@@ -52,9 +50,8 @@ procedure cursor_off;
 procedure cursor_on;
 procedure cursor_big;
 
-function get_cursor_start:byte;
-function get_cursor_end:byte;
-procedure set_cursor(start_line, end_line : byte);
+function get_cursor:word;
+procedure set_cursor(w : word);
 
 procedure set_blink(on : boolean);
 
@@ -365,33 +362,36 @@ begin
         scr.locate(last_scr_buf^.x, last_scr_buf^.y);
 end;
 
-procedure set_cursor(start_line, end_line : byte);assembler;
+procedure set_cursor(w : word);assembler;
 asm
-        push       ds
-        push       es
-        push       bp
-        mov        ch, byte ptr [start_line]
-        mov        cl, byte ptr [end_line]
+        mov        cx, w
         mov        ah, 1
         int        $10
-        pop        bp
-        pop        es
-        pop        ds
 end;
+
+function get_cursor:word;assembler;
+asm
+        mov        ah, $0f
+        int        $10
+        mov        ah, 3
+        int        $10
+        mov        ax, cx
+end;
+
 
 procedure cursor_off;
 begin
-        set_cursor($20, $20);
+        set_cursor($2020);
 end;
 
 procedure cursor_on;
 begin
-        set_cursor(cursor_start, cursor_end);
+        set_cursor(cursor);
 end;
 
 procedure cursor_big;
 begin
-        set_cursor(0, cursor_end);
+        set_cursor(cursor and $FF);
 end;
 
 procedure set_blink(on : boolean);assembler;
@@ -399,20 +399,6 @@ asm
         mov        bl, byte ptr [on]
         mov        ax, $1003
         int        $10
-end;
-
-function get_cursor_start:byte;assembler;
-asm
-        mov        ah, 3
-        int        $10
-        mov        al, ch
-end;
-
-function get_cursor_end:byte;assembler;
-asm
-        mov        ah, 3
-        int        $10
-        mov        al, cl
 end;
 
 function is_monochrome:boolean;assembler;
@@ -425,19 +411,13 @@ asm
         and        al, 4
 end;
 
-procedure init;
 begin
+        cursor := get_cursor;
         if is_monochrome then vseg := segb000 else vseg := segb800;
         set_blink(false);
-        cursor_start := get_cursor_start;
-        cursor_end := get_cursor_end;
         screen_size := (getwidth * getheight) shl 1;
         line_size := getwidth shl 1;
         getmem(screen, screen_size);
         move(mem[vseg:0], screen[0], screen_size);
         mouse.mshow;
-end;
-
-begin
-        init;
 end.
