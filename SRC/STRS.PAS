@@ -42,8 +42,8 @@ procedure to_file(fname : string; r : EditorStr; var errCode : integer; scrupdat
 function create(next, prev : EditorStr; body : string) : EditorStr;
 procedure free(r : EditorStr);
 
-function put(var r : EditorStr; var body : string) : EditorStr;
-procedure get(var r : EditorStr; var dest : string);
+function put(r : EditorStr; var body : string) : EditorStr;
+procedure get(r : EditorStr; var dest : string);
 function delete(r : EditorStr; num_from, num_to : longint) : EditorStr;
 function merge(r : EditorStr) : EditorStr;
 
@@ -89,7 +89,7 @@ begin
         Dos2EditorStr := r;
 end;
 
-function put(var r : EditorStr; var body : string) : EditorStr;
+function put(r : EditorStr; var body : string) : EditorStr;
 begin
         case memType of
         DOS: r := Dos2EditorStr(strsd.put(EditorStr2Dos(r), body));
@@ -258,7 +258,7 @@ begin
         new := r;
 end;
 
-procedure get(var r : EditorStr; var dest : string);
+procedure get(r : EditorStr; var dest : string);
 begin
         case memType of
         DOS: strsd.get(EditorStr2Dos(r), dest);

@@ -51,6 +51,8 @@ K_SHIFT_END      = $4F31;
 
 K_CTRL_LEFT      = $7300;
 K_CTRL_RIGHT     = $7400;
+K_CTRL_PGUP      = $8400;
+K_CTRL_PGDN      = $7600;
 
 K_CTRL_HOME      = $7700;
 K_CTRL_END       = $7500;

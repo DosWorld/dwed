@@ -83,6 +83,11 @@ or ~F7~
 
 ~Alt~+~F2~       - Save clipboard to file.
 ~Alt~+~F3~       - Load clipboard from file.
+///2EXTEDITING
+        Extended editing.
+
+~Ctrl~+~Shift~+~PGUP~ - Move line up.
+~Ctrl~+~Shift~+~PGDN~ - Move line down.
 ///2WINDOW
         Window using.
 

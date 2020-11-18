@@ -1274,6 +1274,50 @@ begin
         hk_userdef := r;
 end;
 
+function hk_move_line_up(var ctx:TEditorContext; event:PEvent):integer;
+var r : integer;
+        s1 : string;
+        s2 : string;
+begin
+        r := SCRU_NONE;
+        if not strs.is_first(ctx.current^.cline) then begin
+                commit(ctx);
+                strs.get(strs.go_prev(ctx.current^.cline), s1);
+                strs.get(ctx.current^.cline, s2);
+                ctx.current^.cline := strs.put(ctx.current^.cline, s1);
+                ctx.current^.cline := strs.go_prev(ctx.current^.cline);
+                ctx.current^.cline := strs.put(ctx.current^.cline, s2);
+                if strs.is_first(ctx.current^.cline) then ctx.current^.rline := ctx.current^.cline;
+                if ctx.current^.scry <> 0 then dec(ctx.current^.scry);
+                ctx.current^.chg := true;
+                r := SCRU_FULL;
+                load_ed(ctx);
+        end;
+        hk_move_line_up := r;
+end;
+
+function hk_move_line_down(var ctx:TEditorContext; event:PEvent):integer;
+var r : integer;
+        s1 : string;
+        s2 : string;
+begin
+        r := SCRU_NONE;
+        if not strs.is_last(ctx.current^.cline) then begin
+                commit(ctx);
+                strs.get(ctx.current^.cline, s1);
+                strs.get(strs.go_next(ctx.current^.cline), s2);
+                ctx.current^.cline := strs.put(ctx.current^.cline, s2);
+                if strs.is_first(ctx.current^.cline) then ctx.current^.rline := ctx.current^.cline;
+                ctx.current^.cline := strs.go_next(ctx.current^.cline);
+                ctx.current^.cline := strs.put(ctx.current^.cline, s1);
+                if ctx.current^.scry <> ctx.config.height - 1 then inc(ctx.current^.scry);
+                ctx.current^.chg := true;
+                load_ed(ctx);
+                r := SCRU_FULL;
+        end;
+        hk_move_line_down := r;
+end;
+
 begin
         reg_handler(K_ESC, false, false, false, false, @hk_esc);
         reg_handler(K_ALT_F10, false, false, true, false, @hk_addons);
@@ -1281,6 +1325,9 @@ begin
         reg_handler(K_CTRL_ALT_C, true, false, true, false, @hk_calc);
         reg_handler(K_CTRL_ALT_H, true, false, true, false, @hk_change_hl);
         reg_handler(K_SHIFT_F2, false, true, false, false, @hk_save_as);
+
+        reg_handler(K_CTRL_PGUP, true, true, false, true, @hk_move_line_up);
+        reg_handler(K_CTRL_PGDN, true, true, false, true, @hk_move_line_down);
 
         reg_handler(K_F1, false, false, false, false, @hk_help);
         reg_handler(K_F2, false, false, false, false, @hk_save);

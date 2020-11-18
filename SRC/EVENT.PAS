@@ -85,9 +85,7 @@ begin
                 if kbd.haskey then begin
                         e.etype := KEYBOARD;
                         e.key := kbd.getkey;
-                        break;
-                end;
-                if mouse.mavail then begin
+                end else if mouse.mavail then begin
                         newstate := mouse.mbuttons;
                         e.mouse_x := mouse.mgetx;
                         e.mouse_y := mouse.mgety;
@@ -105,6 +103,14 @@ begin
                                 end;
                         end else if (e.mouse_x <> mx) or (e.mouse_y <> my) then begin
                                 e.etype := MOUSE_MOVE;
+                        end;
+                end;
+                if e.etype = NONE then begin
+                        asm
+                                mov        ax,$8600
+                                xor        cx, cx
+                                mov        dx, 250
+                                int        $15
                         end;
                 end;
         end;
