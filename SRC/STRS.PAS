@@ -60,7 +60,7 @@ function renum(r : EditorStr) : longint;
 function get_num(r : EditorStr) : longint;
 function find_num(r : EditorStr; num : longint) : EditorStr;
 
-function append(r : EditorStr; var pos : integer; p : pchar) : EditorStr;
+function append(r : EditorStr; var pos : integer; p : pchar; var lnum:word) : EditorStr;
 function split(r : EditorStr; pos : integer) : EditorStr;
 
 function is_nil(r : EditorStr) : boolean;
@@ -400,13 +400,13 @@ begin
         merge := r;
 end;
 
-function append(r : EditorStr; var pos : integer; p : pchar) : EditorStr;
+function append(r : EditorStr; var pos : integer; p : pchar; var lnum:word) : EditorStr;
 begin
         case memType of
-        DOS: r := Dos2EditorStr(strsd.append(EditorStr2Dos(r), pos, p));
-        EMS: r := Dos2EditorStr(strsd.append(EditorStr2Dos(r), pos, p));
-        XMS: r := Dos2EditorStr(strsd.append(EditorStr2Dos(r), pos, p));
-        else r := Dos2EditorStr(strsd.append(EditorStr2Dos(r), pos, p));
+        DOS: r := Dos2EditorStr(strsd.append(EditorStr2Dos(r), pos, p, lnum));
+        EMS: r := Dos2EditorStr(strsd.append(EditorStr2Dos(r), pos, p, lnum));
+        XMS: r := Dos2EditorStr(strsd.append(EditorStr2Dos(r), pos, p, lnum));
+        else r := Dos2EditorStr(strsd.append(EditorStr2Dos(r), pos, p, lnum));
         end;
         append := r;
 end;

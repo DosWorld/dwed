@@ -654,6 +654,7 @@ begin
 end;
 
 function hk_cb_paste(var ctx:TEditorContext; event:PEvent):integer;
+var lnum: word;
 begin
         commit(ctx);
         if ctx.current^.editor.selection then begin
@@ -661,7 +662,11 @@ begin
                 ctx.current^.total := strs.renum(ctx.current^.rline);
                 ctx.current^.editor.selection := false;
         end;
-        ctx.current^.cline := strs.append(ctx.current^.cline, ctx.current^.editor.x, ctx.clipboard);
+        ctx.current^.cline := strs.append(ctx.current^.cline, ctx.current^.editor.x, ctx.clipboard, lnum);
+        while (lnum <> 0) and (ctx.current^.scry <> ctx.config.height - 2) do begin
+                dec(lnum);
+                inc(ctx.current^.scry);
+        end;
         with ctx.current^ do begin
                 if scry = 0 then scrline := cline;
                 if strs.is_first(cline) then rline := cline else rline := strs.go_first(cline);

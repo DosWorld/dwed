@@ -48,7 +48,7 @@ function go_next(r : pointer) : pointer;
 
 function renum(r : pointer) : longint;
 function get_num(r : pointer) : longint;
-function append(r : pointer; var pos : integer; p : pchar) : pointer;
+function append(r : pointer; var pos : integer; p : pchar; var lnum:word) : pointer;
 function split(r : pointer; pos : integer) : pointer;
 
 implementation
@@ -250,17 +250,19 @@ begin
         merge := r;
 end;
 
-function append(r : pointer; var pos : integer; p : pchar) : pointer;
+function append(r : pointer; var pos : integer; p : pchar; var lnum:word) : pointer;
 var     s, src, s1, s2 : string;
         c : char;
         len : integer;
 begin
+        lnum := 0;
         if not ((r = nil) or (p = nil)) then begin
                 s := '';
                 while p[0] <> #0 do begin
                         c := p[0];
                         case c of
                         #$0A: begin
+                                inc(lnum);
                                 strsd.get(r, src);
                                 s1 := '';
                                 s2 := '';

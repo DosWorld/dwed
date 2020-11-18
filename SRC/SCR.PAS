@@ -314,40 +314,26 @@ asm
         push       ds
         mov        ax, word ptr [seg0040]
         mov        ds, ax
-        mov        al, byte ptr [$0062]
-        xor        ah, ah
-        shl        ax, 1
-        add        ax, $50
-        mov        bx, ax
-        mov        al, byte ptr [bx];
-        xor        ah, ah
+        mov        bh, byte ptr [$0062]
         pop        ds
+        mov        ah, 3
+        int        $10
+        mov        al,dl
+        xor        ah,ah
 end;
-{
-begin
-        getx := mem[Seg0040 : (mem[Seg0040:$62] shl 1) + $50] and $ff;
-end;
-}
 
 function gety:integer;assembler;
 asm
         push       ds
         mov        ax, word ptr [seg0040]
         mov        ds, ax
-        mov        al, byte ptr [$0062]
-        xor        ah, ah
-        shl        ax, 1
-        add        ax, $51
-        mov        bx, ax
-        mov        al, byte ptr [bx];
-        xor        ah, ah
+        mov        bh, byte ptr [$0062]
         pop        ds
+        mov        ah, 3
+        int        $10
+        mov        al,dh
+        xor        ah,ah
 end;
-{
-begin
-        gety := mem[Seg0040:(mem[Seg0040:$62] shl 1) + $51] and $ff;
-end;
-}
 
 procedure push;
 var     p : PScr;
@@ -449,7 +435,7 @@ begin
         line_size := getwidth shl 1;
         getmem(screen, screen_size);
         move(mem[vseg:0], screen[0], screen_size);
-	mouse.mshow;
+        mouse.mshow;
 end;
 
 begin
