@@ -40,14 +40,14 @@ const handlers : PEventHandler = nil;
 
 {$F+}
 
-procedure reg_handler(key : word; is_ctrl, is_shift, is_alt, reset_selection : boolean; proc : pointer);
+procedure reg_handler(scancode : byte; is_ctrl, is_shift, is_alt, reset_selection : boolean; proc : pointer);
 var h : PEventHandler;
 begin
         getmem(h, sizeof(TEventHandler));
         h^.next := handlers;
         h^.proc := proc;
         h^.reset_selection := reset_selection;
-        h^.event.key := key;
+        h^.event.scancode := scancode;
         h^.event.is_ctrl := is_ctrl;
         h^.event.is_alt := is_alt;
         h^.event.is_shift := is_shift;
@@ -64,7 +64,7 @@ function hk_cb_cut(var ctx:TEditorContext; event:PEvent):integer;forward;
 {$F-}
 function compare_event(var e1, e2 : TEvent) : boolean;
 begin
-        compare_event := (hi(e1.key) = hi(e2.key))
+        compare_event := (e1.scancode = e2.scancode)
                         and (e1.is_shift = e2.is_shift)
                         and (e1.is_alt = e2.is_alt)
                         and (e1.is_ctrl = e2.is_ctrl);
@@ -78,7 +78,7 @@ var h : PEventHandler;
         proc : TEventProc;
 begin
         r := SCRU_NONE;
-        if e.etype = KEYBOARD then begin
+        if (e.etype = KEYBOARD) then begin
                 h := handlers;
                 xofs := ctx.current^.scrx;
                 while (h <> nil) do begin
@@ -196,10 +196,10 @@ begin
                                         '', @menu[1], selItem);
                                 if event^.etype in [MOUSE_PRESS_B1, MOUSE_PRESS_B2] then begin selItem := -1; break; end;
                                 if event^.etype <> KEYBOARD then continue;
-                                if event^.key = K_ESC then break;
-                                if event^.key = K_ENTER then break;
+                                if event^.scancode = SCAN_ESC then break;
+                                if event^.scancode = SCAN_ENTER then break;
                         end;
-                        if event^.key = K_ENTER then begin
+                        if event^.scancode = SCAN_ENTER then begin
                                 if ((mt = 1) and (selItem = 0))
                                 or ((mt = 3) and (selItem = 2))
                                 then begin
@@ -517,8 +517,8 @@ begin
                 scr.show;
                 scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, newname, 32, 255);
                 if event^.etype = KEYBOARD then begin
-                        if event^.key = K_ESC then begin start_save := false; break; end;
-                        if event^.key = K_ENTER then begin start_save := true; break; end;
+                        if event^.scancode = SCAN_ESC then begin start_save := false; break; end;
+                        if event^.scancode = SCAN_ENTER then begin start_save := true; break; end;
                 end else if event^.etype <> MOUSE_MOVE then begin start_save := false; break; end;
         end;
         if start_save then begin
@@ -696,8 +696,8 @@ begin
         while true do begin
                 scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, lNumStr, 12, 12);
                 if event^.etype = KEYBOARD then begin
-                        if event^.key = K_ESC then begin start_find := false; break; end;
-                        if event^.key = K_ENTER then begin start_find := true; break; end;
+                        if event^.scancode = SCAN_ESC then begin start_find := false; break; end;
+                        if event^.scancode = SCAN_ENTER then begin start_find := true; break; end;
                 end else if event^.etype <> MOUSE_MOVE then begin start_find := false; break; end;
         end;
         if start_find then begin
@@ -771,7 +771,8 @@ begin
                 r := SCRU_FULL;
         end else begin
                 with event^ do begin
-                        key := $20;
+                        ascii := ' ';
+                        scancode := SCAN_SPACE;
                         is_shift := false;
                         is_ctrl := false;
                         is_alt := false;
@@ -836,7 +837,7 @@ var r, len      : integer;
         changed : boolean;
 begin
         r := SCRU_NONE;
-        c := chr(lo(event^.key));
+        c := event^.ascii;
         changed := false;
         len := length(ctx.current^.editor.line);
 
@@ -940,6 +941,7 @@ begin
                 end;
                 r := SCRU_FULL;
                 ctx.current^.editor.selection := false;
+                commit(ctx);
         end;
         hk_find_again := r;
 end;
@@ -973,8 +975,8 @@ begin
         while true do begin
                 scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, searchStr, 32, 64);
                 if event^.etype = KEYBOARD then begin
-                        if event^.key = K_ESC then begin start_find := false; break; end;
-                        if event^.key = K_ENTER then begin start_find := true; break; end;
+                        if event^.scancode = SCAN_ESC then begin start_find := false; break; end;
+                        if event^.scancode = SCAN_ENTER then begin start_find := true; break; end;
                 end else if event^.etype <> MOUSE_MOVE then begin start_find := false; break; end;
         end;
         searchStr := trim(searchStr);
@@ -986,8 +988,8 @@ begin
                 while true do begin
                         scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, replaceStr, 32, 64);
                         if event^.etype = KEYBOARD then begin
-                                if event^.key = K_ESC then begin start_find := false; break; end;
-                                if event^.key = K_ENTER then begin break; end;
+                                if event^.scancode = SCAN_ESC then begin start_find := false; break; end;
+                                if event^.scancode = SCAN_ENTER then begin break; end;
                         end else if event^.etype <> MOUSE_MOVE then begin start_find := false; break; end;
                 end;
         end;
@@ -1043,8 +1045,8 @@ begin
                 scr.show;
                 scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, fname, 32, 255);
                 if event^.etype = KEYBOARD then begin
-                if event^.key = K_ESC then begin start_save := false; break; end;
-                if event^.key = K_ENTER then begin start_save := true; break; end;
+                if event^.scancode = SCAN_ESC then begin start_save := false; break; end;
+                if event^.scancode = SCAN_ENTER then begin start_save := true; break; end;
                 end else if event^.etype <> MOUSE_MOVE then begin start_save := false; break; end;
         end;
         if start_save then begin
@@ -1069,8 +1071,8 @@ begin
                 scr.show;
                 scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, fname, 32, 255);
                 if event^.etype = KEYBOARD then begin
-                        if event^.key = K_ESC then begin start_load := false; break; end;
-                        if event^.key = K_ENTER then begin start_load := true; break; end;
+                        if event^.scancode = SCAN_ESC then begin start_load := false; break; end;
+                        if event^.scancode = SCAN_ENTER then begin start_load := true; break; end;
                 end else if event^.etype <> MOUSE_MOVE then begin start_load := false; break; end;
         end;
         errCode := 0;
@@ -1167,8 +1169,8 @@ begin
                 scr.show;
                 scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, fname, 32, 255);
                 if event^.etype = KEYBOARD then begin
-                        if event^.key = K_ESC then begin start_load := false; break; end;
-                        if event^.key = K_ENTER then begin start_load := true; break; end;
+                        if event^.scancode = SCAN_ESC then begin start_load := false; break; end;
+                        if event^.scancode = SCAN_ENTER then begin start_load := true; break; end;
                 end else if event^.etype <> MOUSE_MOVE then begin start_load := false; break; end;
         end;
         if start_load then begin
@@ -1216,10 +1218,10 @@ begin
         cmd := '';
         r := SCRU_NONE;
         can_run := true;
-        case event^.key of
-        K_F5: cmd := ctx.config.udef_f5;
-        K_F8: cmd := ctx.config.udef_f8;
-        K_F9: cmd := ctx.config.udef_f9;
+        case event^.scancode of
+        SCAN_F5: cmd := ctx.config.udef_f5;
+        SCAN_F8: cmd := ctx.config.udef_f8;
+        SCAN_F9: cmd := ctx.config.udef_f9;
         end;
         cmd := trim(cmd);
         if length(cmd) = 0 then can_run := false;
@@ -1325,80 +1327,80 @@ begin
 end;
 
 begin
-        reg_handler(K_ESC, false, false, false, false, @hk_esc);
-        reg_handler(K_ALT_F10, false, false, true, false, @hk_addons);
-        reg_handler(K_CTRL_ALT_A, true, false, true, false, @hk_asciitbl);
-        reg_handler(K_CTRL_ALT_C, true, false, true, false, @hk_calc);
-        reg_handler(K_CTRL_ALT_H, true, false, true, false, @hk_change_hl);
-        reg_handler(K_SHIFT_F2, false, true, false, false, @hk_save_as);
+        reg_handler(SCAN_ESC, false, false, false, false, @hk_esc);
+        reg_handler(SCAN_ALT_F10, false, false, true, false, @hk_addons);
+        reg_handler(SCAN_A, true, false, true, false, @hk_asciitbl);
+        reg_handler(SCAN_C, true, false, true, false, @hk_calc);
+        reg_handler(SCAN_H, true, false, true, false, @hk_change_hl);
+        reg_handler(SCAN_SHIFT_F2, false, true, false, false, @hk_save_as);
 
-        reg_handler(K_CTRL_PGUP, true, true, false, true, @hk_move_line_up);
-        reg_handler(K_CTRL_PGDN, true, true, false, true, @hk_move_line_down);
+        reg_handler(SCAN_CTRL_PGUP, true, true, false, true, @hk_move_line_up);
+        reg_handler(SCAN_CTRL_PGDN, true, true, false, true, @hk_move_line_down);
 
-        reg_handler(K_F1, false, false, false, false, @hk_help);
-        reg_handler(K_F2, false, false, false, false, @hk_save);
-        reg_handler(K_F3, false, false, false, false, @hk_load);
-        reg_handler(K_F5, false, false, false, false, @hk_userdef);
-        reg_handler(K_F6, false, false, false, false, @hk_nextwin);
-        reg_handler(K_F7, false, false, false, true, @hk_start_find);
-        reg_handler(K_F8, false, false, false, false, @hk_userdef);
-        reg_handler(K_F9, false, false, false, false, @hk_userdef);
+        reg_handler(SCAN_F1, false, false, false, false, @hk_help);
+        reg_handler(SCAN_F2, false, false, false, false, @hk_save);
+        reg_handler(SCAN_F3, false, false, false, false, @hk_load);
+        reg_handler(SCAN_F5, false, false, false, false, @hk_userdef);
+        reg_handler(SCAN_F6, false, false, false, false, @hk_nextwin);
+        reg_handler(SCAN_F7, false, false, false, true, @hk_start_find);
+        reg_handler(SCAN_F8, false, false, false, false, @hk_userdef);
+        reg_handler(SCAN_F9, false, false, false, false, @hk_userdef);
 
-        reg_handler(K_ALT_F2, false, false, true, false, @hk_cb_save);
-        reg_handler(K_ALT_F3, false, false, true, false, @hk_cb_load);
-        reg_handler(K_ALT_F4, false, false, true, false, @hk_close);
-        reg_handler(K_ALT_F5, false, false, true, false, @hk_dos_screen);
-        reg_handler(K_ALT_F6, false, false, true, false, @hk_winlist);
+        reg_handler(SCAN_ALT_F2, false, false, true, false, @hk_cb_save);
+        reg_handler(SCAN_ALT_F3, false, false, true, false, @hk_cb_load);
+        reg_handler(SCAN_ALT_F4, false, false, true, false, @hk_close);
+        reg_handler(SCAN_ALT_F5, false, false, true, false, @hk_dos_screen);
+        reg_handler(SCAN_ALT_F6, false, false, true, false, @hk_winlist);
 
-        reg_handler(K_CTRL_LEFT, true, false, false, true, @hk_word_left);
-        reg_handler(K_CTRL_RIGHT, true, false, false, true, @hk_word_right);
+        reg_handler(SCAN_CTRL_LEFT, true, false, false, true, @hk_word_left);
+        reg_handler(SCAN_CTRL_RIGHT, true, false, false, true, @hk_word_right);
 
-        reg_handler(K_CTRL_LEFT, true, true, false, false, @hk_word_sleft);
-        reg_handler(K_CTRL_RIGHT, true, true, false, false, @hk_word_sright);
+        reg_handler(SCAN_CTRL_LEFT, true, true, false, false, @hk_word_sleft);
+        reg_handler(SCAN_CTRL_RIGHT, true, true, false, false, @hk_word_sright);
 
-        reg_handler(K_TAB, false, false, false, false, @hk_tab);
-        reg_handler(K_SHIFT_TAB, false, true, false, false, @hk_shift_tab);
+        reg_handler(SCAN_TAB, false, false, false, false, @hk_tab);
+        reg_handler(SCAN_TAB, false, true, false, false, @hk_shift_tab);
 
-        reg_handler(K_SHIFT_UP, false, true, false, false, @hk_sup);
-        reg_handler(K_SHIFT_DOWN, false, true, false, false, @hk_sdown);
-        reg_handler(K_SHIFT_LEFT, false, true, false, false, @hk_sleft);
-        reg_handler(K_SHIFT_RIGHT, false, true, false, false, @hk_sright);
-        reg_handler(K_SHIFT_PGUP, false, true, false, false, @hk_spgup);
-        reg_handler(K_SHIFT_PGDN, false, true, false, false, @hk_spgdown);
-        reg_handler(K_SHIFT_HOME, false, true, false, false, @hk_shome);
-        reg_handler(K_SHIFT_END, false, true, false, false, @hk_send);
+        reg_handler(SCAN_UP, false, true, false, false, @hk_sup);
+        reg_handler(SCAN_DOWN, false, true, false, false, @hk_sdown);
+        reg_handler(SCAN_LEFT, false, true, false, false, @hk_sleft);
+        reg_handler(SCAN_RIGHT, false, true, false, false, @hk_sright);
+        reg_handler(SCAN_PGUP, false, true, false, false, @hk_spgup);
+        reg_handler(SCAN_PGDN, false, true, false, false, @hk_spgdown);
+        reg_handler(SCAN_HOME, false, true, false, false, @hk_shome);
+        reg_handler(SCAN_END, false, true, false, false, @hk_send);
 
-        reg_handler(K_UP, false, false, false, true, @hk_up);
-        reg_handler(K_DOWN, false, false, false, true, @hk_down);
-        reg_handler(K_LEFT, false, false, false, true, @hk_left);
-        reg_handler(K_RIGHT, false, false, false, true, @hk_right);
-        reg_handler(K_PGUP, false, false, false, true, @hk_pgup);
-        reg_handler(K_PGDN, false, false, false, true, @hk_pgdown);
-        reg_handler(K_HOME, false, false, false, true, @hk_home);
-        reg_handler(K_END, false, false, false, true, @hk_end);
-        reg_handler(K_CTRL_HOME, true, false, false, true, @hk_file_begin);
-        reg_handler(K_CTRL_END, true, false, false, true, @hk_file_end);
+        reg_handler(SCAN_UP, false, false, false, true, @hk_up);
+        reg_handler(SCAN_DOWN, false, false, false, true, @hk_down);
+        reg_handler(SCAN_LEFT, false, false, false, true, @hk_left);
+        reg_handler(SCAN_RIGHT, false, false, false, true, @hk_right);
+        reg_handler(SCAN_PGUP, false, false, false, true, @hk_pgup);
+        reg_handler(SCAN_PGDN, false, false, false, true, @hk_pgdown);
+        reg_handler(SCAN_HOME, false, false, false, true, @hk_home);
+        reg_handler(SCAN_END, false, false, false, true, @hk_end);
+        reg_handler(SCAN_CTRL_HOME, true, false, false, true, @hk_file_begin);
+        reg_handler(SCAN_CTRL_END, true, false, false, true, @hk_file_end);
 
-        reg_handler(K_DEL, false, false, false, false, @hk_del);
-        reg_handler(K_BS, false, false, false, false, @hk_bs);
-        reg_handler(K_ENTER, false, false, false, false, @hk_enter);
+        reg_handler(SCAN_DEL, false, false, false, false, @hk_del);
+        reg_handler(SCAN_BS, false, false, false, false, @hk_bs);
+        reg_handler(SCAN_ENTER, false, false, false, false, @hk_enter);
 
-        reg_handler(K_CTRL_S, true, false, false, true, @hk_save);
-        reg_handler(K_CTRL_S, true, true, false, true, @hk_save);
-        reg_handler(K_INS, false, false, false, false, @hk_ins);
+        reg_handler(SCAN_S, true, false, false, true, @hk_save);
+        reg_handler(SCAN_S, true, true, false, true, @hk_save);
+        reg_handler(SCAN_INS, false, false, false, false, @hk_ins);
 
-        reg_handler(K_CTRL_X, true, false, false, false, @hk_cb_cut);
-        reg_handler(K_CTRL_C, true, false, false, false, @hk_cb_copy);
-        reg_handler(K_CTRL_V, true, false, false, false, @hk_cb_paste);
+        reg_handler(SCAN_X, true, false, false, false, @hk_cb_cut);
+        reg_handler(SCAN_C, true, false, false, false, @hk_cb_copy);
+        reg_handler(SCAN_V, true, false, false, false, @hk_cb_paste);
 
-        reg_handler(K_CTRL_Y, true, false, false, false, @hk_cb_cutline);
-        reg_handler(K_CTRL_U, true, false, false, false, @hk_cb_paste);
+        reg_handler(SCAN_Y, true, false, false, false, @hk_cb_cutline);
+        reg_handler(SCAN_U, true, false, false, false, @hk_cb_paste);
 
-        reg_handler(K_CTRL_L, true, false, false, true, @hk_goto_line);
-        reg_handler(K_CTRL_F, true, false, false, true, @hk_start_find);
-        reg_handler(K_CTRL_F, true, true, false, true, @hk_start_find);
-        reg_handler(K_CTRL_K, true, false, false, true, @hk_find_again);
+        reg_handler(SCAN_L, true, false, false, true, @hk_goto_line);
+        reg_handler(SCAN_F, true, false, false, true, @hk_start_find);
+        reg_handler(SCAN_F, true, true, false, true, @hk_start_find);
+        reg_handler(SCAN_K, true, false, false, true, @hk_find_again);
 
-        reg_handler(K_INS, false, true, false, false, @hk_cb_paste);
-        reg_handler(K_DEL, false, true, false, false, @hk_cb_cut);
+        reg_handler(SCAN_INS, false, true, false, false, @hk_cb_paste);
+        reg_handler(SCAN_DEL, false, true, false, false, @hk_cb_cut);
 end.

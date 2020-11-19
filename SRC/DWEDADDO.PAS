@@ -55,8 +55,8 @@ begin
                         addons_menu, sitem);
                 if e.etype in [MOUSE_PRESS_B1, MOUSE_PRESS_B2] then begin sitem := -1; break; end;
                 if e.etype <> KEYBOARD then continue;
-                if e.key = K_ESC then begin sitem := -1; break; end;
-                if (e.key = K_ENTER) or (lo(e.key) = 32) then break;
+                if e.scancode = SCAN_ESC then begin sitem := -1; break; end;
+                if (e.scancode = SCAN_ENTER) or (e.ascii = ' ') then break;
         end;
         scr.pop;
         if sitem = -1 then exit;
@@ -128,13 +128,13 @@ begin
                         wait_event(e);
                         if e.etype = KEYBOARD then break;
                 end;
-                case e.key of
-                K_UP: dec(ascii_tbl_sel, 16);
-                K_DOWN: inc(ascii_tbl_sel, 16);
-                K_LEFT: dec(ascii_tbl_sel);
-                K_RIGHT: inc(ascii_tbl_sel);
-                K_ENTER: begin
-                        if kbd.is_shift then begin
+                case e.scancode of
+                SCAN_UP: dec(ascii_tbl_sel, 16);
+                SCAN_DOWN: inc(ascii_tbl_sel, 16);
+                SCAN_LEFT: ascii_tbl_sel := (ascii_tbl_sel and $F0) or ((ascii_tbl_sel - 1) and $0F);
+                SCAN_RIGHT: ascii_tbl_sel := (ascii_tbl_sel and $F0) or ((ascii_tbl_sel + 1) and $0F);
+                SCAN_ENTER: begin
+                        if e.is_shift then begin
                                 insert_str(ctx, '' + hexb(ascii_tbl_sel));
                                 break;
                         end else begin
@@ -146,9 +146,9 @@ begin
                                 break;
                         end;
                 end;
-                K_ESC: break;
+                SCAN_ESC: break;
                 else begin
-                        ch := upcase(chr(lo(e.key)));
+                        ch := upcase(e.ascii);
                         if ch in ['0'..'9'] then
                                 ascii_tbl_sel := (ascii_tbl_sel shl 4)
                                         or ((ord(ch) - ord('0')) and $0F)
@@ -208,10 +208,10 @@ begin
                         wait_event(e);
                         if e.etype = KEYBOARD then break;
                 end;
-                case e.key of
-                K_ESC: begin insertStr := ''; break; end;
-                K_ENTER: begin
-                        if not kbd.is_shift then begin
+                case e.scancode of
+                SCAN_ESC: begin insertStr := ''; break; end;
+                SCAN_ENTER: begin
+                        if not e.is_shift then begin
                                 case calc_op of
                                 '+': calc_op1 := calc_op2 + calc_op1;
                                 '-': calc_op1 := calc_op2 - calc_op1;
@@ -229,18 +229,18 @@ begin
                                 break;
                         end;
                 end;
-                K_TAB: begin
+                SCAN_TAB: begin
                         if radix = RADIX10 then radix := RADIX16
                         else if radix = RADIX16 then radix := RADIX2
                         else if radix = RADIX2 then radix := RADIX10;
                 end;
-                K_BS: begin
+                SCAN_BS: begin
                         if radix = RADIX2 then calc_op1 := calc_op1 shr 1
                         else if radix = RADIX10 then calc_op1 := calc_op1 div 10
                         else if radix = RADIX16 then calc_op1 := calc_op1 shr 8;
                 end;
                 end;
-                ch := upcase(chr(lo(e.key)));
+                ch := upcase(e.ascii);
                 case ch of
                 'C': begin calc_op1 := 0; continue; end;
                 '+','-','*','/','M','&','|','^': begin calc_op := ch; calc_op2 := calc_op1; calc_op1 := 0; continue; end;

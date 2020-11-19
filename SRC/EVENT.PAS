@@ -37,7 +37,8 @@ EventType = (NONE,
 PEvent = ^TEvent;
 TEvent = record
         etype          : EventType;
-        key            : word;
+        scancode       : byte;
+        ascii          : char;
         is_ctrl        : boolean;
         is_shift       : boolean;
         is_alt         : boolean;
@@ -63,8 +64,11 @@ procedure wait_event(var e : TEvent);
 var state    : byte;
     newstate : byte;
     mx, my   : integer;
+    flags    : byte;
+    key      : word;
 begin
-        e.key := 0;
+        e.scancode := 0;
+        e.ascii := #0;
         e.etype := NONE;
         e.is_ctrl := false;
         e.is_alt := false;
@@ -83,8 +87,10 @@ begin
         end;
         while e.etype = NONE do begin
                 if kbd.haskey then begin
+                        key := kbd.getkey;
                         e.etype := KEYBOARD;
-                        e.key := kbd.getkey;
+                        e.scancode := hi(key);
+                        e.ascii := chr(lo(key));
                 end else if mouse.mavail then begin
                         newstate := mouse.mbuttons;
                         e.mouse_x := mouse.mgetx;
@@ -114,10 +120,11 @@ begin
                         end;
                 end;
         end;
-        if e.etype <> MOUSE_MOVE then begin
-                e.is_ctrl := kbd.is_ctrl;
-                e.is_alt := kbd.is_alt;
-                e.is_shift := kbd.is_shift;
+        if e.etype <> MOUSE_MOVE  then begin
+                flags := kbd.getflags;
+                e.is_ctrl := kbd.is_ctrl(flags);
+                e.is_alt := kbd.is_alt(flags);
+                e.is_shift := kbd.is_shift(flags);
         end;
 end;
 

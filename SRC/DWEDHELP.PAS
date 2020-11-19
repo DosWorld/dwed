@@ -109,9 +109,11 @@ begin
                                 'Help', topic_menu, selItem);
                         if e.etype = KEYBOARD then break;
                 end;
-                if (e.key = K_ESC) or (e.key = K_BS) then break;
-                if (e.key = K_ENTER) or (lo(e.key) = 32) then begin
-                        topic_id := selItem;
+                case e.scancode of
+                SCAN_ESC: break;
+                SCAN_BS: break;
+                SCAN_ENTER: topic_id := selItem;
+                SCAN_SPACE: topic_id := selItem;
                 end;
         end;
         kbd.reset;

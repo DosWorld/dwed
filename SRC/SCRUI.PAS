@@ -33,12 +33,6 @@ ANSWER = (YES, NO, CANCEL, RETRY, IGNORE, ALL, MAYBE, IDONTKNOWN, ASKMETOMORROW)
 
 procedure box(x, y, w, h :integer; clr:byte);
 procedure vmenu(var e : TEvent;x, y, w, h :integer; mclr, sclr:byte; title : string; mtext:pchar; var selItem:integer);
-function hmenu(y : integer;
-        mclr, sclr : byte;
-        mtext : pchar;
-        var selx:integer; var sely:integer;
-        var lineId : String):word;
-
 procedure editstr(var e : TEvent; x, y : integer; clr:byte; var str : string; vislen, maxlen:integer);
 
 function yes_no : ANSWER;
@@ -129,7 +123,8 @@ begin
                                    e.mouse_x, e.mouse_y)
                                    and (scr_ofs + (e.mouse_y - y) <= total) then begin
                                    e.etype := KEYBOARD;
-                                   e.key := K_ENTER;
+                                   e.scancode := SCAN_ENTER;
+                                   e.ascii := #$0D;
                                    selItem := scr_ofs + (e.mouse_y - y);
                                    break;
                                 end else if in_bound(x - 1, y - 1, x + w + 1, y + h - 1,
@@ -140,55 +135,36 @@ begin
                 end;
                 if e.etype <> KEYBOARD then break;
                 if e.is_shift or e.is_ctrl or e.is_alt then break;
-                hi_key := hi(e.key);
-                if hi_key = hi(K_UP) then begin
+                case e.scancode of
+                SCAN_UP: begin
                         if selItem <> 0 then dec(selItem);
-                end else if hi_key = hi(K_HOME) then begin
+                end;
+                SCAN_HOME: begin
                         selItem := 0;
-                end else if hi_key = hi(K_END) then begin
+                end;
+                SCAN_END: begin
                         selItem := total;
-                end else if hi_key = hi(K_DOWN) then begin
+                end;
+                SCAN_DOWN: begin
                         if selItem <> total then inc(selItem);
-                end else if hi_key = hi(K_PGUP) then begin
+                end;
+                SCAN_PGUP: begin
                         if selItem >= h then dec(selItem, h) else selItem := 0;
-                end else if hi_key = hi(K_PGDN) then begin
+                end;
+                SCAN_PGDN: begin
                         if total - h > selItem then inc(selItem, h) else selItem := total;
                 end else break;
+                end;
         end;
         scr.pop;
-end;
-
-function hmenu(y : integer;
-        mclr, sclr : byte;
-        mtext : pchar;
-        var selx:integer; var sely:integer;
-        var lineId : String):word;
-var key : word;
-        hi_key : byte;
-begin
-        lineId := '';
-        scr.push;
-        while true do begin
-                scr.pick;
-                scr.show;
-                key := getkey;
-                if is_shift or is_ctrl or is_alt then break;
-                hi_key := hi(key);
-                if hi_key = hi(K_UP) then begin
-                end else if hi_key = hi(K_DOWN) then begin
-                end else if hi_key = hi(K_LEFT) then begin
-                end else if hi_key = hi(K_RIGHT) then begin
-                end else break;
-        end;
-        scr.pop;
-        hmenu := key;
 end;
 
 procedure editstr(var e : TEvent; x, y : integer; clr:byte; var str : string; vislen, maxlen:integer);
 var visstr : string;
     save_cursor : word;
-    pos : integer;
-    ofs_x : integer;
+    pos         : integer;
+    ofs_x       : integer;
+    hi_key      : word;
 begin
         save_cursor := scr.get_cursor;
         scr.set_cursor(scr.cursor);
@@ -206,37 +182,43 @@ begin
                 kbd.reset;
                 wait_event(e);
                 if e.etype = KEYBOARD then begin
-                        case e.key of
-                        K_BS:   if (length(str) <> 0) and (pos > 1) then begin
+                        hi_key := e.scancode;
+                        if e.is_ctrl or e.is_alt then continue;
+                        case e.scancode of
+                        SCAN_BS: begin
+                                if (length(str) <> 0) and (pos > 1) then begin
                                         delete(str, pos - 1, 1);
                                         dec(pos);
                                 end;
-                        K_DEL:  if (length(str) + 1 <> pos) then begin
+                        end;
+                        SCAN_DEL: begin
+                                if (length(str) + 1 <> pos) then begin
                                         delete(str, pos, 1);
                                 end;
-                        K_HOME: begin
+                        end;
+                        SCAN_HOME: begin
                                 pos := 1;
                                 ofs_x := 0;
                         end;
-                        K_END: begin
+                        SCAN_END: begin
                                 pos := length(str) + 1;
                                 ofs_x := 0;
                         end;
-                        K_LEFT: begin
+                        SCAN_LEFT: begin
                                 if pos > 1 then dec(pos);
                         end;
-                        K_RIGHT: begin
+                        SCAN_RIGHT: begin
                                 if pos <= length(str) then inc(pos);
                         end;
-                        K_ENTER: break;
-                        K_ESC: break;
-                        K_TAB: break;
-                        K_SHIFT_TAB: break;
-                        else if lo(e.key) >= 32 then
+                        SCAN_ENTER: break;
+                        SCAN_ESC: break;
+                        SCAN_TAB: break;
+                        else if e.ascii >= ' ' then begin
                                 if length(str) <> maxlen then begin
-                                        System.insert(chr(lo(e.key)), str, pos);
+                                        System.insert(e.ascii, str, pos);
                                         inc(pos);
                                 end;
+                        end;
                         end;
                 end else if (e.etype = MOUSE_PRESS_B1)
                         and (e.mouse_y = y)
@@ -260,11 +242,12 @@ begin
         r  := MAYBE;
         while r = MAYBE do begin
                 kbd.reset;
-                w := kbd.getkey;
-                if hi(w) = hi(K_ESC) then r := NO;
-                if hi(w) = $31 then r := NO;
-                if hi(w) = hi(K_ENTER) then r := YES;
-                if hi(w) = $15 then r := YES;
+                case hi(kbd.getkey) of
+                SCAN_ESC: r := NO;
+                SCAN_N: r := NO;
+                SCAN_ENTER: r := YES;
+                SCAN_Y: r := YES;
+                end;
         end;
         yes_no := r;
 end;
@@ -277,12 +260,13 @@ begin
         r  := MAYBE;
         while r = MAYBE do begin
                 kbd.reset;
-                w := kbd.getkey;
-                if hi(w) = hi(K_ESC) then r := CANCEL;
-                if hi(w) = $31 then r := NO;
-                if hi(w) = hi(K_ENTER) then r := YES;
-                if hi(w) = $15 then r := YES;
-                if hi(w) = $2E then r := CANCEL;
+                case hi(kbd.getkey) of
+                SCAN_ESC: r := CANCEL;
+                SCAN_N: r := NO;
+                SCAN_ENTER: r := YES;
+                SCAN_Y: r := YES;
+                SCAN_C: r := CANCEL;
+                end;
         end;
         yes_no_cancel := r;
 end;

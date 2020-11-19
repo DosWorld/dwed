@@ -582,8 +582,8 @@ begin
                         ctx.config.color.menu_sel,
                         'Opened files',
                         p, sitem);
-                if e.key = K_ESC then break;
-                if (e.key = K_ENTER) or (lo(e.key) = 32) then begin
+                if e.scancode = SCAN_ESC then break;
+                if (e.scancode = SCAN_ENTER) or (e.scancode = SCAN_SPACE) then begin
                         if (sitem <> cctx) then begin
                                 i := 0;
                                 r := ctx.all;
@@ -712,9 +712,9 @@ begin
         scr.show;
         kbd.reset;
         while true do begin
-                case kbd.getkey of
-                K_ESC: break;
-                K_ENTER: break;
+                case hi(kbd.getkey) of
+                SCAN_ESC: break;
+                SCAN_ENTER: break;
                 end;
         end;
         scr.pop;

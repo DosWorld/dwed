@@ -85,8 +85,8 @@ begin
                         color, color_sel,
                         'Syntax highlight scheme', hl_menu, sitem);
                 if e.etype <> KEYBOARD then continue;
-                if e.key = K_ESC then break;
-                if (e.key = K_ENTER) or (lo(e.key) = 32) then begin
+                if e.scancode = SCAN_ESC then break;
+                if (e.scancode = SCAN_ENTER) or (e.scancode = SCAN_SPACE) then begin
                         i := 0;
                         r := langs;
                         while r <> nil do begin
