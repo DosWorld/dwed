@@ -1,6 +1,6 @@
 # DWED
 
-Text file editor and IDE for MS-DOS and 8086 CPU designed in modern style for a IBM XT-grade PC.
+Text file editor and IDE for MS-DOS and 8086/88 CPU (IBM XT-grade PC) designed in modern style.
 
 Main features:
 
