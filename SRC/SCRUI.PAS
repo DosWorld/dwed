@@ -37,6 +37,8 @@ procedure editstr(var e : TEvent; x, y : integer; clr:byte; var str : string; vi
 
 function yes_no : ANSWER;
 function yes_no_cancel:ANSWER;
+function yes_no_all:ANSWER;
+
 procedure msg_box(color : byte; title, content, bottom : string);
 function in_bound(x1, y1, x2, y2 : integer; x, y : integer):boolean;
 
@@ -269,6 +271,25 @@ begin
                 end;
         end;
         yes_no_cancel := r;
+end;
+
+function yes_no_all:ANSWER;
+var r : ANSWER;
+        w        : word;
+begin
+        scr.cursor_off;
+        r  := MAYBE;
+        while r = MAYBE do begin
+                kbd.reset;
+                case hi(kbd.getkey) of
+                SCAN_ESC: r := NO;
+                SCAN_N: r := NO;
+                SCAN_ENTER: r := YES;
+                SCAN_Y: r := YES;
+                SCAN_A: r := ALL;
+                end;
+        end;
+        yes_no_all := r;
 end;
 
 procedure msg_box(color : byte; title, content, bottom : string);

@@ -37,6 +37,8 @@ SCAN_RIGHT         = $4D;
 
 SCAN_CTRL_LEFT     = $73;
 SCAN_CTRL_RIGHT    = $74;
+SCAN_CTRL_UP       = $8D;
+SCAN_CTRL_DOWN     = $91;
 
 SCAN_INS           = $52;
 SCAN_HOME          = $47;

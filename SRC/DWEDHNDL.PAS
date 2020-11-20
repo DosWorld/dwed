@@ -869,24 +869,18 @@ begin
         hk_default := r;
 end;
 
-function hk_find_again(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
-        start_col   : integer;
+function search(var ctx:TEditorContext; is_replace : boolean):EditorStr;
+var
         line        : EditorStr;
-        lineStr     : string;
-        position    : integer;
         searchText  : string;
-        is_replace  : boolean;
-        msg         : string;
+        lineStr     : string;
+        start_col   : integer;
+        position    : integer;
 begin
-        r := SCRU_CLINE;
-        commit(ctx);
-        ctx.search := trim(ctx.search);
-        line := ctx.current^.cline;
-        start_col := ctx.current^.editor.x;
         searchText := ctx.search;
-        is_replace := length(ctx.replace) <> 0;
         if not ctx.searchCaseSens then searchText := upstr(searchText);
+        start_col := ctx.current^.editor.x;
+        line := ctx.current^.cline;
         while line <> nil do begin
                 strs.get(line, lineStr);
                 if not ctx.searchCaseSens then lineStr := upstr(lineStr);
@@ -897,35 +891,67 @@ begin
                         ctx.current^.editor.x := start_col + position - 1;
                         if not is_replace then inc(ctx.current^.editor.x, length(searchText));
                         load_ed(ctx);
-                        r := SCRU_FULL;
                         break;
                 end;
                 start_col := 1;
                 line := strs.go_next(line);
         end;
-        if line = nil then begin
-                scr.push;
-                scrui.msg_box(ctx.current^.config^.color.top, 'Search / Replace', 'Substring not found.', '[ OK ]');
-                scr.show;
-                kbd.reset;
-                kbd.getkey;
-                scr.pop;
-                r := SCRU_FULL;
-        end else if is_replace then begin
-                norm_xy(ctx, SCRU_FULL);
-                load_ed(ctx);
-                ctx.current^.editor.selection := true;
-                ctx.current^.editor.sel_row := strs.get_num(ctx.current^.cline);
-                ctx.current^.editor.sel_x := ctx.current^.editor.x + length(searchText);
-                dwedscru.update(ctx, SCRU_FULL);
-                msg := ' Replace it? (~Y~/~N~)';
-                scr.cln(0, 0, ctx.current^.config^.color.top);
-                scr.printhl(0, 0, ctx.current^.config^.color.top,
-                         ctx.current^.config^.color.top_hl,
-                         msg);
-                scr.show;
-                case scrui.yes_no of
-                YES: begin
+        search := line;
+end;
+
+procedure search_not_found(var ctx:TEditorContext);
+begin
+        scr.push;
+        scrui.msg_box(ctx.current^.config^.color.top, 'Search / Replace', 'Substring not found.', '[ OK ]');
+        scr.show;
+        kbd.reset;
+        kbd.getkey;
+        scr.pop;
+end;
+
+function hk_find_again(var ctx:TEditorContext; event:PEvent):integer;
+var r : integer;
+        line        : EditorStr;
+        lineStr     : string;
+        searchText  : string;
+        is_replace  : boolean;
+        msg         : string;
+        ans         : Answer;
+        count       : longint;
+begin
+        r := SCRU_CLINE;
+        commit(ctx);
+        ctx.search := trim(ctx.search);
+        line := ctx.current^.cline;
+        searchText := ctx.search;
+        is_replace := length(ctx.replace) <> 0;
+
+        line := search(ctx, is_replace);
+
+        if is_replace then begin
+                ans := YES;
+                count := 0;
+                if line = nil then begin
+                        search_not_found(ctx);
+                end else while (line <> nil) and (ans in [YES, ALL]) do begin
+                        norm_xy(ctx, SCRU_FULL);
+                        load_ed(ctx);
+                        ctx.current^.editor.selection := true;
+                        ctx.current^.editor.sel_row := strs.get_num(ctx.current^.cline);
+                        ctx.current^.editor.sel_x := ctx.current^.editor.x + length(searchText);
+                        if ans = YES then begin
+                                dwedscru.update(ctx, SCRU_FULL);
+                                msg := ' Replace it? (~Y~/~N~/~A~)';
+                                scr.cln(0, 0, ctx.current^.config^.color.top);
+                                scr.printhl(0, 0, ctx.current^.config^.color.top,
+                                         ctx.current^.config^.color.top_hl,
+                                         msg);
+                                scr.show;
+                                ans := scrui.yes_no_all;
+                        end;
+                        if ans = NO then begin
+                                inc(ctx.current^.editor.x, length(searchText));
+                        end else begin
                                 System.delete(ctx.current^.editor.line
                                         , ctx.current^.editor.x
                                         , length(searchText));
@@ -934,14 +960,28 @@ begin
                                         , ctx.current^.editor.x);
                                 ctx.current^.editor.chg := true;
                                 inc(ctx.current^.editor.x, length(ctx.replace));
+                                inc(count);
                         end;
-                NO: begin
-                                inc(ctx.current^.editor.x, length(searchText));
-                        end;
+                        ctx.current^.editor.selection := false;
+                        commit(ctx);
+                        line := search(ctx, is_replace);
+                end;
+                if (ans = ALL) and (count <> 0) then begin
+                        scr.push;
+                        scrui.msg_box(ctx.current^.config^.color.top, 'Search / Replace', 'Replaced ' +
+                                ltoa(count) +
+                                ' string(s).', '[ OK ]');
+                        scr.show;
+                        kbd.reset;
+                        kbd.getkey;
+                        scr.pop;
                 end;
                 r := SCRU_FULL;
-                ctx.current^.editor.selection := false;
-                commit(ctx);
+        end else begin
+                if line = nil then begin
+                        search_not_found(ctx);
+                end;
+                r := SCRU_FULL;
         end;
         hk_find_again := r;
 end;
@@ -1336,6 +1376,8 @@ begin
 
         reg_handler(SCAN_CTRL_PGUP, true, true, false, true, @hk_move_line_up);
         reg_handler(SCAN_CTRL_PGDN, true, true, false, true, @hk_move_line_down);
+        reg_handler(SCAN_CTRL_UP, true, true, false, true, @hk_move_line_up);
+        reg_handler(SCAN_CTRL_DOWN, true, true, false, true, @hk_move_line_down);
 
         reg_handler(SCAN_F1, false, false, false, false, @hk_help);
         reg_handler(SCAN_F2, false, false, false, false, @hk_save);
