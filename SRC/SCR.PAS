@@ -86,7 +86,7 @@ var screen_size, line_size : word;
 function getheight:integer;assembler;
 asm
         push       ds
-        mov        ax, word ptr [seg0040]
+        mov        ax, seg0040
         mov        ds, ax
         mov        al, byte ptr[$0084]
         xor        ah, ah
@@ -97,7 +97,7 @@ end;
 function getwidth:integer;assembler;
 asm
         push       ds
-        mov        ax, word ptr [seg0040]
+        mov        ax, seg0040
         mov        ds, ax
         mov        ax, word ptr[$004a]
         pop        ds
@@ -158,6 +158,7 @@ asm
         mov        ax, x
         mov        cx, y
         call       buf_es_di
+        xor        ch, ch
         mov        cx, len
         xor        ch, ch
         mov        ah, clr
@@ -195,7 +196,7 @@ asm
         mov        cx, y
         call       buf_es_di
         mov        bx, line_size
-        sub        cx, 2
+        sub        bx, 2
         mov        cx, len
         mov        ah, clr
         mov        al, c
@@ -271,10 +272,11 @@ end;
 
 procedure show;assembler;
 asm
+        call       mhide
+
         push       es
         push       ds
 
-        call       mhide
 
         mov        ax, vseg
         mov        es, ax
@@ -284,10 +286,10 @@ asm
         cld
         repz       movsb
 
-        call       mshow
-
         pop        ds
         pop        es
+
+        call       mshow
 end;
 
 procedure locate(x, y : integer);assembler;

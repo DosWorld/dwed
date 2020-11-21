@@ -92,10 +92,12 @@ begin
                                 scr.chcolor(0, i, text_sel_color, len);
                         end;
                 end;
+
                 high_light(ctx.current^.st, w
                         , ctx.config.color.text_hl
                         , text_color
                         , @scr.screen[(w * i) shl 1]);
+
                 p := strs.go_next(p);
         end;
 end;
@@ -119,6 +121,7 @@ begin
         scr.print(0, ctx.current^.scry + 1, ctx.current^.config^.color.text, line);
         scrx := ctx.current^.scrx;
         width := ctx.current^.config^.width;
+
         if ctx.current^.editor.selection then begin
                 get_sel_coord(ctx, sb_x, sb_y, se_x, se_y);
                 clinenum := strs.get_num(ctx.current^.cline);
@@ -149,6 +152,7 @@ begin
                 end;
                 if len > 0 then scr.chcolor(x, ctx.current^.scry + 1, ctx.current^.config^.color.text_sel, len);
         end;
+
         with ctx do begin
                 high_light(current^.st, config.width
                 , config.color.text_hl
@@ -197,7 +201,6 @@ begin
                 if scru >= SCRU_TOP then update_top(ctx);
 
                 if ctx.ins then scr.cursor_on else scr.cursor_big;
-
                 scr.show;
         end;
 end;
