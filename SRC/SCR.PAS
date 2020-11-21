@@ -108,32 +108,35 @@ end;
 procedure buf_es_di;assembler;
 asm
         mov        bx, ax
-        mov        ax, word ptr [line_size]
+        mov        ax, line_size
         mul        cx
         xchg       bx, ax
         shl        ax, 1
         add        ax, bx
-        les        di, [screen]
+        les        di, screen
         add        di, ax
 end;
 
 procedure cls(clr : byte);assembler;
 asm
-        mov        ax, word ptr [screen_size]
+        push       es
+
+        mov        ax, screen_size
         shr        ax, 1
         xchg       ax, cx
         mov        ah, clr
         mov        al, ' '
-        push       es
         les        di, screen
         cld
         repz       stosw
+
         pop        es
 end;
 
 procedure cln(x, y : integer; clr : byte);assembler;
 asm
         push       es
+
         call       getwidth
         push       ax
         mov        ax, x
@@ -145,6 +148,7 @@ asm
         mov        al, ' '
         cld
         repz       stosw
+
         pop        es
 end;
 
@@ -155,6 +159,7 @@ asm
         mov        cx, y
         call       buf_es_di
         mov        cx, len
+        xor        ch, ch
         mov        ah, clr
         mov        al, c
         cld
@@ -172,12 +177,12 @@ asm
         mov        cx, len
         mov        al, clr
         cld
-        or         cx, cx
+        or         cl, cl
         jz         @end
 @cont:
         stosb
         inc        di
-        dec        cx
+        dec        cl
         jnz        @cont
 @end:
         pop        es
@@ -190,15 +195,17 @@ asm
         mov        cx, y
         call       buf_es_di
         mov        bx, line_size
+        sub        cx, 2
         mov        cx, len
         mov        ah, clr
         mov        al, c
-        or         cx, cx
+        cld
+        or         cl, cl
         jz         @end
 @cont:
-        mov        word ptr [es:di], ax
+        stosw
         add        di, bx
-        dec        cx
+        dec        cl
         jnz        @cont
 @end:
         pop        es
@@ -208,14 +215,12 @@ procedure print(x, y:integer; clr : byte; s : string);assembler;
 asm
         push       es
         push       ds
+
         mov        ax, x
         mov        cx, y
         call       buf_es_di
-        lea        bx, s
         mov        ah, clr
-        mov        si, [ss:bx]
-        mov        bx, [ss:bx+2]
-        mov        ds, bx
+        lds        si, s
         lodsb
         or         al, al
         jz         @end
@@ -236,32 +241,28 @@ asm
         push       es
         push       ds
 
-        mov        ax, word ptr [x]
-        mov        cx, word ptr [y]
+        mov        ax, x
+        mov        cx, y
         call       buf_es_di
 
-        lea        bx, s
-        mov        si, word ptr [ss:bx]
-        mov        ax, word ptr [ss:bx+2]
-        mov        ds, ax
-        xor        ah, ah
+        mov        ah, clr
+        mov        bh, hlclr
+        lds        si, s
         lodsb
-        or         ax, ax
+        or         al, al
         jz         @end
-        mov        cx, ax
-        mov        ah, byte ptr [ss:clr]
-        mov        bh, byte ptr [ss:hlclr]
+        mov        cl, al
         cld
 @cont:
         lodsb
         cmp        al, '~'
         jnz        @print
-        xchg       ah,bh
+        xchg       ah, bh
         jmp        @cont2
 @print:
         stosw
 @cont2:
-        dec        cx
+        dec        cl
         jnz        @cont
 @end:
         pop        ds
@@ -270,27 +271,23 @@ end;
 
 procedure show;assembler;
 asm
-        call       mhide
-
         push       es
         push       ds
 
+        call       mhide
 
-        mov        ax, word ptr [vseg]
+        mov        ax, vseg
         mov        es, ax
-        mov        cx, [screen_size]
-        mov        si, word ptr [screen]
-        mov        ax, word ptr [screen+2]
-        mov        ds, ax
+        mov        cx, screen_size
+        lds        si, screen
         xor        di, di
         cld
         repz       movsb
 
+        call       mshow
 
         pop        ds
         pop        es
-
-        call       mshow
 end;
 
 procedure locate(x, y : integer);assembler;
@@ -300,6 +297,7 @@ asm
         mov        ds, ax
         mov        bh, byte ptr [$0062]
         pop        ds
+
         mov        dl, byte ptr [x]
         mov        dh, byte ptr [y]
         mov        ah, 2
@@ -313,6 +311,7 @@ asm
         mov        ds, ax
         mov        bh, byte ptr [$0062]
         pop        ds
+
         mov        ah, 3
         int        $10
         mov        al,dl
@@ -326,6 +325,7 @@ asm
         mov        ds, ax
         mov        bh, byte ptr [$0062]
         pop        ds
+
         mov        ah, 3
         int        $10
         mov        al,dh

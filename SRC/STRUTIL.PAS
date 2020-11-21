@@ -116,7 +116,7 @@ begin
 end;
 
 function strlen(p:pchar):word;
-var s:pchar;
+var s : pchar;
 begin
         s := p;
         while p[0] <> #0 do inc(p);
@@ -124,33 +124,25 @@ begin
 end;
 
 function basename(s:string):string;
-var r:string;
-        i : integer;
+var     i : integer;
 begin
-        i := length(s);
-        for i:=length(s) downto 0 do
+        for i := length(s) downto 0 do
         begin
-                case s[i] of
-                ':','\','/': break;
-                end;
+                if s[i] in [':','\','/'] then break;
         end;
-        if i = 0 then r := s else r := copy(s, i+1, length(s) - i);
-        basename := r;
+        if i <> 0 then s := copy(s, i+1, length(s) - i);
+        basename := s;
 end;
 
 function getpathname(s:string):string;
-var r:string;
-        i : integer;
+var     i : integer;
 begin
-        i := length(s);
-        for i:=length(s) downto 0 do
+        for i := length(s) downto 0 do
         begin
-                case s[i] of
-                ':','\','/': break;
-                end;
+                if s[i] in [':','\','/'] then break;
         end;
-        if i = 0 then r := '' else r := copy(s, 1, i);
-        getpathname := r;
+        if i <> 0 then s := copy(s, 1, i);
+        getpathname := s;
 end;
 
 function change_ext(s:string; new_ext:string):string;
@@ -190,7 +182,7 @@ begin
 end;
 
 function hexb(b : byte):string;
-const a:string[16] = '0123456789ABCDEF';
+const a : string[16] = '0123456789ABCDEF';
 begin
         hexb := a[((b shr 4) and $0f) + 1] + a[(b and $0f) + 1];
 end;
@@ -243,17 +235,17 @@ end;
 
 function is_digit(c:char):boolean;
 begin
-        is_digit := (c >= '0') and (c <= '9');
+        is_digit := c in ['0'..'9'];
 end;
 
 function is_alpha(c:char):boolean;
 begin
-        is_alpha := ((c >= 'a') and (c <= 'z')) or ((c >= 'A') and (c <= 'Z'));
+        is_alpha := c in ['a'..'z', 'A'..'Z'];
 end;
 
 function is_hdigit(c:char):boolean;
 begin
-        is_hdigit := ((c >= '0') and (c <= '9')) or ((c >= 'a') and (c <= 'f')) or ((c >= 'A') and (c <= 'F'));
+        is_hdigit := c in ['0'..'9', 'a'..'f', 'A'..'F'];
 end;
 
 function is_id(c:char):boolean;
@@ -327,11 +319,9 @@ end;
 
 function strchr(p : pchar; c : char) : pchar;assembler;
 asm
-        mov        ah, byte ptr [c]
-        mov        si, word ptr [p]
-        mov        bx, word ptr [p+2]
         push       ds
-        mov        ds, bx
+        mov        ah, c
+        lds        si, p
         cld
 @cont:
         lodsb
