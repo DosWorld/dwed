@@ -42,13 +42,23 @@ end;
 procedure get_str_part(var ctx : TEditorContext; var s : string);
 var len : integer;
     w   : integer;
+    nl  : integer;
+    sc  : integer;
 begin
         len := ord(s[0]);
         w := ctx.current^.config^.width;
-        if len < ctx.current^.scrx then s := '' else begin
-                if ctx.current^.scrx <> 0 then s := copy(s, ctx.current^.scrx + 1, len - ctx.current^.scrx);
+        sc := ctx.current^.scrx;
+        nl:= len - sc;
+        if nl < 0 then nl := 0;
+        if nl > w then nl := w;
+        if (nl <> 0) and (sc<> 0) then move(s[sc + 1], s[1], nl);
+        s[0] := chr(nl);
+{
+        if len < ctx.current^.scrx then s[0] := #0 else begin
+                if ctx.current^.scrx <> 0 then System.delete(s, 1, ctx.current^.scrx);
         end;
-        if ord(s[0]) > w then s := copy(s, 1, w);
+        if ord(s[0]) > w then s[0] := chr(w);
+}
 end;
 
 procedure update_full(var ctx : TEditorContext);
@@ -76,8 +86,8 @@ begin
                 clinenum := strs.get_num(p);
                 strs.get(p, s);
                 get_str_part(ctx, s);
-                scr.cln(0, i, text_color);
                 scr.print(0, i, text_color, s);
+                scr.cln(ord(s[0]), i, text_color);
                 if selection then begin
                         if p = ctx.current^.cline then begin
                         end else if line_full_in_sel(clinenum, sb_y, se_y) then scr.chcolor(0, i, text_sel_color, w)

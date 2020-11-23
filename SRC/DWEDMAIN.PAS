@@ -48,6 +48,7 @@ begin
                         welcome_msg := false;
                 end;
                 scru := SCRU_NONE;
+
                 i := 0;
                 if has_event then begin
                         while (has_event) and (i < 8) do begin
@@ -60,6 +61,10 @@ begin
                         wait_event(event);
                         scru := process_event(ctx, event);
                 end;
+{
+                wait_event(event);
+                scru := process_event(ctx, event);
+}
         end;
 end;
 
