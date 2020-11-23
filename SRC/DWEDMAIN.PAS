@@ -147,7 +147,8 @@ begin
                 end;
         end;
         if (length(key) = 0) and (length(value) = 0) then key := param;
-        key := upstr(trim(key));
+        key := trim(key);
+        upstr(key);
         value := trim(value);
 end;
 

@@ -46,8 +46,8 @@ type
 PVocabEntry = ^TVocabEntry;
 TVocabEntry = record
         hash        : word;
-        keyword     : string[16];
         next        : PVocabEntry;
+        keyword     : string[16];
 end;
 
 PLangDesc = ^TLangDesc;
@@ -57,7 +57,7 @@ TLangDesc = record
         caseSens  : boolean;
         ext       : string[64];
         vocab     : PVocabEntry;
-        title     : string[24];
+        title     : string[48];
         next      : PLangDesc;
 end;
 
@@ -105,12 +105,13 @@ end;
 procedure add_lang(st : SourceType; ext : string; caseSens : boolean; hlchars, title : string);
 var lng : PLangDesc;
 begin
+        upstr(ext);
         getmem(lng, sizeof(TLangDesc));
         lng^.st := st;
         lng^.title := title;
         lng^.caseSens := caseSens;
         lng^.vocab := nil;
-        lng^.ext := upstr(ext);
+        lng^.ext := ext;
         lng^.hlchars := hlchars + #0;
         lng^.next := langs;
         langs := lng;
@@ -142,7 +143,8 @@ var lng : PLangDesc;
         r        : SourceType;
 begin
         r := SRC_NONE;
-        ext := '|' + upstr(ext) + '|';
+        upstr(ext);
+        ext := '|' + ext + '|';
         lng := langs;
         while lng <> nil do begin
                 if System.pos(ext, lng^.ext) <> 0 then begin
@@ -162,7 +164,7 @@ begin
         while lng <> nil do begin
                 if lng^.st = st then begin
                         getmem(entry, sizeof(TVocabEntry));
-                        if not lng^.caseSens then keyword := upstr(keyword);
+                        if not lng^.caseSens then upstr(keyword);
                         entry^.next := lng^.vocab;
                         entry^.keyword := keyword;
                         entry^.hash := hcode(keyword);
@@ -219,7 +221,7 @@ begin
                         end else begin
                                 if wordStarted and (pos > 1) then begin
                                         str[0] := chr(pos);
-                                        if not lng^.caseSens then str := upstr(str);
+                                        if not lng^.caseSens then upstr(str);
                                         if find_keyword(lng^.vocab, str) then
                                         asm
                                                 push       ds
@@ -347,7 +349,7 @@ end;
 
 var i : integer; s : string;
 begin
-        dwedhl.add_lang(SRC_DISABLE, '|%?%|', false, '', '     DISABLE');
+        dwedhl.add_lang(SRC_DISABLE, '|%?%|', false, '', '     DISABLE (Use this, if too slow)');
         dwedhl.add_lang(SRC_FORTH, '|f|4th|', false, '+-/*[]():;,.!@?','.4th Forth Source');
         dwedhl.add_keyword(SRC_FORTH, 'immediate');
         dwedhl.add_keyword(SRC_FORTH, 'dup');
@@ -743,19 +745,18 @@ begin
         dwedhl.add_keyword(SRC_NONE, 'email');
         dwedhl.add_keyword(SRC_NONE, 'mailto');
         dwedhl.add_keyword(SRC_NONE, 'http');
+        dwedhl.add_keyword(SRC_NONE, 'https');
         dwedhl.add_keyword(SRC_NONE, 'ftp');
         dwedhl.add_keyword(SRC_NONE, 'sftp');
         dwedhl.add_keyword(SRC_NONE, 'email');
         dwedhl.add_keyword(SRC_NONE, 'mailto');
         dwedhl.add_keyword(SRC_NONE, 'url');
-        dwedhl.add_keyword(SRC_NONE, 'if');
-        dwedhl.add_keyword(SRC_NONE, 'then');
-        dwedhl.add_keyword(SRC_NONE, 'else');
-        dwedhl.add_keyword(SRC_NONE, 'return');
+        dwedhl.add_keyword(SRC_NONE, 'note');
         dwedhl.add_keyword(SRC_NONE, 'todo');
         dwedhl.add_keyword(SRC_NONE, 'tbd');
         dwedhl.add_keyword(SRC_NONE, 'asap');
         dwedhl.add_keyword(SRC_NONE, 'bug');
+        dwedhl.add_keyword(SRC_NONE, 'bugfix');
         dwedhl.add_keyword(SRC_NONE, 'fix');
         dwedhl.add_keyword(SRC_NONE, 'fixit');
         dwedhl.add_keyword(SRC_NONE, 'note');

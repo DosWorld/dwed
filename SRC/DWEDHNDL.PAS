@@ -878,12 +878,12 @@ var
         position    : integer;
 begin
         searchText := ctx.search;
-        if not ctx.searchCaseSens then searchText := upstr(searchText);
+        if not ctx.searchCaseSens then upstr(searchText);
         start_col := ctx.current^.editor.x;
         line := ctx.current^.cline;
         while line <> nil do begin
                 strs.get(line, lineStr);
-                if not ctx.searchCaseSens then lineStr := upstr(lineStr);
+                if not ctx.searchCaseSens then upstr(lineStr);
                 position := pos(searchText, copy(lineStr, start_col, length(lineStr) - start_col + 1));
                 if position <>0 then begin
                         ctx.current^.cline := line;

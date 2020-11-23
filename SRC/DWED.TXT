@@ -25,12 +25,12 @@ and ~N~ or ~ESC~ - to answer ~NO~.
 2. For micro-instalation need only two files: ~DWED.EXE~ and
    ~DWEDOVL.EXE~.
 
-3. DPMI version - ~DWED16.EXE~ require files:
-   ~RTM.EXE~
-   ~DPMI16BI.OVL~
-   ~DWEDOVLP.EXE~
+3. DPMI-16 version - ~DWED16.EXE~ require files: ~RTM.EXE~,
+   ~DPMI16BI.OVL~, ~DWEDOVLP.EXE~.
 
 4. You can store ~DWED.CFG~ in local dir, also.
+
+5. You can disable highlight, if too slow.
 ///2NAVIGATION
         Navigation.
 
@@ -137,7 +137,7 @@ or
 To run user's shell scripts used keys ~F5~, ~F8~, ~F9~.
 To configure actions, put into ~DWED.CFG~ lines like:
 
-~usr.def.f5~ = make clean
+~usr.def.f5~ = %COMSPEC%
 ~usr.def.f8~ = make all
 ~usr.def.f9~ = make run
 ///1EXT-MEM

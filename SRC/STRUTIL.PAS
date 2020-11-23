@@ -37,9 +37,9 @@ procedure strupr(p : pchar);
 function strhash(p : pchar):word;
 function strchr(p : pchar; c : char) : pchar;
 
-function upstr(s : string):string;
+procedure upstr(var s : string);
 
-function hcode(s : string):word;
+function hcode(var s : string):word;
 
 function hexb(b : byte):string;
 function hexw(w : word):string;
@@ -89,7 +89,7 @@ begin
         get_filename_ext := r;
 end;
 
-procedure strupr(p:pchar);
+procedure strupr(p : pchar);
 begin
         while p[0] <> #0 do begin
                 p[0] := upcase(p[0]);
@@ -97,12 +97,34 @@ begin
         end;
 end;
 
-function upstr(s:string):string;
-var i, l : integer;
-begin
-        l := length(s);
-        for i := 1 to l do s[i] := upcase(s[i]);
-        upstr := s;
+procedure upstr(var s : string);assembler;
+asm
+        push       ds
+        push       es
+
+        lds        si, s
+        push       ds
+        pop        es
+        cld
+        lodsb
+        mov        cl, al
+        or         cl, cl
+        jz         @end
+        mov        di, si
+@cont:
+        lodsb
+        cmp        al, 'a'
+        jl         @noconv
+        cmp        al, 'z'
+        jg         @noconv
+        sub        al, $20
+@noconv:
+        stosb
+        dec        cl
+        jnz        @cont
+@end:
+        pop        es
+        pop        ds
 end;
 
 procedure strcpy(dst, src:pchar);
@@ -115,7 +137,7 @@ begin
         src[0] := #0;
 end;
 
-function strlen(p:pchar):word;
+function strlen(p : pchar):word;
 var s : pchar;
 begin
         s := p;
@@ -164,16 +186,31 @@ begin
         change_ext := r + new_ext;
 end;
 
-function hcode(s:string):word;
-var h : word;
-        i, l : integer;
-begin
-        l := length(s); h := 0;
-        for i := 1 to l do h := h * 33 + ord(s[i]);
-        hcode := h;
+function hcode(var s : string):word;assembler;
+asm
+        push       ds
+        lds        si, s
+        cld
+        xor        bx, bx
+        lodsb
+        or         al, al
+        jz         @end
+        mov        cl, al
+@cont:
+        xchg       bx, ax
+        mov        bx, 33
+        mul        bx
+        xchg       bx, ax
+        lodsb
+        add        bx, ax
+        dec        cl
+        jnz        @cont
+@end:
+        pop        ds
+        mov        ax, bx
 end;
 
-function strhash(p:pchar):word;
+function strhash(p : pchar):word;
 var h : word;
 begin
         h := 0;
@@ -359,7 +396,7 @@ var r : byte;
 begin
         r := 0;
         if length(str) = 1 then str := '0' + str;
-        str := upstr(str);
+        upstr(str);
         if length(str) > 2 then str := copy(str, 1, 2);
         for i := 1 to 2 do begin
                 c := str[i];
