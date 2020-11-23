@@ -13,7 +13,7 @@ Main features:
 * Support Long File Names (LFN)
 * Support user's color scheme (via config-file)
 * Support user's shell script running by hotkeys F5, F8, F9.
-* You can disable highlight and receive good speed with low-speed PC.
+* You can disable highlight and receive good speed with XT.
 
 Restrictions:
 
