@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$G-,B-,S-,R-,I-}
 unit dwedutil;
 
 interface
@@ -100,11 +99,13 @@ begin
                 if scry < 0 then scry := 0;
                 if editor.x < 1 then editor.x := 1;
                 if editor.x > length(editor.line) + 1 then editor.x := length(editor.line) + 1;
+                if strs.is_first(cline) then begin scrline := cline; scry := 0; end;
         end;
         if ctx.current^.scry <> 0 then begin
                 i := ctx.current^.scry;
                 x := 0;
-                while i <> 0 do begin
+                with ctx.current^ do scrline := cline;
+                while i > 0 do begin
                         if strs.is_first(ctx.current^.scrline) then begin
                                 ctx.current^.scry := x;
                                 break;
@@ -146,23 +147,22 @@ function go_line_up(var ctx : TEditorContext) : integer;
 var r : integer;
 begin
         r := SCRU_NONE;
-        if ctx.current^.scry <> 0 then begin
-                commit(ctx);
+        commit(ctx);
+        if not strs.is_first(ctx.current^.cline) then begin
+                if ctx.current^.scry <> 0 then begin
+                        with ctx.current^ do begin
+                                dec(scry);
+                        end;
+                        r := SCRU_CLINE;
+                end else begin
+                        r := SCRU_SD;
+                end;
                 with ctx.current^ do begin
                         cline := strs.go_prev(cline);
-                        dec(scry);
                 end;
-                load_ed(ctx);
-                r := SCRU_FULL;
-        end else if not strs.is_first(ctx.current^.scrline) then begin
-                commit(ctx);
-                with ctx.current^ do begin
-                        cline := strs.go_prev(cline);
-                        scrline := strs.go_prev(scrline);
-                end;
-                load_ed(ctx);
-                r := SCRU_FULL;
+                if ctx.current^.editor.selection then r := SCRU_FULL;
         end;
+        load_ed(ctx);
         go_line_up := r;
 end;
 
@@ -170,23 +170,22 @@ function go_line_down(var ctx : TEditorContext) : integer;
 var r : integer;
 begin
         r := SCRU_NONE;
+        commit(ctx);
         if not strs.is_last(ctx.current^.cline) then begin
-                commit(ctx);
                 with ctx.current^ do begin
-                        if config^.height - 2 <> scry then begin
+                        scrline := strs.go_next(scrline);
+                        if config^.height - 2 > scry then begin
                                 inc(scry);
                                 cline := strs.go_next(cline);
+                                r := SCRU_CLINE;
                         end else begin
-                                scrline := strs.go_next(scrline);
                                 cline := strs.go_next(cline);
+                                r := SCRU_SU;
                         end;
+                        if ctx.current^.editor.selection then r := SCRU_FULL;
                 end;
-                load_ed(ctx);
-                if length(ctx.current^.editor.line) + 1 < ctx.current^.editor.x then begin
-                        go_line_end(ctx);
-                end;
-                r := SCRU_FULL;
-        end else r := SCRU_NONE;
+        end;
+        load_ed(ctx);
         go_line_down := r;
 end;
 
@@ -317,8 +316,8 @@ function go_page_up(var ctx : TEditorContext) : integer;
 var r, i : integer;
 begin
         r := SCRU_NONE;
+        commit(ctx);
         if (ctx.current^.scrx <> 0) or (ctx.current^.scry <> 0) or (ctx.current^.editor.x <> 1) then begin
-                commit(ctx);
                 with ctx.current^ do begin
                         while scry <> 0 do begin
                                 cline := strs.go_prev(cline);
@@ -327,11 +326,9 @@ begin
                         scrx := 0;
                         editor.x := 1;
                 end;
-                load_ed(ctx);
                 r := SCRU_FULL;
         end else begin
                 i := ctx.current^.config^.height - 2;
-                commit(ctx);
                 while (i <> 0) and (not strs.is_first(ctx.current^.scrline)) do begin
                         with ctx.current^ do scrline := strs.go_prev(scrline);
                         dec(i);
@@ -340,9 +337,9 @@ begin
                         scry := 0;
                         cline := scrline;
                 end;
-                load_ed(ctx);
                 r := SCRU_FULL;
         end;
+        load_ed(ctx);
         go_page_up := r;
 end;
 
@@ -350,10 +347,10 @@ function go_page_down(var ctx : TEditorContext) : integer;
 var r, i : integer;
 begin
         r := SCRU_NONE;
+        commit(ctx);
         if (ctx.current^.scrx <> 0)
          or (ctx.current^.scry <> ctx.current^.config^.height-2)
          or (ctx.current^.editor.x <> 1) then begin
-                commit(ctx);
                 with ctx.current^ do begin
                         while (scry <> config^.height-2) and (not strs.is_last(cline)) do begin
                                 cline := strs.go_next(cline);
@@ -362,10 +359,8 @@ begin
                         scrx := 0;
                         editor.x := 1;
                 end;
-                load_ed(ctx);
                 r := SCRU_FULL;
         end else begin
-                commit(ctx);
                 i := ctx.current^.config^.height - 2;
                 while (i <> 0) and (not strs.is_last(ctx.current^.cline)) do begin
                         with ctx.current^ do begin
@@ -374,9 +369,9 @@ begin
                         end;
                         dec(i);
                 end;
-                load_ed(ctx);
                 r := SCRU_FULL;
         end;
+        load_ed(ctx);
         go_page_down := r;
 end;
 

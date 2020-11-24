@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$G-,B-,S-,R-,I-}
 unit strs;
 
 interface
@@ -316,24 +315,12 @@ end;
 
 function go_prev(r : EditorStr) : EditorStr;
 begin
-        case memType of
-        DOS: r := strsd.go_prev(r);
-        EMS: r := strsd.go_prev(r);
-        XMS: r := strsd.go_prev(r);
-        else r := strsd.go_prev(r);
-        end;
-        go_prev := r;
+        go_prev := strsd.go_prev(r);
 end;
 
 function go_next(r : EditorStr) : EditorStr;
 begin
-        case memType of
-        DOS: r := strsd.go_next(r);
-        EMS: r := strsd.go_next(r);
-        XMS: r := strsd.go_next(r);
-        else r := nil;
-        end;
-        go_next := r;
+        go_next := strsd.go_next(r);
 end;
 
 procedure free(r : EditorStr);

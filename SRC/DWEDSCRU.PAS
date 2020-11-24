@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$G-,B-,S-,R-,I-}
 unit dwedscru;
 
 interface
@@ -53,12 +52,6 @@ begin
         if nl > w then nl := w;
         if (nl <> 0) and (sc<> 0) then move(s[sc + 1], s[1], nl);
         s[0] := chr(nl);
-{
-        if len < ctx.current^.scrx then s[0] := #0 else begin
-                if ctx.current^.scrx <> 0 then System.delete(s, 1, ctx.current^.scrx);
-        end;
-        if ord(s[0]) > w then s[0] := chr(w);
-}
 end;
 
 procedure update_full(var ctx : TEditorContext);
@@ -128,6 +121,7 @@ begin
         x := 0;
         line := ctx.current^.editor.line;
         get_str_part(ctx, line);
+        scr.cln(0, ctx.current^.scry + 1, ctx.current^.config^.color.text);
         scr.print(0, ctx.current^.scry + 1, ctx.current^.config^.color.text, line);
         scrx := ctx.current^.scrx;
         width := ctx.current^.config^.width;
@@ -163,16 +157,18 @@ begin
                 if len > 0 then scr.chcolor(x, ctx.current^.scry + 1, ctx.current^.config^.color.text_sel, len);
         end;
 
-        with ctx do begin
-                high_light(current^.st, config.width
-                , config.color.text_hl
-                , config.color.text
-                , @scr.screen[(config.width * (current^.scry + 1)) shl 1]);
-                high_light_braket(config.width
-                , current^.editor.x - 1 - current^.scrx
-                , #$B2
-                , @scr.screen[(config.width * (current^.scry + 1)) shl 1]);
+        with ctx.current^ do begin
+                high_light(st, config^.width
+                , config^.color.text_hl
+                , config^.color.text
+                , @scr.screen[(config^.width * (scry + 1)) shl 1]);
         end;
+end;
+
+procedure update_scroll(var ctx : TEditorContext; is_up : boolean);
+begin
+        if is_up then scr.scroll_up(0, 1, ctx.config.width, ctx.config.height - 1, 1)
+        else scr.scroll_down(0, 1, ctx.config.width, ctx.config.height - 1, 1);
 end;
 
 procedure update_top(var ctx : TEditorContext);
@@ -207,9 +203,12 @@ procedure update(var ctx : TEditorContext; scru : integer);
 begin
         if scru <> SCRU_NONE then begin
                 if scru >= SCRU_FULL then update_full(ctx);
+
+                if scru = SCRU_SD then update_scroll(ctx, false)
+                else if scru = SCRU_SU then update_scroll(ctx, true);
+
                 if scru >= SCRU_CLINE then update_cline(ctx);
                 if scru >= SCRU_TOP then update_top(ctx);
-
                 if ctx.ins then scr.cursor_on else scr.cursor_big;
                 scr.show;
         end;

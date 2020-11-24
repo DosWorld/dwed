@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$G-,B-,S-,R-,I-}
 unit dwedmain;
 
 interface
@@ -33,38 +32,37 @@ implementation
 uses dos, scr, kbd, strs, strutil, lfn, dwedtype, dwedhndl, dwedutil, dwedhl, dwedscru, dwedlnch, dwedpar, event;
 
 procedure edit(var ctx : TEditorContext; welcome_msg : boolean);
-var k, i, scru  :integer;
-        event   : TEvent;
+var     scru, prev_scru, i : integer;
+        event              : TEvent;
 begin
         scru := SCRU_FULL;
         while scru <> SCRU_QUIT do begin
-                dwedscru.update(ctx, scru);
-                if welcome_msg then begin
-                        with ctx.current^.config^.color do begin
-                                scr.cln(0, 0, top);
-                                scr.printhl(2, 0, top, top_hl, 'Welcome!  Press ~F1~ for help');
+                if scru <> SCRU_NONE then begin
+                        dwedscru.update(ctx, scru);
+                        if welcome_msg then begin
+                                with ctx.current^.config^.color do begin
+                                        scr.cln(0, 0, top);
+                                        scr.printhl(2, 0, top, top_hl, 'Welcome!  Press ~F1~ for help');
+                                end;
+                                scr.show;
+                                welcome_msg := false;
                         end;
-                        scr.show;
-                        welcome_msg := false;
+                        scru := SCRU_NONE;
                 end;
-                scru := SCRU_NONE;
-
-                i := 0;
-                if has_event then begin
-                        while (has_event) and (i < 8) do begin
-                                wait_event(event);
-                                k := process_event(ctx, event);
-                                if k > scru then scru := k;
-                                inc(i);
-                        end;
-                end else begin
+                if not haskey then begin
                         wait_event(event);
                         scru := process_event(ctx, event);
+                end else begin
+                        i := 0;
+                        prev_scru := 0;
+                        while (i < 8) and haskey do begin
+                                wait_event(event);
+                                scru := process_event(ctx, event);
+                                if prev_scru < scru then prev_scru := scru;
+                                if (scru <> SCRU_NONE) and (scru <> SCRU_FULL) then begin scru := prev_scru; break; end;
+                                inc(i);
+                        end;
                 end;
-{
-                wait_event(event);
-                scru := process_event(ctx, event);
-}
         end;
 end;
 

@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{G-,S-,R-,I-}
 unit strutil;
 
 interface
@@ -197,8 +196,7 @@ asm
         jz         @end
         mov        cl, al
 @cont:
-        xchg       bx, ax
-        mov        bx, 33
+        mov        ax, 33
         mul        bx
         xchg       bx, ax
         lodsb
@@ -206,8 +204,8 @@ asm
         dec        cl
         jnz        @cont
 @end:
-        pop        ds
         mov        ax, bx
+        pop        ds
 end;
 
 function strhash(p : pchar):word;
@@ -265,19 +263,48 @@ begin
         octb := s;
 end;
 
-function is_blank(c:char):boolean;
-begin
-        is_blank := c <= ' ';
+function is_blank(c:char):boolean;assembler;
+asm
+        xor        al, al
+        mov        ah, c
+        cmp        ah, ' '
+        jg         @end
+        dec        al
+@end:
 end;
 
-function is_digit(c:char):boolean;
-begin
-        is_digit := c in ['0'..'9'];
+function is_digit(c:char):boolean;assembler;
+asm
+        xor        al, al
+        mov        ah, c
+        cmp        ah, '0'
+        jl         @cont1
+        cmp        ah, '9'
+        jg         @cont1
+        dec        al
+@cont1:
+        xor        ah, ah
 end;
 
-function is_alpha(c:char):boolean;
-begin
-        is_alpha := c in ['a'..'z', 'A'..'Z'];
+function is_alpha(c:char):boolean;assembler;
+asm
+        xor        al, al
+        mov        ah, c
+        cmp        ah, 'a'
+        jl         @cont1
+        cmp        ah, 'z'
+        jg         @cont1
+        dec        al
+        jmp        @end
+@cont1:
+        cmp        ah, 'A'
+        jl         @cont2
+        cmp        ah, 'Z'
+        jg         @cont2
+        dec        al
+@cont2:
+@end:
+        xor        ah, ah
 end;
 
 function is_hdigit(c:char):boolean;
@@ -285,10 +312,43 @@ begin
         is_hdigit := c in ['0'..'9', 'a'..'f', 'A'..'F'];
 end;
 
-function is_id(c:char):boolean;
-begin
-        is_id := is_alpha(c) or (c = '_');
+function is_id(c:char):boolean;assembler;
+asm
+        xor        al, al
+        mov        ah, c
+        cmp        ah, 'a'
+        jl         @cont1
+        cmp        ah, 'z'
+        jg         @cont1
+        dec        al
+        jmp        @end
+@cont1:
+        cmp        ah, 'A'
+        jl         @cont2
+        cmp        ah, 'Z'
+        jg         @cont2
+        dec        al
+        jmp        @end
+@cont2:
+
+        cmp        ah, '0'
+        jl         @cont3
+        cmp        ah, '9'
+        jg         @cont3
+        dec        al
+        jmp        @end
+@cont3: cmp        ah, '_'
+        jnz        @end
+        dec        al
+@end:
+        xor        ah, ah
 end;
+
+{
+begin
+        is_id := is_alpha(c) or is_digit(c) or (c = '_');
+end;
+}
 
 function ltrim(s:string):string;
 var k, l : integer;
@@ -298,7 +358,7 @@ begin
                 if s[k] > ' ' then break;
                 inc(k);
         end;
-        s := copy(s, k, l - k + 1);
+        if k <> 1 then s := copy(s, k, l - k + 1);
         ltrim := s;
 end;
 
@@ -310,7 +370,7 @@ begin
                 if s[k] > ' ' then break;
                 dec(k);
         end;
-        if k = 0 then s := '' else if k <> l then s := copy(s, 1, k);
+        if k = 0 then s := '' else if k <> l then s[0] := chr(k);
         rtrim := s;
 end;
 
@@ -411,7 +471,7 @@ end;
 function unquote(str : string) : string;
 begin
         if length(str) > 0 then begin
-                if str[1] = '"' then begin
+                if (str[1] = '"') and (str[length(str)] = '"') then begin
                         str := copy(str, 2, length(str) - 2);
                 end;
         end;

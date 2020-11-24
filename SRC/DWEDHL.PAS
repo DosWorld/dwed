@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$G-,B-,S-,R-,I-}
 unit dwedhl;
 
 interface
@@ -34,7 +33,6 @@ SourceType = (SRC_C, SRC_CMM, SRC_PAS, SRC_BAS, SRC_ASM, SRC_BAT, SRC_MD,
 
 function find_SourceType_by_ext(ext : string): SourceType;
 procedure high_light(st: SourceType; width : integer; hlclr, tclr : byte; scr:pchar);
-procedure high_light_braket(width, posit : integer; c : char; scr : pchar);
 procedure change_hl(var st : SourceType; color, color_sel : byte);
 
 implementation
@@ -120,9 +118,9 @@ end;
 function find_char(c : char; p : pchar):integer;assembler;
 asm
         push       ds
-        mov        ah, byte ptr [c]
-        lds        si, [p]
-        mov        cx, $FFFF
+        mov        ah, c
+        lds        si, p
+        mov        dx, $FFFF
         mov        bx, si
         cld
 @cont:
@@ -131,10 +129,10 @@ asm
         jz         @end
         cmp        al, ah
         jnz        @cont
-        mov        cx, si
-        sub        cx, bx
+        mov        dx, si
+        sub        dx, bx
 @end:
-        mov        ax, cx
+        mov        ax, dx
         pop        ds
 end;
 
@@ -175,11 +173,6 @@ begin
         end;
 end;
 
-function is_alpha(ch:char):boolean;
-begin
-        is_alpha := ch in ['a'..'z', 'A'..'Z', '0'..'9', '_'];
-end;
-
 function find_keyword(vocab : PVocabEntry; var str:string):boolean;
 var r : boolean;
         hash : word;
@@ -210,8 +203,8 @@ begin
         while width <> 0 do begin
                 ch := scr[0];
                 if ord(scr[1]) = tclr then begin
-                        if is_alpha(ch) then begin
-                                if not wordStarted then begin
+                        if is_id(ch) then begin
+                                if (not wordStarted) and (lng^.vocab <> nil) then begin
                                         wordStart := scr + 1;
                                         wordStarted := true;
                                         pos := 0;
@@ -267,52 +260,6 @@ begin
                         break;
                 end;
                 lng := lng^.next;
-        end;
-end;
-
-function get_braket_pair(c : char) : char;
-begin
-        case c of
-        '(': c := ')';
-        ')': c := '(';
-        '{': c := '}';
-        '}': c := '{';
-        '[': c := ']';
-        ']': c := '[';
-        else c := ' ';
-        end;
-        get_braket_pair := c;
-end;
-
-function get_direction(c : char) : boolean;
-begin
-        get_direction := c in ['(', '{', '['];
-end;
-
-procedure high_light_braket(width, posit : integer; c : char; scr : pchar);
-var fchar    : char;
-    pair     : char;
-    cchar    : char;
-    count, x : integer;
-    step     : integer;
-begin
-        fchar := scr[posit shl 1];
-        pair := get_braket_pair(fchar);
-        if pair = ' ' then exit;
-        if get_direction(fchar) then step := 1 else step := -1;
-        x := posit; count := 0;
-        while (x >= 0) and (x < width) do begin
-                cchar := scr[x shl 1];
-
-                if cchar = fchar then inc(count)
-                else if cchar = pair then dec(count);
-
-                if (cchar = pair) and (count = 0) then begin
-                        scr[x shl 1] := c;
-                        break;
-                end;
-
-                inc(x, step);
         end;
 end;
 

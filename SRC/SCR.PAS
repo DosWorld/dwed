@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$G-,B-,F+,S-,R-,I-}
+{$F+}
 unit scr;
 
 interface
@@ -60,6 +60,9 @@ function getheight:integer;
 
 function getx:integer;
 function gety:integer;
+
+procedure scroll_up(stx, sty, w, h, lines : integer);
+procedure scroll_down(stx, sty, w, h, lines : integer);
 
 implementation
 
@@ -411,6 +414,28 @@ asm
         mov        al, byte ptr [$0065]
         pop        ds
         and        al, 4
+end;
+
+procedure scroll_up(stx, sty, w, h, lines : integer);
+var i    : integer;
+    scrw : integer;
+begin
+        i := 0; w := w shl 1; scrw := getwidth;
+        while i < (h - lines) do begin
+                move(screen[(stx + (sty + i + lines) * scrw) shl 1], screen[(stx + (sty + i) * scrw) shl 1], w);
+                inc(i);
+        end;
+end;
+
+procedure scroll_down(stx, sty, w, h, lines : integer);
+var i    : integer;
+    scrw : integer;
+begin
+        i := h - lines; w := w shl 1; scrw := getwidth;
+        while i >= 0 do begin
+                move(screen[(stx + (sty + i) * scrw) shl 1], screen[(stx + (sty + i + lines) * scrw) shl 1], w);
+                dec(i);
+        end;
 end;
 
 begin
