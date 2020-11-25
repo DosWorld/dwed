@@ -402,39 +402,29 @@ begin
 end;
 
 function save_clipboard(var ctx : TEditorContext; fname:string) : integer;
-var f : file;
-        r        : integer;
+var f : word;
 begin
-        lfn.create(fname);
-        lfn.assign(f, fname);
-        {$I-}
-        rewrite(f, 1);
-        r := ioresult;
-        {$I+}
-        if r = 0 then begin
-                blockwrite(f, ctx.clipboard, strlen(ctx.clipboard));
-                truncate(f);
-                close(f);
+        f := lfn.lopen_w(fname);
+        if f <> 0 then begin
+                lfn.lwrite(f, ctx.clipboard[0], strlen(ctx.clipboard));
+                lfn.ltruncate(f);
+                lfn.lclose(f);
         end;
-        save_clipboard := r;
+        if f <> 0 then save_clipboard := 0 else save_clipboard := 105;
 end;
 
 function load_clipboard(var ctx : TEditorContext; fname:string) : integer;
-var f : file;
-        r        : integer;
+var f : word;
         readed   : word;
 begin
-        lfn.assign(f, fname);
-        {$I-}
-        System.reset(f, 1);
-        r := ioresult;
-        {$I+}
-        if r = 0 then begin
-                blockread(f, ctx.clipboard, CB_SIZE - 1, readed);
+        f := lfn.lopen_r(fname);
+        if f <> 0 then begin
+                readed := lfn.lread(f, ctx.clipboard, CB_SIZE - 1);
+                lfn.lclose(f);
                 ctx.clipboard[readed] := #0;
-                close(f);
         end;
-        load_clipboard := r;
+        if f <> 0 then f := 0 else f := 104;
+        load_clipboard := f;
 end;
 
 procedure copy_selected(var ctx : TEditorContext);

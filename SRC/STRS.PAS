@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
+{$I-}
 unit strs;
 
 interface
@@ -112,7 +113,7 @@ end;
 
 function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : EditorStr;
 var     root, cur, last : Pointer;
-        f          : file;
+        f          : word;
         buf        : array[0..BUF_SIZE-1] of char;
         readed     : word;
         pos        : word;
@@ -131,16 +132,12 @@ begin
         ppercent := -1;
         pos := 0;
         root := nil; last := nil;
-        lfn.assign(f, fname);
-        {$I-}
-        reset(f, 1);
-        errCode := ioresult;
-        {$I+}
+        f := lfn.lopen_r(fname);
+        if f = 0 then errCode := 104 else errCode := 0;
         position := 0;
         if errCode = 0 then begin
-                total := filesize(f);
-                seek(f, 0);
-                blockread(f, buf[0], BUF_SIZE, readed);
+                total := lfn.lsize(f);
+                readed := lfn.lread(f, buf[0], BUF_SIZE);
                 strbufpos := 0;
                 while readed <> 0 do begin
                         while pos < readed do begin
@@ -175,7 +172,7 @@ begin
                                         ppercent := percent;
                                 end;
                         end;
-                        blockread(f, buf[0], BUF_SIZE, readed);
+                        readed := lfn.lread(f, buf[0], BUF_SIZE);
                         pos := 0;
                 end;
                 if strbufpos > 255 then strbufpos := 255;
@@ -183,7 +180,7 @@ begin
                 s[0] := chr(strbufpos);
                 cur := strs.create(nil, last, s);
                 if root = nil then root := cur;
-                close(f);
+                lfn.lclose(f);
         end else begin
                 root := strs.new;
         end;
@@ -192,7 +189,7 @@ end;
 
 procedure to_file(fname : string; r : EditorStr; var errCode : integer; scrupdate : pointer);
 var
-        f       : file;
+        f       : word;
         buf     : array[0..BUF_SIZE-1] of char;
         inbuf   : word;
         len     : word;
@@ -203,12 +200,8 @@ var
         ppercent   : integer;
         scrup      : TPercentUpdateProc;
 begin
-        lfn.create(fname);
-        lfn.assign(f, fname);
-        {$I-}
-        rewrite(f, 1);
-        errCode := ioresult;
-        {$I+}
+        f := lfn.lopen_w(fname);
+        if f = 0 then errCode := 105 else errCode := 0;
         if errCode <> 0 then exit;
         inbuf := 0;
         scrup := TPercentUpdateProc(scrupdate);
@@ -219,7 +212,7 @@ begin
                 strs.get(r, s);
                 len := length(s);
                 if (len + 2) >= (BUF_SIZE - inbuf) then begin
-                        blockwrite(f, buf[0], inbuf);
+                        lfn.lwrite(f, buf[0], inbuf);
                         inbuf := 0;
                 end;
                 move(s[1], buf[inbuf], len);
@@ -240,9 +233,9 @@ begin
                         end;
                 end;
         end;
-        if inbuf <> 0 then blockwrite(f, buf[0], inbuf);
-        truncate(f);
-        close(f);
+        if inbuf <> 0 then lfn.lwrite(f, buf[0], inbuf);
+        lfn.ltruncate(f);
+        lfn.lclose(f);
 end;
 
 function new : EditorStr;

@@ -214,7 +214,7 @@ begin
                         SCAN_ENTER: break;
                         SCAN_ESC: break;
                         SCAN_TAB: break;
-                        else if e.ascii >= ' ' then begin
+                        0, 2..$39: begin
                                 if length(str) <> maxlen then begin
                                         System.insert(e.ascii, str, pos);
                                         inc(pos);

@@ -32,7 +32,7 @@ function is_installed : boolean;
 
 implementation
 
-uses dos, strutil, sysext;
+uses dos, strutil, sysext, lfn;
 
 Type
 PString = ^String;
@@ -238,16 +238,8 @@ begin
 end;
 
 function is_installed : boolean;
-var f : text;
-    i : integer;
 begin
-     assign(f, DEVFILE);
-     {$I-}
-     rewrite(f);
-     i := ioresult;
-     {$I+}
-     if i = 0 then close(f);
-     is_installed := i = 0;
+        is_installed := lfn.file_exists(DEVFILE);
 end;
 
 function rchar : char;

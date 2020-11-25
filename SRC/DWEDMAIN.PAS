@@ -67,8 +67,7 @@ begin
 end;
 
 procedure reset_context(var ctx : TEditorContext);
-var     f      : file;
-        readed : integer;
+var     f      : word;
         path   : string;
 begin
         with ctx do begin
@@ -101,11 +100,10 @@ begin
                 help_topic_id := 0;
                 temp := '';
         end;
-        System.assign(f, dwedlnch.DEVFILE);
-        System.reset(f, 1);
-        if ioresult = 0 then begin
-                blockread(f, ctx.temp[0], 256, readed);
-                close(f);
+        f := lopen_r(dwedlnch.DEVFILE);
+        if f <> 0 then begin
+                lfn.lread(f, ctx.temp[0], 256);
+                lfn.lclose(f);
         end;
         path := '';
         if length(path) = 0 then path := getenv('TEMP');
@@ -161,29 +159,25 @@ begin
 end;
 
 function load_config(var ctx : TEditorContext; fname : string):boolean;
-var f : text;
+var f : word;
         i          : integer;
         str        : string;
         key, value : string;
 begin
-        lfn.assign_text(f, fname);
-        {$I-}
-        System.reset(f);
-        i := ioresult;
-        {$I+}
-        if i = 0 then begin
-                while not eof(f) do begin
-                        readln(f, str);
+        f := lfn.lopen_r(fname);
+        if f <> 0 then begin
+                while not lfn.leof(f) do begin
+                        lfn.lreadln(f, str);
                         split(str, key, value);
                         process_param(ctx, key, value);
                 end;
-                close(f);
+                lfn.lclose(f);
         end;
         load_config := i = 0;
 end;
 
 procedure parse_temp(var ctx : TEditorContext);
-var   f : text;
+var   f : word;
       s, ss   : string;
       i, p    : integer;
       errCode : integer;
@@ -191,10 +185,10 @@ var   f : text;
       cline_num       : longint;
       fname   : string;
 begin
-        assign_text(f, ctx.temp);
-        System.reset(f);
-        if ioresult = 0 then while not eof(f) do begin
-                readln(f, s);
+        f := lfn.lopen_r(ctx.temp);
+        if f = 0 then exit;
+        while not lfn.leof(f) do begin
+                lfn.lreadln(f, s);
                 i := 1;
                 p := 1;
                 while (s[p] <> ',') and (p < length(s)) do inc(p);
@@ -227,7 +221,7 @@ begin
                         norm_xy(ctx, 0);
                 end;
         end;
-        close(f);
+        lfn.lclose(f);
 end;
 
 procedure dwed_main(exe_path : string);

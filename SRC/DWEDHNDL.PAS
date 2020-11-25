@@ -349,7 +349,6 @@ function hk_file_begin(var ctx:TEditorContext; event:PEvent):integer;
 begin
         commit(ctx);
         with ctx.current^ do begin
-                scrline := rline;
                 cline := rline;
                 scry := 0;
                 scrx := 0;
@@ -364,12 +363,6 @@ begin
         commit(ctx);
         with ctx.current^ do begin
                 while not strs.is_last(cline) do cline := strs.go_next(cline);
-                scrline := cline;
-                scry := 0;
-                while not strs.is_first(scrline) and (scry < config^.height - 2) do begin
-                        scrline := strs.go_prev(scrline);
-                        inc(scry);
-                end;
                 scrx := 0;
                 editor.x := 1;
         end;
@@ -1232,23 +1225,22 @@ begin
         hk_calc := SCRU_FULL;
 end;
 
-procedure serialize_fctx(var t:text; current:PFileContext);
+procedure serialize_fctx(var t : word; current : PFileContext);
 begin
         if current = nil then exit;
         if current^.next <> nil then serialize_fctx(t, current^.next);
-        writeln(t, current^.editor.x,
-        ',', current^.scrx, 
-        ',', current^.scry, 
-        ',', strs.get_num(current^.cline),
-        ',', current^.fname 
+        lfn.lwriteln(t, System.concat(itoa(current^.editor.x),
+        ',', itoa(current^.scrx),
+        ',', itoa(current^.scry),
+        ',', ltoa(strs.get_num(current^.cline)),
+        ',', current^.fname) 
         );
 end;
 
 function hk_userdef(var ctx:TEditorContext; event:PEvent):integer;
 var     cmd       : string;
         r         : integer;
-        f         : file;
-        t         : text;
+        t         : word;
         writed    : word;
         can_run   : boolean;
         srcctx    : PFileContext;
@@ -1287,12 +1279,10 @@ begin
         end;
 
         if can_run then begin
-                lfn.assign_text(t, ctx.temp);
-                rewrite(t);
-                errCode := ioresult;
-                if errCode <> 0 then begin handle_error(ctx, errCode); can_run := false; end else begin
+                t := lfn.lopen_w(ctx.temp);
+                if t = 0 then begin handle_error(ctx, 105); can_run := false; end else begin
                         serialize_fctx(t, ctx.all);
-                        close(t);
+                        lfn.lclose(t);
                 end;
         end;
 
@@ -1308,12 +1298,10 @@ begin
         end;
 
         if can_run then begin 
-                System.assign(f, dwedlnch.DEVFILE);
-                rewrite(f, 1);
-                errCode := ioresult;
-                if errCode <> 0 then begin handle_error(ctx, errCode); can_run := false; end else begin
-                        blockwrite(f, cmd[0], length(cmd) + 1, writed);
-                        close(f);
+                t := lfn.lopen_w(dwedlnch.DEVFILE);
+                if t = 0 then begin handle_error(ctx, 105); can_run := false; end else begin
+                        lfn.lwrite(t, cmd[0], length(cmd) + 1);
+                        lfn.lclose(t);
                         ctx.exit_code := 254;
                 end;
         end;
