@@ -417,23 +417,35 @@ asm
 end;
 
 procedure scroll_up(stx, sty, w, h, lines : integer);
-var i    : integer;
-    scrw : integer;
+var i      : integer;
+    scrw   : integer;
+    slines : integer;
+    cur    : integer;
 begin
         i := 0; w := w shl 1; scrw := getwidth;
+        slines := (lines * scrw) shl 1;
+        cur := (stx + (sty * scrw)) shl 1;
+        scrw := scrw shl 1;
         while i < (h - lines) do begin
-                move(screen[(stx + (sty + i + lines) * scrw) shl 1], screen[(stx + (sty + i) * scrw) shl 1], w);
+                move(screen[slines + cur], screen[cur], w);
+                inc(cur, scrw);
                 inc(i);
         end;
 end;
 
 procedure scroll_down(stx, sty, w, h, lines : integer);
-var i    : integer;
-    scrw : integer;
+var i      : integer;
+    scrw   : integer;
+    slines : integer;
+    cur    : integer;
 begin
         i := h - lines; w := w shl 1; scrw := getwidth;
+        slines := (lines * scrw) shl 1;
+        cur := (stx + i * scrw) shl 1;
+        scrw := scrw shl 1;
         while i >= 0 do begin
-                move(screen[(stx + (sty + i) * scrw) shl 1], screen[(stx + (sty + i + lines) * scrw) shl 1], w);
+                move(screen[cur], screen[slines + cur], w);
+                dec(cur, scrw);
                 dec(i);
         end;
 end;

@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
+{$F+}
 unit strutil;
 
 interface
@@ -88,12 +89,30 @@ begin
         get_filename_ext := r;
 end;
 
-procedure strupr(p : pchar);
-begin
-        while p[0] <> #0 do begin
-                p[0] := upcase(p[0]);
-                inc(p);
-        end;
+procedure strupr(p : pchar);assembler;
+asm
+        push       ds
+        push       es
+
+        lds        si, p
+        push       ds
+        pop        es
+        cld
+        mov        di, si
+@cont:
+        lodsb
+        cmp        al, 'a'
+        jl         @noconv
+        cmp        al, 'z'
+        jg         @noconv
+        sub        al, $20
+@noconv:
+        stosb
+        or         al, al
+        jnz        @cont
+@end:
+        pop        es
+        pop        ds
 end;
 
 procedure upstr(var s : string);assembler;
@@ -126,22 +145,37 @@ asm
         pop        ds
 end;
 
-procedure strcpy(dst, src:pchar);
-begin
-        while src[0] <> #0 do begin
-                src[0] := dst[0];
-                inc(src);
-                inc(dst);
-        end;
-        src[0] := #0;
+procedure strcpy(dst, src:pchar);assembler;
+asm
+        push       ds
+        push       es
+        lds        si, src
+        les        di, dst
+        cld
+@cont:
+        lodsb
+        stosb
+        or         al, al
+        jnz        @cont
+        pop        es
+        pop        ds
 end;
 
-function strlen(p : pchar):word;
-var s : pchar;
-begin
-        s := p;
-        while p[0] <> #0 do inc(p);
-        strlen := p - s;
+function strlen(p : pchar):word;assembler;
+asm
+        push       ds
+        lds        si, p
+        xor        bx, bx
+        cld
+@cont:
+        lodsb
+        or         al, al
+        jnz        @end
+        inc        bx
+        jmp        @cont
+@end:
+        mov        ax, bx
+        pop        ds
 end;
 
 function basename(s:string):string;
@@ -307,12 +341,34 @@ asm
         xor        ah, ah
 end;
 
-function is_hdigit(c:char):boolean;
-begin
-        is_hdigit := c in ['0'..'9', 'a'..'f', 'A'..'F'];
+function is_hdigit(c : char):boolean;assembler;
+asm
+        xor        al, al
+        mov        ah, c
+        cmp        ah, 'a'
+        jl         @cont1
+        cmp        ah, 'f'
+        jg         @cont1
+        dec        al
+        jmp        @end
+@cont1:
+        cmp        ah, 'A'
+        jl         @cont2
+        cmp        ah, 'f'
+        jg         @cont2
+        dec        al
+        jmp        @end
+@cont2:
+        cmp        ah, '0'
+        jl         @end
+        cmp        ah, '9'
+        jg         @end
+        dec        al
+@end:
+        xor        ah, ah
 end;
 
-function is_id(c:char):boolean;assembler;
+function is_id(c : char):boolean;assembler;
 asm
         xor        al, al
         mov        ah, c
@@ -330,7 +386,6 @@ asm
         dec        al
         jmp        @end
 @cont2:
-
         cmp        ah, '0'
         jl         @cont3
         cmp        ah, '9'
@@ -344,13 +399,7 @@ asm
         xor        ah, ah
 end;
 
-{
-begin
-        is_id := is_alpha(c) or is_digit(c) or (c = '_');
-end;
-}
-
-function ltrim(s:string):string;
+function ltrim(s : string):string;
 var k, l : integer;
 begin
         k := 1; l := length(s);

@@ -364,6 +364,7 @@ begin
         with ctx.current^ do begin
                 while not strs.is_last(cline) do cline := strs.go_next(cline);
                 scrx := 0;
+                scry := config^.height - 2;
                 editor.x := 1;
         end;
         load_ed(ctx);

@@ -201,9 +201,9 @@ var
 begin
         wordStarted := false;
         while width <> 0 do begin
-                ch := scr[0];
+                ch := scr^;
                 if ord(scr[1]) = tclr then begin
-                        if is_id(ch) then begin
+                        if is_alpha(ch) then begin
                                 if (not wordStarted) and (lng^.vocab <> nil) then begin
                                         wordStart := scr + 1;
                                         wordStarted := true;
@@ -237,15 +237,21 @@ begin
 }                                       
                                 end;
                                 wordStarted := false;
-                                if (ch > ' ') then begin
+                                if (ch > ' ') and (not is_id(ch)) then begin
                                         if find_char(ch, syschars) >= 0 then scr[1] := chr(hlclr);
                                 end;
                         end;
                 end else begin
                         wordStarted := false;
                 end;
+                asm
+                        add        word ptr [scr], 2
+                        dec        width
+                end;
+{
                 inc(scr, 2);
                 dec(width);
+}
         end;
 end;
 
