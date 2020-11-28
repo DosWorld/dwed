@@ -77,38 +77,14 @@ begin
         memType := mType;
 end;
 
-{$F-}
-function EditorStr2Dos(var r : EditorStr) : pointer;
-begin
-        EditorStr2Dos := r;
-end;
-
-{$F-}
-function Dos2EditorStr(r : pointer) : EditorStr;
-begin
-        Dos2EditorStr := r;
-end;
-
 function put(r : EditorStr; var body : string) : EditorStr;
 begin
-        case memType of
-        DOS: r := strsd.put(r, body);
-        EMS: r := strsd.put(r, body);
-        XMS: r := strsd.put(r, body);
-        else r := nil;
-        end;
-        put := r
+        put := strsd.put(r, body);
 end;
 
 function create(next, prev : EditorStr; var body : string) : EditorStr;
 begin
-        case memType of
-        DOS: next := strsd.create(next, prev, body);
-        EMS: next := strsd.create(next, prev, body);
-        XMS: next := strsd.create(next, prev, body);
-        else next := nil;
-        end;
-        create := next;
+        create := strsd.create(next, prev, body);
 end;
 
 function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : EditorStr;
@@ -239,71 +215,33 @@ begin
 end;
 
 function new : EditorStr;
-var r : EditorStr;
 begin
-        case memType of
-        DOS: r := strsd.new;
-        EMS: r := strsd.new;
-        XMS: r := strsd.new;
-        else r := nil;
-        end;
-        new := r;
+        new := strsd.new;
 end;
 
 procedure get(r : EditorStr; var dest : string);
 begin
-        case memType of
-        DOS: strsd.get(r, dest);
-        EMS: strsd.get(r, dest);
-        XMS: strsd.get(r, dest);
-        else dest := '';
-        end;
+        strsd.get(r, dest);
 end;
 
 function is_first(r : EditorStr) : boolean;
-var b : boolean;
 begin
-        case memType of
-        DOS: b := strsd.is_first(r);
-        EMS: b := strsd.is_first(r);
-        XMS: b := strsd.is_first(r);
-        else b := true;
-        end;
-        is_first := b;
+        is_first := strsd.is_first(r);
 end;
 
 function is_last(r : EditorStr) : boolean;
-var b : boolean;
 begin
-        case memType of
-        DOS: b := strsd.is_last(r);
-        EMS: b := strsd.is_last(r);
-        XMS: b := strsd.is_last(r);
-        else b := true;
-        end;
-        is_last := b;
+        is_last := strsd.is_last(r);
 end;
 
 function go_first(r : EditorStr) : EditorStr;
 begin
-        case memType of
-        DOS: r := strsd.go_first(r);
-        EMS: r := strsd.go_first(r);
-        XMS: r := strsd.go_first(r);
-        else r := nil;
-        end;
-        go_first := r;
+        go_first := strsd.go_first(r);
 end;
 
 function go_last(r : EditorStr) : EditorStr;
 begin
-        case memType of
-        DOS: r := strsd.go_last(r);
-        EMS: r := strsd.go_last(r);
-        XMS: r := strsd.go_last(r);
-        else r := nil;
-        end;
-        go_last := r;
+        go_last := strsd.go_last(r);
 end;
 
 function go_prev(r : EditorStr) : EditorStr;
@@ -318,35 +256,17 @@ end;
 
 procedure free(r : EditorStr);
 begin
-        case memType of
-        DOS: strsd.free(r);
-        EMS: strsd.free(r);
-        XMS: strsd.free(r);
-        end;
+        strsd.free(r);
 end;
 
 function renum(r : EditorStr) : longint;
-var res : longint;
 begin
-        case memType of
-        DOS: res := strsd.renum(r);
-        EMS: res := strsd.renum(r);
-        XMS: res := strsd.renum(r);
-        else res := 0;
-        end;
-        renum := res;
+        renum := strsd.renum(r);
 end;
 
 function get_num(r : EditorStr) : longint;
-var res : longint;
 begin
-        case memType of
-        DOS: res := strsd.get_num(r);
-        EMS: res := strsd.get_num(r);
-        XMS: res := strsd.get_num(r);
-        else res := 0;
-        end;
-        get_num := res;
+        get_num := strsd.get_num(r);
 end;
 
 function find_num(r : EditorStr; num : longint) : EditorStr;
@@ -360,46 +280,22 @@ end;
 
 function delete(r : EditorStr; num_from, num_to : longint) : EditorStr;
 begin
-        case memType of
-        DOS: r := strsd.delete(r, num_from, num_to);
-        EMS: r := strsd.delete(r, num_from, num_to);
-        XMS: r := strsd.delete(r, num_from, num_to);
-        else r := nil;
-        end;
-        delete := r
+        delete := strsd.delete(r, num_from, num_to);
 end;
 
 function merge(r : EditorStr) : EditorStr;
 begin
-        case memType of
-        DOS: r := strsd.merge(r);
-        EMS: r := strsd.merge(r);
-        XMS: r := strsd.merge(r);
-        else r := nil;
-        end;
-        merge := r;
+        merge := strsd.merge(r);
 end;
 
 function append(r : EditorStr; var pos : integer; p : pchar; var lnum:word) : EditorStr;
 begin
-        case memType of
-        DOS: r := strsd.append(r, pos, p, lnum);
-        EMS: r := strsd.append(r, pos, p, lnum);
-        XMS: r := strsd.append(r, pos, p, lnum);
-        else r := strsd.append(r, pos, p, lnum);
-        end;
-        append := r;
+        append := strsd.append(r, pos, p, lnum);
 end;
 
 function split(r : EditorStr; pos : integer) : EditorStr;
 begin
-        case memType of
-        DOS: r := strsd.split(r, pos);
-        EMS: r := strsd.split(r, pos);
-        XMS: r := strsd.split(r, pos);
-        else r := strsd.split(r, pos);
-        end;
-        split := r;
+        split := strsd.split(r, pos);
 end;
 
 function is_nil(r : EditorStr) : boolean;
