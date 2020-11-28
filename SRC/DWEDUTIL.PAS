@@ -100,22 +100,20 @@ begin
                 if editor.x < 1 then editor.x := 1;
                 if editor.x > length(editor.line) + 1 then editor.x := length(editor.line) + 1;
                 if strs.is_first(cline) then begin scrline := cline; scry := 0; end;
-        end;
-        if ctx.current^.scry <> 0 then begin
-                i := ctx.current^.scry;
-                x := 0;
-                with ctx.current^ do scrline := cline;
-                while i > 0 do begin
-                        if strs.is_first(ctx.current^.scrline) then begin
-                                ctx.current^.scry := x;
-                                break;
+                if scry <> 0 then begin
+                        i := scry;
+                        x := 0;
+                        scrline := cline;
+                        while i > 0 do begin
+                                if strs.is_first(scrline) then begin
+                                        ctx.current^.scry := x;
+                                        break;
+                                end;
+                                scrline := strs.go_prev(scrline);
+                                inc(x);
+                                dec(i);
                         end;
-                        with ctx.current^ do scrline := strs.go_prev(scrline);
-                        inc(x);
-                        dec(i);
                 end;
-        end;
-        with ctx.current^ do begin
                 if scrx >= editor.x then scrx := editor.x - 1;
                 if config^.width <= (editor.x - scrx - 1) then scrx := editor.x - config^.width;
         end;
@@ -148,19 +146,17 @@ var r : integer;
 begin
         r := SCRU_NONE;
         commit(ctx);
-        if not strs.is_first(ctx.current^.cline) then begin
-                if ctx.current^.scry <> 0 then begin
-                        with ctx.current^ do begin
+        with ctx.current^ do begin
+                if not strs.is_first(cline) then begin
+                        if scry <> 0 then begin
                                 dec(scry);
+                                r := SCRU_CLINE;
+                        end else begin
+                                r := SCRU_SD;
                         end;
-                        r := SCRU_CLINE;
-                end else begin
-                        r := SCRU_SD;
-                end;
-                with ctx.current^ do begin
                         cline := strs.go_prev(cline);
+                        if editor.selection then r := SCRU_FULL;
                 end;
-                if ctx.current^.editor.selection then r := SCRU_FULL;
         end;
         load_ed(ctx);
         go_line_up := r;
@@ -171,18 +167,16 @@ var r : integer;
 begin
         r := SCRU_NONE;
         commit(ctx);
-        if not strs.is_last(ctx.current^.cline) then begin
-                with ctx.current^ do begin
-                        scrline := strs.go_next(scrline);
+        with ctx.current^ do begin
+                if not strs.is_last(cline) then begin
                         if config^.height - 2 > scry then begin
                                 inc(scry);
-                                cline := strs.go_next(cline);
                                 r := SCRU_CLINE;
                         end else begin
-                                cline := strs.go_next(cline);
                                 r := SCRU_SU;
                         end;
-                        if ctx.current^.editor.selection then r := SCRU_FULL;
+                        cline := strs.go_next(cline);
+                        if editor.selection then r := SCRU_FULL;
                 end;
         end;
         load_ed(ctx);
@@ -248,19 +242,21 @@ begin
                         r := SCRU_FULL;
                 end;
         end else begin
-                with ctx.current^.editor do if x > length(line) then x := length(line);
-                dec(ctx.current^.editor.x);
-                if ctx.current^.editor.x > 1 then begin
-                        while (ctx.current^.editor.x > 1)
-                                and (ctx.current^.editor.line[ctx.current^.editor.x] <= ' ')
-                                do begin
-                                dec(ctx.current^.editor.x);
-                        end;
-                        while (ctx.current^.editor.x > 1)
-                                and (ctx.current^.editor.line[ctx.current^.editor.x] > ' ')
-                                do begin
-                                if is_split_chr(ctx.current^.editor.line[ctx.current^.editor.x]) then break;
-                                dec(ctx.current^.editor.x);
+                with ctx.current^ do begin
+                        if editor.x > length(editor.line) then editor.x := length(editor.line);
+                        dec(editor.x);
+                        if editor.x > 1 then begin
+                                while (editor.x > 1)
+                                        and (editor.line[editor.x] <= ' ')
+                                        do begin
+                                        dec(editor.x);
+                                end;
+                                while (editor.x > 1)
+                                        and (editor.line[editor.x] > ' ')
+                                        do begin
+                                        if is_split_chr(editor.line[editor.x]) then break;
+                                        dec(editor.x);
+                                end;
                         end;
                 end;
                 r := SCRU_CLINE;
@@ -285,25 +281,26 @@ begin
                         r := SCRU_FULL;
                 end;
         end else begin
-                if ctx.current^.editor.x > length(ctx.current^.editor.line)
-                        then ctx.current^.editor.x := length(ctx.current^.editor.line);
-                inc(ctx.current^.editor.x);
-                if ctx.current^.editor.x < length(ctx.current^.editor.line) then begin
-                        if ctx.current^.editor.line[ctx.current^.editor.x] <= ' ' then begin
-                                while (ctx.current^.editor.x < length(ctx.current^.editor.line))
-                                        and (ctx.current^.editor.line[ctx.current^.editor.x] <= ' ')
-                                        do inc(ctx.current^.editor.x); 
-                        end else begin
-                                while (ctx.current^.editor.x < length(ctx.current^.editor.line))
-                                        and (ctx.current^.editor.line[ctx.current^.editor.x] > ' ')
-                                        do begin
-                                        if is_split_chr(ctx.current^.editor.line[ctx.current^.editor.x]) then break;
-                                        inc(ctx.current^.editor.x);
-                                end;
-                                while (ctx.current^.editor.x < length(ctx.current^.editor.line))
-                                        and (ctx.current^.editor.line[ctx.current^.editor.x] <= ' ')
-                                        do begin
-                                        inc(ctx.current^.editor.x);
+                with ctx.current^ do begin
+                        if editor.x > length(editor.line) then editor.x := length(editor.line);
+                        inc(editor.x);
+                        if editor.x < length(editor.line) then begin
+                                if editor.line[editor.x] <= ' ' then begin
+                                        while (editor.x < length(editor.line))
+                                                and (editor.line[editor.x] <= ' ')
+                                                do inc(editor.x); 
+                                end else begin
+                                        while (editor.x < length(editor.line))
+                                                and (editor.line[editor.x] > ' ')
+                                                do begin
+                                                if is_split_chr(editor.line[editor.x]) then break;
+                                                inc(editor.x);
+                                        end;
+                                        while (editor.x < length(editor.line))
+                                                and (editor.line[editor.x] <= ' ')
+                                                do begin
+                                                inc(editor.x);
+                                        end;
                                 end;
                         end;
                 end;
@@ -313,66 +310,48 @@ begin
 end;
 
 function go_page_up(var ctx : TEditorContext) : integer;
-var r, i : integer;
+var i : integer;
 begin
-        r := SCRU_NONE;
         commit(ctx);
-        if (ctx.current^.scrx <> 0) or (ctx.current^.scry <> 0) or (ctx.current^.editor.x <> 1) then begin
-                with ctx.current^ do begin
-                        while scry <> 0 do begin
-                                cline := strs.go_prev(cline);
-                                dec(scry);
-                        end;
-                        scrx := 0;
-                        editor.x := 1;
+        with ctx.current^ do begin
+                if (scrx <> 0) or (scry <> 0) or (editor.x <> 1) then begin
+                        i := scry;
+                end else begin
+                        i := config^.height - 2;
                 end;
-                r := SCRU_FULL;
-        end else begin
-                i := ctx.current^.config^.height - 2;
-                while (i <> 0) and (not strs.is_first(ctx.current^.scrline)) do begin
-                        with ctx.current^ do scrline := strs.go_prev(scrline);
+                while (i <> 0) and (not strs.is_first(cline)) do begin
+                        cline := strs.go_prev(cline);
                         dec(i);
                 end;
-                with ctx.current^ do begin
-                        scry := 0;
-                        cline := scrline;
-                end;
-                r := SCRU_FULL;
+                scrx := 0;
+                scry := 0;
+                editor.x := 1;
         end;
         load_ed(ctx);
-        go_page_up := r;
+        go_page_up := SCRU_FULL;
 end;
 
 function go_page_down(var ctx : TEditorContext) : integer;
-var r, i : integer;
+var i : integer;
 begin
-        r := SCRU_NONE;
         commit(ctx);
-        if (ctx.current^.scrx <> 0)
-         or (ctx.current^.scry <> ctx.current^.config^.height-2)
-         or (ctx.current^.editor.x <> 1) then begin
-                with ctx.current^ do begin
-                        while (scry <> config^.height-2) and (not strs.is_last(cline)) do begin
-                                cline := strs.go_next(cline);
-                                inc(scry);
-                        end;
-                        scrx := 0;
-                        editor.x := 1;
+        with ctx.current^ do begin
+                if (scrx <> 0) or (scry <> config^.height-2) 
+                 or (editor.x <> 1) then begin
+                        i := config^.height-2 - scry;
+                end else begin
+                        i := config^.height - 2;
                 end;
-                r := SCRU_FULL;
-        end else begin
-                i := ctx.current^.config^.height - 2;
-                while (i <> 0) and (not strs.is_last(ctx.current^.cline)) do begin
-                        with ctx.current^ do begin
-                                scrline := strs.go_next(scrline);
-                                cline := strs.go_next(cline);
-                        end;
+                while (i <> 0) and (not strs.is_last(cline)) do begin
+                        cline := strs.go_next(cline);
                         dec(i);
                 end;
-                r := SCRU_FULL;
+                scrx := 0;
+                editor.x := 1;
+                scry := config^.height-2;
         end;
         load_ed(ctx);
-        go_page_down := r;
+        go_page_down := SCRU_FULL;
 end;
 
 procedure get_sel_coord(
@@ -385,12 +364,13 @@ var x : integer;
         y        : longint;
 begin
         commit(ctx);
-        if not ctx.current^.editor.selection then exit;
-
-        sb_y := ctx.current^.editor.sel_row;
-        sb_x := ctx.current^.editor.sel_x;
-        se_y := strs.get_num(ctx.current^.cline);
-        se_x := ctx.current^.editor.x;
+        with ctx.current^ do begin
+                if not editor.selection then exit;
+                sb_y := editor.sel_row;
+                sb_x := editor.sel_x;
+                se_y := strs.get_num(cline);
+                se_x := editor.x;
+        end;
         if (sb_y > se_y) or ((sb_y = se_y) and (sb_x > se_x)) then begin
                 x := sb_x;
                 y := sb_y;
@@ -409,8 +389,8 @@ begin
                 lfn.lwrite(f, ctx.clipboard[0], strlen(ctx.clipboard));
                 lfn.ltruncate(f);
                 lfn.lclose(f);
-        end;
-        if f <> 0 then save_clipboard := 0 else save_clipboard := 105;
+                save_clipboard := 0;
+        end else save_clipboard := 105;
 end;
 
 function load_clipboard(var ctx : TEditorContext; fname:string) : integer;
@@ -422,9 +402,8 @@ begin
                 readed := lfn.lread(f, ctx.clipboard, CB_SIZE - 1);
                 lfn.lclose(f);
                 ctx.clipboard[readed] := #0;
-        end;
-        if f <> 0 then f := 0 else f := 104;
-        load_clipboard := f;
+                load_clipboard := 0;
+        end else load_clipboard := 104;
 end;
 
 procedure copy_selected(var ctx : TEditorContext);
@@ -478,9 +457,6 @@ begin
                 line := strs.go_next(line);
         end;
         ctx.clipboard[pos] := #0;
-{$IFDEF TEST}
-        save_clipboard(ctx, 'cb.txt');
-{$ENDIF}
 end;
 
 procedure delete_selected(var ctx : TEditorContext);
@@ -693,7 +669,7 @@ begin
         else errMsg := 'Unknown error code';
         end;
         scr.push;
-        scrui.msg_box(ctx.current^.config^.color.top_hl, 'Error', '#' + itoa(errCode) + ': ' + errMsg, '[ OK ]');
+        scrui.msg_box(ctx.current^.config^.color.top_hl, 'Error', concat('#', itoa(errCode), ': ', errMsg), '[ OK ]');
         scr.show;
         kbd.reset;
         while true do begin

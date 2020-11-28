@@ -65,12 +65,14 @@ var h, w, i, x1, len   : integer;
         text_sel_color : byte;
         selection      : boolean;
 begin
-        h := ctx.current^.config^.height;
-        w := ctx.current^.config^.width;
-        p := ctx.current^.scrline;
-        text_sel_color := ctx.current^.config^.color.text_sel;
-        text_color := ctx.current^.config^.color.text;
-        selection := ctx.current^.editor.selection;
+        with ctx.current^ do begin
+                h := config^.height;
+                w := config^.width;
+                p := scrline;
+                text_sel_color := config^.color.text_sel;
+                text_color := config^.color.text;
+                selection := editor.selection;
+        end;
         scrx := ctx.current^.scrx;
 
         get_sel_coord(ctx, sb_x, sb_y, se_x, se_y);

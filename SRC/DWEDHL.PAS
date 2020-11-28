@@ -203,7 +203,7 @@ begin
         while width <> 0 do begin
                 ch := scr^;
                 if ord(scr[1]) = tclr then begin
-                        if is_alpha(ch) then begin
+                        if is_id(ch) then begin
                                 if (not wordStarted) and (lng^.vocab <> nil) then begin
                                         wordStart := scr + 1;
                                         wordStarted := true;

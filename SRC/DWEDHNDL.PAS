@@ -193,10 +193,12 @@ begin
                                         ctx.config.color.menu,
                                         ctx.config.color.menu_sel,
                                         '', @menu[1], selItem);
-                                if event^.etype in [MOUSE_PRESS_B1, MOUSE_PRESS_B2] then begin selItem := -1; break; end;
-                                if event^.etype <> KEYBOARD then continue;
-                                if event^.scancode = SCAN_ESC then break;
-                                if event^.scancode = SCAN_ENTER then break;
+                                with event^ do begin
+                                        if etype in [MOUSE_PRESS_B1, MOUSE_PRESS_B2] then begin selItem := -1; break; end;
+                                        if etype <> KEYBOARD then continue;
+                                        if scancode = SCAN_ESC then break;
+                                        if scancode = SCAN_ENTER then break;
+                                end;
                         end;
                         if event^.scancode = SCAN_ENTER then begin
                                 if ((mt = 1) and (selItem = 0))
@@ -389,10 +391,10 @@ begin
         end;
         r := SCRU_FULL;
         s := '';
-        for i := 1 to length(ctx.current^.editor.line) do begin
-                if ctx.current^.editor.line[i] = ' ' then s := s + ' ' else break;
-        end;
         with ctx.current^ do begin
+                for i := 1 to length(editor.line) do begin
+                        if editor.line[i] = ' ' then s := s + ' ' else break;
+                end;
                 cline := strs.split(cline, editor.x);
                 if strs.is_first(cline) then rline := cline;
                 if scry = 0 then scrline := cline;
@@ -401,12 +403,12 @@ begin
                 cline := strs.go_next(cline);
                 total := strs.renum(rline);
                 load_ed(ctx);
+                if length(s) <> 0 then editor.line := s + ltrim(editor.line);
+                chg := true;
+                editor.chg := length(s) <> 0;
+                editor.x := length(s) + 1;
+                scrx := 0;
         end;
-        if length(s) <> 0 then ctx.current^.editor.line := s + ltrim(ctx.current^.editor.line);
-        ctx.current^.chg := true;
-        ctx.current^.editor.chg := length(s) <> 0;
-        ctx.current^.editor.x := length(s) + 1;
-        ctx.current^.scrx := 0;
         hk_enter := r;
 end;
 
@@ -552,16 +554,16 @@ begin
                 if ctx.current^.editor.x = 1 then begin
                         if not strs.is_first(ctx.current^.cline) then begin
                                 commit(ctx);
-                                ctx.current^.cline := strs.go_prev(ctx.current^.cline);
-                                strs.get(ctx.current^.cline, s);
                                 with ctx.current^ do begin
+                                        cline := strs.go_prev(cline);
+                                        strs.get(cline, s);
                                         cline := strs.merge(cline);
                                         if scry = 0 then scrline := cline
                                         else dec(scry);
                                         total := strs.renum(rline);
                                         chg := true;
+                                        editor.x := length(s) + 1;
                                 end;
-                                ctx.current^.editor.x := length(s) + 1;
                                 load_ed(ctx);
                                 r := SCRU_FULL;
                         end;
@@ -656,14 +658,14 @@ begin
                 ctx.current^.total := strs.renum(ctx.current^.rline);
                 ctx.current^.editor.selection := false;
         end;
-        isfist := strs.is_first(ctx.current^.cline);
-        ctx.current^.cline := strs.append(ctx.current^.cline, ctx.current^.editor.x, ctx.clipboard, lnum);
-        if isfist then ctx.current^.rline := strs.go_first(ctx.current^.cline);
-        while (lnum <> 0) and (ctx.current^.scry <> ctx.config.height - 2) do begin
-                dec(lnum);
-                inc(ctx.current^.scry);
-        end;
         with ctx.current^ do begin
+                isfist := strs.is_first(cline);
+                cline := strs.append(cline, editor.x, ctx.clipboard, lnum);
+                if isfist then rline := strs.go_first(cline);
+                while (lnum <> 0) and (scry <> config^.height - 2) do begin
+                        dec(lnum);
+                        inc(scry);
+                end;
                 total := strs.renum(rline);
                 chg := true;
         end;
@@ -1201,10 +1203,12 @@ begin
         while true do begin
                 scr.show;
                 scrui.editstr(event^, length(msg) + 1, 0, ctx.current^.config^.color.top, fname, 32, 255);
-                if event^.etype = KEYBOARD then begin
-                        if event^.scancode = SCAN_ESC then begin start_load := false; break; end;
-                        if event^.scancode = SCAN_ENTER then begin start_load := true; break; end;
-                end else if event^.etype <> MOUSE_MOVE then begin start_load := false; break; end;
+                with event^ do begin
+                        if etype = KEYBOARD then begin
+                                if scancode = SCAN_ESC then begin start_load := false; break; end;
+                                if scancode = SCAN_ENTER then begin start_load := true; break; end;
+                        end else if etype <> MOUSE_MOVE then begin start_load := false; break; end;
+                end;
         end;
         if start_load then begin
                 load_file(ctx, fname, errCode, @file_progress);
