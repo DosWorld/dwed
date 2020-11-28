@@ -125,10 +125,12 @@ function go_line_begin(var ctx : TEditorContext) : integer;
 var r : integer;
 begin
         r := SCRU_CLINE;
-        ctx.current^.editor.x := 1;
-        if ctx.current^.scrx <> 0 then begin
-                ctx.current^.scrx := 0;
-                r := SCRU_FULL;
+        with ctx.current^ do begin
+                editor.x := 1;
+                if scrx <> 0 then begin
+                        scrx := 0;
+                        r := SCRU_FULL;
+                end;
         end;
         go_line_begin := r;
 end;
@@ -475,7 +477,6 @@ begin
                 lineStr := copy(lineStr, 1, sb_x - 1) + copy(lineStr, se_x, length(lineStr) - se_x + 1);
                 bline := strs.put(bline, lineStr);
                 ctx.current^.cline := bline;
-                if ctx.current^.scry = 0 then ctx.current^.scrline := bline;
                 ctx.current^.editor.x := sb_x;
         end else begin
                 if (sb_y + 1 <> se_y) then ctx.current^.rline := strs.delete(ctx.current^.rline, sb_y + 1, se_y - 1);

@@ -397,7 +397,6 @@ begin
                 end;
                 cline := strs.split(cline, editor.x);
                 if strs.is_first(cline) then rline := cline;
-                if scry = 0 then scrline := cline;
                 if scry <> config^.height - 2 then inc(scry);
                 editor.x := 1;
                 cline := strs.go_next(cline);
@@ -558,8 +557,7 @@ begin
                                         cline := strs.go_prev(cline);
                                         strs.get(cline, s);
                                         cline := strs.merge(cline);
-                                        if scry = 0 then scrline := cline
-                                        else dec(scry);
+                                        if scry <> 0 then dec(scry);
                                         total := strs.renum(rline);
                                         chg := true;
                                         editor.x := length(s) + 1;
@@ -594,7 +592,6 @@ begin
                         with ctx.current^ do begin
                                 cline := strs.merge(cline);
                                 if strs.is_first(cline) then rline := cline;
-                                if scry = 0 then scrline := cline;
                                 total := strs.renum(rline);
                                 chg := true;
                         end;
@@ -812,14 +809,16 @@ begin
                 load_ed(ctx);
                 r := SCRU_FULL;
         end else begin
+                with ctx.current^ do begin
                 i := ctx.current^.config^.tab_size;
                 while (i > 0)
-                 and (ctx.current^.editor.line[1] = ' ')
-                 and (length(ctx.current^.editor.line) > 0) do begin
-                        System.delete(ctx.current^.editor.line, 1, 1);
-                        ctx.current^.editor.chg := true;
-                        if ctx.current^.editor.x <> 1 then dec(ctx.current^.editor.x);
-                        dec(i);
+                         and (editor.line[1] = ' ')
+                         and (length(editor.line) > 0) do begin
+                                System.delete(editor.line, 1, 1);
+                                editor.chg := true;
+                                if editor.x <> 1 then dec(editor.x);
+                                dec(i);
+                        end;
                 end;
                 r := SCRU_CLINE;
         end;
