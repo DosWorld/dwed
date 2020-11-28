@@ -14,6 +14,7 @@ Main features:
 * Support user's color scheme (via config-file)
 * Support user's shell script running by hotkeys F5, F8, F9.
 * You can disable highlight and receive good speed with XT.
+* Support mouse
 
 Restrictions:
 
