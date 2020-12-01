@@ -557,6 +557,7 @@ begin
                                         cline := strs.go_prev(cline);
                                         strs.get(cline, s);
                                         cline := strs.merge(cline);
+                                        rline := strs.go_first(cline);
                                         if scry <> 0 then dec(scry);
                                         total := strs.renum(rline);
                                         chg := true;
