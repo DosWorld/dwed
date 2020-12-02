@@ -173,7 +173,7 @@ begin
                 end;
                 lfn.lclose(f);
         end;
-        load_config := i = 0;
+        load_config := i <> 0;
 end;
 
 procedure parse_temp(var ctx : TEditorContext);

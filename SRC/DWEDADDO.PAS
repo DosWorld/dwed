@@ -259,7 +259,7 @@ begin
                         end;
                 RADIX16: begin
                                 if ch in ['0'..'9'] then calc_op1 := (calc_op1 shl 4) or (ord(ch) - ord('0'));
-                                if ch in ['A'..'F'] then calc_op1 := (calc_op1 shl 4) or (ord(ch) - ord('A'));
+                                if ch in ['A'..'F'] then calc_op1 := (calc_op1 shl 4) or (ord(ch) - ord('A') + 10);
                         end;
                 end;
         end;
