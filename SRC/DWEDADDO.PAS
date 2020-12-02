@@ -186,7 +186,7 @@ begin
         scr.printhl(x + 2, y + 5, $1b, $1e, '~+~ Add   ~-~ Sub   ~*~ Mul   ~/~ Div   ~M~ Mod');
         scr.printhl(x + 2, y + 6, $1b, $1e, '~&~ And   ~|~ Or    ~^~ Xor   ~!~ Not   ~N~ Neg');
         scr.hprint(x + 1, y + 7, $1b, #$C4 , 39);
-        scr.printhl(x + 2, y + 8, $1b, $1e, '~C~ Clr   ~'+#$1D+'~ Rdx    ~Shift~+~'+#$11+#$D9+'~ Enter value');
+        scr.printhl(x + 2, y + 8, $1b, $1e, '~Spc~ Clr  ~'+#$1D+'~ Rdx   ~Shift~+~'+#$11+#$D9+'~ Enter value');
         while true do begin
                 scr.vprint(x + 6, y + 1,  $1b, ' ', 3);
                 if radix = RADIX10 then begin scr.print(x + 6, y + 1, $1e, '' + #$10); locate(x + 39, y + 1); end
@@ -242,7 +242,7 @@ begin
                 end;
                 ch := upcase(e.ascii);
                 case ch of
-                'C': begin calc_op1 := 0; continue; end;
+                ' ': begin calc_op1 := 0; continue; end;
                 '+','-','*','/','M','&','|','^': begin calc_op := ch; calc_op2 := calc_op1; calc_op1 := 0; continue; end;
                 'N': calc_op1 := -calc_op1;
                 '!': calc_op1 := calc_op1 xor $FFFFFFFF;

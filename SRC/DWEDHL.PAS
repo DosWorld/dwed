@@ -51,7 +51,7 @@ end;
 PLangDesc = ^TLangDesc;
 TLangDesc = record
         st        : SourceType;
-        hlchars   : string[128];
+        hlchars   : pchar;
         caseSens  : boolean;
         ext       : string[64];
         vocab     : PVocabEntry;
@@ -100,7 +100,7 @@ begin
         end;
 end;
 
-procedure add_lang(st : SourceType; ext : string; caseSens : boolean; hlchars, title : string);
+procedure add_lang(st : SourceType; ext : string; caseSens : boolean; hlchars : pchar; title : string);
 var lng : PLangDesc;
 begin
         upstr(ext);
@@ -110,7 +110,7 @@ begin
         lng^.caseSens := caseSens;
         lng^.vocab := nil;
         lng^.ext := ext;
-        lng^.hlchars := hlchars + #0;
+        lng^.hlchars := hlchars;
         lng^.next := langs;
         langs := lng;
 end;
@@ -200,7 +200,8 @@ var
         wordStart   : pchar;
 begin
         wordStarted := false;
-        while width <> 0 do begin
+        pos := 0;
+        while width >= 0 do begin
                 ch := scr^;
                 if ord(scr[1]) = tclr then begin
                         if is_id(ch) then begin
@@ -262,7 +263,7 @@ begin
         lng := langs;
         while lng <> nil do begin
                 if lng^.st = st then begin
-                        hl(scr, width, hlclr, tclr, lng, @lng^.hlchars[1]);
+                        hl(scr, width, hlclr, tclr, lng, @lng^.hlchars);
                         break;
                 end;
                 lng := lng^.next;
@@ -691,7 +692,8 @@ begin
 
         s := '';
         for i := $B3 to $DA do s := s + chr(i);
-        dwedhl.add_lang(SRC_NONE, '|txt|doc|diz||', false, '`^#@*_.,?+*/\-()!:;"=<>(){}[]~|' + s + #$27, 'Default text');
+        s := '`^#@*_.,?+*/\-()!:;"=<>(){}[]~|' + s + #$27 + #0;
+        dwedhl.add_lang(SRC_NONE, '|txt|doc|diz||', false,  @s[1], 'Default text');
         dwedhl.add_keyword(SRC_NONE, 'http');
         dwedhl.add_keyword(SRC_NONE, 'ftp');
         dwedhl.add_keyword(SRC_NONE, 'sftp');
