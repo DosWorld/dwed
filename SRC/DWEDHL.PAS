@@ -263,7 +263,7 @@ begin
         lng := langs;
         while lng <> nil do begin
                 if lng^.st = st then begin
-                        hl(scr, width, hlclr, tclr, lng, @lng^.hlchars);
+                        hl(scr, width, hlclr, tclr, lng, lng^.hlchars);
                         break;
                 end;
                 lng := lng^.next;
