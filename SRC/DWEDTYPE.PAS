@@ -65,6 +65,7 @@ TConfig = record
         width         : integer;
         height        : integer;
         color         : TColorConfig;
+        hl_enable     : boolean;
         tab_size      : integer;
         udef_f5       : string;
         udef_f8       : string;

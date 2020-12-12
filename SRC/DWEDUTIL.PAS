@@ -571,7 +571,8 @@ procedure reset_file(p : PFileContext);
 begin
         with p^ do begin
                 sfname := mk_short_name(fname);
-                st := find_SourceType_by_ext(get_filename_ext(sfname));
+                if config^.hl_enable then st := find_SourceType_by_ext(get_filename_ext(sfname)) 
+                else st := SRC_DISABLE;
                 chg := false;
                 cline := rline;
                 scrline := rline;
@@ -592,9 +593,9 @@ begin
         getmem(p, sizeof(TFileContext));
         p^.fname := fname;
         p^.rline := strs.new;
+        p^.config := @ctx.config;
         reset_file(p);
         p^.next := ctx.all;
-        p^.config := @ctx.config;
         ctx.all := p;
         ctx.current := p;
         load_ed(ctx);
@@ -608,9 +609,9 @@ begin
         getmem(p, sizeof(TFileContext));
         p^.fname := fname;
         p^.rline := strs.from_file(fname, ctx.config.tab_size, errCode, percent_proc);
+        p^.config := @ctx.config;
         reset_file(p);
         p^.next := ctx.all;
-        p^.config := @ctx.config;
         ctx.all := p;
         ctx.current := p;
         load_ed(ctx);

@@ -78,6 +78,7 @@ begin
                 config.width := scr.getwidth;
                 config.height := scr.getheight;
                 config.tab_size := 8;
+                config.hl_enable := true;
                 config.color.top    := $70;
                 config.color.top_hl := $74;
                 config.color.text_dl := $08;
@@ -132,6 +133,7 @@ begin
         else if key = 'USR.DEF.F5' then ctx.config.udef_f5 := value
         else if key = 'USR.DEF.F8' then ctx.config.udef_f8 := value
         else if key = 'USR.DEF.F9' then ctx.config.udef_f9 := value
+        else if key = 'HL.ENABLE' then ctx.config.hl_enable := (ahtob(value) <> 0)
         else begin writeln('Unknown parameter ', key, '. Press Enter...'); readln; end;
 end;
 
@@ -160,7 +162,6 @@ end;
 
 function load_config(var ctx : TEditorContext; fname : string):boolean;
 var f : word;
-        i          : integer;
         str        : string;
         key, value : string;
 begin
@@ -173,7 +174,7 @@ begin
                 end;
                 lfn.lclose(f);
         end;
-        load_config := i <> 0;
+        load_config := f <> 0;
 end;
 
 procedure parse_temp(var ctx : TEditorContext);

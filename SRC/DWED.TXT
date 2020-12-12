@@ -115,6 +115,9 @@ have clipboard shared between file.
  and ~MS-DOS Shell Scripting~ .bat
 
 ~Ctrl~+~Alt~+~H~ - to change highlight scheme.
+
+You can disable highlight with config option:
+        ~hl.enable~ = 0
 ///1CMD-LINE
         Command-line parameters magic.
 
@@ -197,7 +200,7 @@ it is mean ~7~ - foreground color and ~0~ - background.
 ~usr.def.f5~ = make clean
 ~usr.def.f8~ = make all
 ~usr.def.f9~ = make run
-
+~hl.enable~ = 1
 ///1LICENSE
         The MIT License (MIT)
         Copyright (c) 2020 DosWorld
