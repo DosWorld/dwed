@@ -1360,7 +1360,6 @@ end;
 
 begin
         reg_handler(SCAN_ESC, false, false, false, false, @hk_esc);
-        reg_handler(SCAN_ALT_F10, false, false, true, false, @hk_addons);
         reg_handler(SCAN_A, true, false, true, false, @hk_asciitbl);
         reg_handler(SCAN_C, true, false, true, false, @hk_calc);
         reg_handler(SCAN_H, true, false, true, false, @hk_change_hl);
@@ -1379,12 +1378,14 @@ begin
         reg_handler(SCAN_F7, false, false, false, true, @hk_start_find);
         reg_handler(SCAN_F8, false, false, false, false, @hk_userdef);
         reg_handler(SCAN_F9, false, false, false, false, @hk_userdef);
+        reg_handler(SCAN_F12, false, false, false, false, @hk_addons);
 
         reg_handler(SCAN_ALT_F2, false, false, true, false, @hk_cb_save);
         reg_handler(SCAN_ALT_F3, false, false, true, false, @hk_cb_load);
         reg_handler(SCAN_ALT_F4, false, false, true, false, @hk_close);
         reg_handler(SCAN_ALT_F5, false, false, true, false, @hk_dos_screen);
         reg_handler(SCAN_ALT_F6, false, false, true, false, @hk_winlist);
+        reg_handler(SCAN_ALT_F10, false, false, true, false, @hk_addons);
 
         reg_handler(SCAN_CTRL_LEFT, true, false, false, true, @hk_word_left);
         reg_handler(SCAN_CTRL_RIGHT, true, false, false, true, @hk_word_right);

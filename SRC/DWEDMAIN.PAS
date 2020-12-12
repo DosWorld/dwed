@@ -78,7 +78,7 @@ begin
                 config.width := scr.getwidth;
                 config.height := scr.getheight;
                 config.tab_size := 8;
-                config.hl_enable := true;
+                config.hl_enable := false;
                 config.color.top    := $70;
                 config.color.top_hl := $74;
                 config.color.text_dl := $08;
@@ -160,21 +160,19 @@ begin
         has_switch := (length(s) > 0) and (s[1] in ['-', '/']);
 end;
 
-function load_config(var ctx : TEditorContext; fname : string):boolean;
-var f : word;
+procedure load_config(var ctx : TEditorContext; fname : string);
+var     f          : word;
         str        : string;
         key, value : string;
 begin
         f := lfn.lopen_r(fname);
-        if f <> 0 then begin
-                while not lfn.leof(f) do begin
-                        lfn.lreadln(f, str);
-                        split(str, key, value);
-                        process_param(ctx, key, value);
-                end;
-                lfn.lclose(f);
+        if f = 0 then exit;
+        while not lfn.leof(f) do begin
+                lfn.lreadln(f, str);
+                split(str, key, value);
+                process_param(ctx, key, value);
         end;
-        load_config := f <> 0;
+        lfn.lclose(f);
 end;
 
 procedure parse_temp(var ctx : TEditorContext);
@@ -241,7 +239,8 @@ begin
         strs.init(strs.DOS);
         dwedpar.pinit(params, trim(PString(ptr(PrefixSeg, $80))^));
         reset_context(ctx);
-        if not load_config(ctx, 'DWED.CFG') then load_config(ctx, exe_path + 'DWED.CFG');
+        load_config(ctx, exe_path + 'DWED.CFG');
+        load_config(ctx, 'DWED.CFG');
         dwedpar.preset(params);
         while phas_next(params) do begin
                 param := pnext(params);

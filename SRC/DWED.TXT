@@ -30,7 +30,7 @@ and ~N~ or ~ESC~ - to answer ~NO~.
 
 4. You can store ~DWED.CFG~ in local dir, also.
 
-5. You can disable highlight, if too slow.
+5. You can disable highlight, if too slow (see ~SYNTAX-HL~).
 ///2NAVIGATION
         Navigation.
 
@@ -116,7 +116,7 @@ have clipboard shared between file.
 
 ~Ctrl~+~Alt~+~H~ - to change highlight scheme.
 
-You can disable highlight with config option:
+You can disable highlight, by default, with config option:
         ~hl.enable~ = 0
 ///1CMD-LINE
         Command-line parameters magic.
@@ -148,7 +148,7 @@ To configure actions, put into ~DWED.CFG~ lines like:
 
 ~DWED~ does not use Extended~/~Expanded Memory, now. ~TBD~
 ///1ADDONS
-You can active Addons window with ~Alt~+~F10~.
+You can active Addons window with ~Alt~+~F10~ or ~F12~.
 ///2FASTKBD.COM
         Fast keyboard.
 
