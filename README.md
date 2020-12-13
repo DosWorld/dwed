@@ -22,7 +22,7 @@ Restrictions:
 * DOS-conventional memory will be enought to load file up to ~300k..400k (expect - 300k border). You can use DPMI-version, if you need more memory and you have modern CPU.
 * No Undo/Redo functionality. The reason is the same as why i dont build AST for syntax highlight - here is no memory for it.
 
-[![DWED review](https://img.youtube.com/vi/7zFomGoKdlQ/0.jpg)](http://www.youtube.com/watch?v=7zFomGoKdlQ)
+Here is small review/intro on FreeDOS channel: http://www.youtube.com/watch?v=7zFomGoKdlQ
 
 # How to run and use
 Use:
