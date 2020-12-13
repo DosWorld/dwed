@@ -59,11 +59,10 @@ begin
 end;
 
 function pnext(var ctx : ParamsContext) : string;
-var res       : string;
-    rres      : string;
-    i         : integer;
-    cur, prev : char;
-    inquote   : boolean;
+var res, rres  : string;
+    i          : integer;
+    cur, prev  : char;
+    inquote    : boolean;
 begin
         res := '';
         i := ctx.pos;

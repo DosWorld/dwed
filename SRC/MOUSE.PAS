@@ -31,23 +31,22 @@ MOUSE_B2 = 2;
 
 procedure mshow;
 procedure mhide;
-function mvisible:boolean;
-function mbuttons:byte;
-function mgetx:integer;
-function mgety:integer;
-function mavail:boolean;
+function mvisible : boolean;
+function mbuttons : byte;
+function mgetx : integer;
+function mgety : integer;
+function mavail : boolean;
 
 implementation
 
-var present : boolean;
-state : boolean;
+var present, state : boolean;
 
-function mavail:boolean;assembler;
+function mavail : boolean;assembler;
 asm
         mov      al, present
 end;
 
-function mvisible:boolean;assembler;
+function mvisible : boolean;assembler;
 asm
         mov       al, present
         or        al, al
@@ -79,7 +78,7 @@ asm
 @nomouse:
 end;
 
-function mbuttons:byte;assembler;
+function mbuttons : byte;assembler;
 asm
         mov       al, present
         or        al, al
@@ -91,7 +90,7 @@ asm
 @nomouse:
 end;
 
-function mgetx:integer;assembler;
+function mgetx : integer;assembler;
 asm
         mov       al, present
         or        al, al
@@ -104,7 +103,7 @@ asm
 @nomouse:
 end;
 
-function mgety:integer;assembler;
+function mgety : integer;assembler;
 asm
         mov       al, present
         or        al, al

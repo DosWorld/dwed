@@ -138,7 +138,7 @@ begin
 end;
 
 procedure split(var param, key, value : string);
-var        i : integer;
+var i : integer;
 begin
         key := '';
         value := '';
@@ -224,13 +224,11 @@ begin
 end;
 
 procedure dwed_main(exe_path : string);
-var     ctx         : TEditorContext;
-        i, pCount   : integer;
-        param       : string;
-        key, value  : string;
-        errCode     : integer;
-        welcome_msg : boolean;
-        params      : ParamsContext;
+var     ctx                : TEditorContext;
+        i, pCount, errCode : integer;
+        param, key, value  : string;
+        welcome_msg        : boolean;
+        params             : ParamsContext;
 begin
         if not dwedlnch.is_installed then begin
                 writeln('This is overlay. Run DWED.EXE or join to the Dark Side.');

@@ -120,12 +120,11 @@ begin
 end;
 
 procedure init;
-var t : PHelpTopicList;
-    maxlen    : integer;
-    len       : integer;
-    totallen  : integer;
-    topicname : string;
-    i, pos    : integer;
+var t           : PHelpTopicList;
+    len, maxlen : integer;
+    totallen    : integer;
+    i, pos      : integer;
+    topicname   : string;
 begin
         topic_list := from_memory(Pointer(@helpbin));
         maxlen := 0;

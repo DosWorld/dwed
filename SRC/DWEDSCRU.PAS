@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
+{$B-}
 unit dwedscru;
 
 interface
@@ -52,15 +53,15 @@ begin
 end;
 
 procedure update_full(var ctx : TEditorContext);
-var h, w, i, x1, len   : integer;
-        p              : EditorStr;
-        s              : string;
+var     h, w, i, x1, len     : integer;
+        p                    : EditorStr;
+        s                    : string;
         sb_y, se_y, clinenum : longint;
-        sb_x, se_x     : integer;
-        scrx           : integer;
-        text_color     : byte;
-        text_sel_color : byte;
-        selection      : boolean;
+        sb_x, se_x, scrx     : integer;
+        text_color           : byte;
+        text_sel_color       : byte;
+        selection            : boolean;
+        scrbufofs            : pchar;
 begin
         with ctx.current^ do begin
                 h := config^.height;
@@ -71,9 +72,9 @@ begin
                 selection := editor.selection;
         end;
         scrx := ctx.current^.scrx;
+        if selection then get_sel_coord(ctx, sb_x, sb_y, se_x, se_y);
 
-        get_sel_coord(ctx, sb_x, sb_y, se_x, se_y);
-
+        scrbufofs := scr.screen + w shl 1;
         for i := 1 to h - 1 do begin
                 clinenum := strs.get_num(p);
                 strs.get(p, s);
@@ -98,8 +99,8 @@ begin
                 high_light(ctx.current^.st, w
                         , ctx.config.color.text_hl
                         , text_color
-                        , @scr.screen[(w * i) shl 1]);
-
+                        , scrbufofs);
+                inc(scrbufofs, w shl 1);
                 p := strs.go_next(p);
         end;
 end;
@@ -107,11 +108,10 @@ end;
 procedure update_cline(var ctx : TEditorContext);
 var
         sb_y, se_y, clinenum : longint;
-        sb_x, se_x     : integer;
-        x, xe, len     : integer;
-        line           : string;
-        scrx           : integer;
-        width          : integer;
+        sb_x, se_x           : integer;
+        x, xe, len           : integer;
+        scrx, width          : integer;
+        line                 : string;
 begin
         with ctx.current^ do begin
                 scr.cln(0, scry + 1, config^.color.text);
@@ -171,17 +171,17 @@ begin
 end;
 
 procedure update_top(var ctx : TEditorContext);
-var ch, i       : char;
-        endline : string;
-        fname   : string;
-        total   : string;
+var     ch, i     : char;
+        endline   : string;
+        fname     : string;
+        total     : string;
         char_code : string;
 begin
         ch := ' ';
         i := 'O';
         if ctx.current^.chg or ctx.current^.editor.chg then ch := '*';
         if ctx.ins then i := 'I';
-        if ctx.current^.editor.x < length(ctx.current^.editor.line) then begin
+        if ctx.current^.editor.x <= length(ctx.current^.editor.line) then begin
                 char_code := hexb(ord(ctx.current^.editor.line[ctx.current^.editor.x]));
         end else char_code := '';
         total := ltoa(ctx.current^.total);

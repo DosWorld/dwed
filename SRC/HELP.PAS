@@ -28,20 +28,20 @@ interface
 
 type
 
-PHelpTopic=^THelpTopic;
-THelpTopic=record
-        name : array[1..12] of char;
+PHelpTopic = ^THelpTopic;
+THelpTopic = record
+        name  : array[1..12] of char;
         recno : word;
-        ofs : byte;
-        lvl : byte;
+        ofs   : byte;
+        lvl   : byte;
 end;
 
-PHelpTopicList=^THelpTopicList;
-THelpTopicList=record
-        topic        :THelpTopic;
-        htext        :pchar;
-        hlen        :word;
-        next        :PHelpTopicList;
+PHelpTopicList = ^THelpTopicList;
+THelpTopicList = record
+        topic  : THelpTopic;
+        htext  : pchar;
+        hlen   : word;
+        next   : PHelpTopicList;
 end;
 
 function from_file(fname : string):PHelpTopicList;
@@ -57,28 +57,28 @@ implementation
 
 type
 
-PHelpIntTopic=^THelpIntTopic;
-THelpIntTopic=record
-        name        :string;
-        ofs        :longint;
-        lvl        :byte;
-        next        :PHelpIntTopic;
+PHelpIntTopic = ^THelpIntTopic;
+THelpIntTopic = record
+        name   : string;
+        ofs    : longint;
+        lvl    : byte;
+        next   : PHelpIntTopic;
 end;
 
-function is_digit(c:char):boolean;
+function is_digit(c : char):boolean;
 begin
         is_digit := c in ['0'..'9'];
 end;
 
 procedure compile(ifname, ofname : string);
-var ifile:text;
+var     ifile        : text;
         ofile        : file;
-        s        : string;
-        tcount        : word;
+        s            : string;
+        tcount       : word;
         root, last, cur : PHelpIntTopic;
-        ofs        : longint;
+        ofs          : longint;
         topic        : THelpTopic;
-        i, l        : integer;
+        i, l         : integer;
 begin
         tcount := 0; root := nil; last := nil; ofs := 0;
         assign(ifile, ifname);
@@ -160,11 +160,10 @@ begin
         end;
 end;
 
-function find(root:PHelpTopicList; topic_name:string):PHelpTopicList;
-var
-        name        : array[1..12] of char;
-        i, l        : integer;
-        found        : boolean;
+function find(root : PHelpTopicList; topic_name : string) : PHelpTopicList;
+var     name     : array[1..12] of char;
+        i, l     : integer;
+        found    : boolean;
         r        : PHelpTopicList;
 begin
         fillchar(name, 12, ' ');
@@ -176,19 +175,22 @@ begin
         found := false;
         while (not found) and (r <> nil) do begin
                 found := true;
-                for i:=1 to 12 do if name[i] <> r^.topic.name[i] then begin found := false; break; end;
-                if found then break;
+                i := 1;
+                while i <= 12 do begin
+                        if name[i] <> r^.topic.name[i] then begin found := false; break; end;
+                        inc(i);
+                end;
+                if found then begin find := r; exit; end;
                 r := r^.next;
         end;
-        if not found then r := nil;
-        find := r;
+        find := nil;
 end;
 
-function from_file(fname:string):PHelpTopicList;
+function from_file(fname : string) : PHelpTopicList;
 var
         f        : file;
-        r, l, c        : PHelpTopicList;
-        nt, fs        : longint;
+        r, l, c  : PHelpTopicList;
+        nt, fs   : longint;
 begin
         r := nil; c := nil; l := nil;
         assign(f, fname);
@@ -223,11 +225,10 @@ begin
         from_file := r;
 end;
 
-function from_memory(p:pointer):PHelpTopicList;
-var
-        rp, ep        : pchar;
-        r, l, c        : PHelpTopicList;
-        nt, fs        : longint;
+function from_memory(p : pointer) : PHelpTopicList;
+var     rp, ep    : pchar;
+        r, l, c   : PHelpTopicList;
+        nt, fs    : longint;
 begin
         r := nil; c := nil; l := nil;
         rp := p;
@@ -261,8 +262,8 @@ begin
         from_memory := r;
 end;
 
-procedure free(hlp:PHelpTopicList);
-var h:PHelpTopicList;
+procedure free(hlp : PHelpTopicList);
+var h : PHelpTopicList;
 begin
         while hlp <> nil do begin
                 h := hlp;

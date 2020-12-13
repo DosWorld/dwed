@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$F+,R-}
+{$F-,R-}
 unit strutil;
 
 interface
@@ -77,7 +77,7 @@ implementation
 
 function get_filename_ext(s : string):string;
 var r : string;
-        i : integer;
+    i : integer;
 begin
         r := '';
         i := length(s);
@@ -178,8 +178,8 @@ asm
         pop        ds
 end;
 
-function basename(s:string):string;
-var     i : integer;
+function basename(s : string):string;
+var i : integer;
 begin
         for i := length(s) downto 0 do
         begin
@@ -189,8 +189,8 @@ begin
         basename := s;
 end;
 
-function getpathname(s:string):string;
-var     i : integer;
+function getpathname(s : string):string;
+var i : integer;
 begin
         for i := length(s) downto 0 do
         begin
@@ -200,9 +200,9 @@ begin
         getpathname := s;
 end;
 
-function change_ext(s:string; new_ext:string):string;
-var r : string;
-        i, p, l : integer;
+function change_ext(s : string; new_ext : string):string;
+var r       : string;
+    i, p, l : integer;
 begin
         l := length(s);
         p := 0;
@@ -271,9 +271,9 @@ begin
         hexp := hexw(seg(p[0])) + ':' + hexw(ofs(p[0]));
 end;
 
-function binb(b:byte):string;
+function binb(b : byte):string;
 var s : string[8];
-        i : integer;
+    i : integer;
 begin
         s[0] := #8;
         for i := 7 downto 0 do if (b and (1 shl i)) <> 0 then s[8-i] := '1' else s[8-i] := '0';
@@ -297,7 +297,7 @@ begin
         octb := s;
 end;
 
-function is_blank(c:char):boolean;assembler;
+function is_blank(c : char) : boolean;assembler;
 asm
         xor        al, al
         mov        ah, c
@@ -307,7 +307,7 @@ asm
 @end:
 end;
 
-function is_digit(c:char):boolean;assembler;
+function is_digit(c : char):boolean;assembler;
 asm
         xor        al, al
         mov        ah, c
@@ -317,10 +317,9 @@ asm
         jg         @cont1
         dec        al
 @cont1:
-        xor        ah, ah
 end;
 
-function is_alpha(c:char):boolean;assembler;
+function is_alpha(c : char):boolean;assembler;
 asm
         xor        al, al
         mov        ah, c
@@ -338,7 +337,6 @@ asm
         dec        al
 @cont2:
 @end:
-        xor        ah, ah
 end;
 
 function is_hdigit(c : char):boolean;assembler;
@@ -365,7 +363,6 @@ asm
         jg         @end
         dec        al
 @end:
-        xor        ah, ah
 end;
 
 function is_id(c : char):boolean;assembler;
@@ -396,7 +393,6 @@ asm
         jnz        @end
         dec        al
 @end:
-        xor        ah, ah
 end;
 
 function ltrim(s : string):string;
@@ -411,7 +407,7 @@ begin
         ltrim := s;
 end;
 
-function rtrim(s:string):string;
+function rtrim(s : string):string;
 var k, l : integer;
 begin
         l := length(s); k := l;
@@ -423,40 +419,40 @@ begin
         rtrim := s;
 end;
 
-function trim(s:string):string;
+function trim(s : string):string;
 begin
         trim := ltrim(rtrim(s));
 end;
 
-function rpad(s:string; len:integer):string;
+function rpad(s : string; len : integer):string;
 begin
         if length(s) > len then s := copy(s, 1, len)
         else while length(s) < len do s := s + ' ';
         rpad := s;
 end;
 
-function lpad(s:string; len:integer):string;
+function lpad(s : string; len : integer):string;
 begin
         if length(s) > len then s := copy(s, 1, len)
         else while length(s) < len do s := ' ' + s;
         lpad := s;
 end;
 
-function itoa(i:integer):string;
+function itoa(i : integer):string;
 var s : string;
 begin
         str(i, s);
         itoa := s;
 end;
 
-function wtoa(w:word):string;
+function wtoa(w : word):string;
 var s : string;
 begin
         str(w, s);
         wtoa := s;
 end;
 
-function ltoa(l:longint):string;
+function ltoa(l : longint):string;
 var s : string;
 begin
         str(l, s);
@@ -481,7 +477,7 @@ asm
         pop        ds
 end;
 
-function atol(s:string; default_val : longint) : longint;
+function atol(s : string; default_val : longint) : longint;
 var res : longint; err_pos : integer;
 begin
      val(s, res, err_pos);
@@ -498,10 +494,10 @@ begin
 end;
 
 function ahtob(str : string) : byte;
-var r : byte;
-        i        : integer;
-        c        : char;
-        k        : byte;
+var r  : byte;
+    i  : integer;
+    c  : char;
+    k  : byte;
 begin
         r := 0;
         if length(str) = 1 then str := '0' + str;

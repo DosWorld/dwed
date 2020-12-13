@@ -277,7 +277,7 @@ asm
 end;
 
 begin
-        have_ext_kb := false;
-        have_122_kb := false;
+        kbd.have_ext_kb := false;
+        kbd.have_122_kb := false;
         kbd.check;
 end.

@@ -80,13 +80,10 @@ TScr=record
         buf    : byte;
 end;
 
-const
-
-last_scr_buf    : PScr = nil;
-
+const last_scr_buf : PScr = nil;
 var screen_size, line_size : word;
 
-function getheight:integer;assembler;
+function getheight : integer;assembler;
 asm
         push       ds
         mov        ax, seg0040
@@ -97,7 +94,7 @@ asm
         pop        ds
 end;
 
-function getwidth:integer;assembler;
+function getwidth : integer;assembler;
 asm
         push       ds
         mov        ax, seg0040
@@ -309,7 +306,7 @@ asm
         int        $10
 end;
 
-function getx:integer;assembler;
+function getx : integer;assembler;
 asm
         push       ds
         mov        ax, word ptr [seg0040]
@@ -323,7 +320,7 @@ asm
         xor        ah,ah
 end;
 
-function gety:integer;assembler;
+function gety : integer;assembler;
 asm
         push       ds
         mov        ax, word ptr [seg0040]
@@ -338,7 +335,7 @@ asm
 end;
 
 procedure push;
-var     p : PScr;
+var p : PScr;
 begin
         getmem(p, screen_size + sizeof(TScr) - 1);
         p^.size := screen_size;
@@ -374,7 +371,7 @@ asm
         int        $10
 end;
 
-function get_cursor:word;assembler;
+function get_cursor : word;assembler;
 asm
         mov        ah, $0f
         int        $10
@@ -406,7 +403,7 @@ asm
         int        $10
 end;
 
-function is_monochrome:boolean;assembler;
+function is_monochrome : boolean;assembler;
 asm
         push       ds
         mov        ax, word ptr [seg0040]
@@ -451,11 +448,11 @@ begin
 end;
 
 begin
-        cursor := get_cursor;
-        if is_monochrome then vseg := segb000 else vseg := segb800;
-        set_blink(false);
-        screen_size := (getwidth * getheight) shl 1;
-        line_size := getwidth shl 1;
+        cursor := scr.get_cursor;
+        if scr.is_monochrome then vseg := segb000 else vseg := segb800;
+        scr.set_blink(false);
+        screen_size := (scr.getwidth * scr.getheight) shl 1;
+        line_size := scr.getwidth shl 1;
         getmem(screen, screen_size);
         move(mem[vseg:0], screen[0], screen_size);
         mouse.mshow;

@@ -84,12 +84,11 @@ end;
 const ascii_tbl_sel : byte = 0;
 
 procedure ascii_table(var ctx : TEditorContext);
-var        x, y, i, j : integer;
-        b       : boolean;
-        color   : byte;
-        cb      : byte;
-        ch      : char;
-        e       : TEvent;
+var     x, y, i, j : integer;
+        b          : boolean;
+        color,  cb : byte;
+        ch         : char;
+        e          : TEvent;
 begin
         x := (scr.getwidth - 50) shr 1; y := (scr.getheight - 22) shr 1;
         scrui.box(x, y, 50, 22, $1b);
@@ -167,7 +166,7 @@ calc_op  : char = ' ';
 radix    : RadixType = RADIX10;
 
 procedure calculator(var ctx : TEditorContext);
-var x, y, i : integer;
+var     x, y, i    : integer;
         key        : word;
         ch         : char;
         insertStr  : string;

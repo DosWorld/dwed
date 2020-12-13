@@ -138,7 +138,7 @@ begin
 end;
 
 procedure add_keyword(st : SourceType; keyword : string);
-var lng : PLangDesc;
+var     lng   : PLangDesc;
         entry : PVocabEntry;
 begin
         lng := langs;
@@ -282,6 +282,7 @@ begin
         hl_menu[pos] := #$0;
 end;
 
+procedure init;
 var i : integer; s : string;
 begin
         dwedhl.add_lang(SRC_DISABLE, '|%?%|', false, '', '     DISABLE (Use this, if too slow)');
@@ -698,4 +699,8 @@ begin
         dwedhl.add_keyword(SRC_NONE, 'note');
 
         create_menu;
+end;
+
+begin
+        init;
 end.

@@ -27,7 +27,7 @@ interface
 
 const DEVFILE : string = 'DWED:';
 
-procedure launcher(var exename:string);
+procedure launcher(var exename : string);
 function is_installed : boolean;
 
 implementation
@@ -259,11 +259,10 @@ begin
         rfname := r;
 end;
 
-var
-        cur_drive : byte;
+var     cur_drive : byte;
         cur_dir   : string;
 
-procedure launcher(var exename:string);
+procedure launcher(var exename : string);
 var params   : string;
     i        : integer;
 begin

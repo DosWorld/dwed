@@ -33,11 +33,7 @@ implementation
 
 uses scr, kbd, scrui, lfn, strs, strutil, dwedscru, dwedutil, dwedaddo, dwedhl, dwedlnch;
 
-{$F+}
-
-const handlers : PEventHandler = nil;
-
-{$F+}
+{$F+}const handlers : PEventHandler = nil;{$F+}
 
 procedure reg_handler(scancode : byte; is_ctrl, is_shift, is_alt, reset_selection : boolean; proc : pointer);
 var h : PEventHandler;
@@ -71,8 +67,8 @@ end;
 {$F+}
 
 function process_event(var ctx : TEditorContext; var e : TEvent) : integer;
-var h : PEventHandler;
-        r : integer;
+var     h    : PEventHandler;
+        r    : integer;
         xofs : integer;
         proc : TEventProc;
 begin
@@ -104,12 +100,9 @@ begin
 end;
 
 {$F+}
-
 function goto_mouse(var ctx : TEditorContext; event : PEvent) : integer;
-var  r : integer;
-     step  : integer;
-     line  : EditorStr;
-     steps : integer;
+var  r, step, steps : integer;
+     line           : EditorStr;
 begin
         commit(ctx);
         dec(event^.mouse_y);
@@ -137,13 +130,11 @@ MM_T2 : string[24] = ' Cut '+#$0a+' Copy ' + #0;
 MM_T3 : string[24] = ' Cut '+#$0a+' Copy '+#$0a+' Paste ' + #0;
 
 function handle_mouse(var ctx : TEditorContext; event : PEvent) : integer;
-var  r       : integer;
-     mt      : integer;
-     menu    : string;
-     have_cb : boolean;
-     key     : word;
-     selItem : integer;
-     x, y    : integer;
+var  r, mt, x, y : integer;
+     menu        : string;
+     have_cb     : boolean;
+     key         : word;
+     selItem     : integer;
 begin
         r := SCRU_NONE;
         if event^.etype = MOUSE_PRESS_B1 then begin
@@ -380,9 +371,8 @@ begin
 end;
 
 function hk_enter(var ctx:TEditorContext; event:PEvent):integer;
-var s : string;
-        i : integer;
-        r : integer;
+var     s    : string;
+        i, r : integer;
 begin
         commit(ctx);
         if ctx.current^.editor.selection then begin
@@ -412,10 +402,8 @@ begin
 end;
 
 function hk_esc(var ctx:TEditorContext; event:PEvent):integer;
-var r          : integer;
-       c       : PFileContext;
-       srcctx  : PFileContext;
-       errCode : integer;
+var    r, errCode : integer;
+       c, srcctx  : PFileContext;
 begin
         r := SCRU_QUIT;
         commit(ctx);
@@ -496,10 +484,9 @@ end;
 
 
 function hk_save_as(var ctx:TEditorContext; event:PEvent):integer;
-var    errCode    : integer;
-       newname    : string;
-       start_save : boolean;
-       msg        : string;
+var    errCode      : integer;
+       newname, msg : string;
+       start_save   : boolean;
 begin
         commit(ctx);
 
@@ -540,7 +527,7 @@ begin
 end;
 
 function hk_bs(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
+var     r : integer;
         s : string;
 begin
         r := SCRU_NONE;
@@ -620,8 +607,8 @@ begin
 end;
 
 function hk_cb_cutline(var ctx:TEditorContext; event:PEvent):integer;
-var clinenum : longint;
-        r, x    : integer;
+var     clinenum : longint;
+        r, x     : integer;
 begin
         if (not ctx.current^.editor.selection) and (not strs.is_last(ctx.current^.cline)) then begin
                 commit(ctx);
@@ -647,7 +634,7 @@ begin
 end;
 
 function hk_cb_paste(var ctx:TEditorContext; event:PEvent):integer;
-var lnum: word;
+var lnum   : word;
     isfist : boolean;
 begin
         commit(ctx);
@@ -732,7 +719,7 @@ begin
 end;
 
 function hk_tab(var ctx:TEditorContext; event:PEvent):integer;
-var i, r : integer;
+var     i, r       : integer;
         sb_y, se_y, clinenum : longint;
         sb_x, se_x : integer;
         line       : EditorStr;
@@ -778,7 +765,7 @@ begin
 end;
 
 function hk_shift_tab(var ctx:TEditorContext; event:PEvent):integer;
-var i, r : integer;
+var     i, r       : integer;
         sb_y, se_y, clinenum : longint;
         sb_x, se_x : integer;
         line       : EditorStr;
@@ -827,7 +814,7 @@ begin
 end;
 
 function hk_default(var ctx:TEditorContext; event:PEvent):integer;
-var r, len      : integer;
+var     r, len  : integer;
         c       : char;
         changed : boolean;
 begin
@@ -865,8 +852,7 @@ begin
 end;
 
 function search(var ctx:TEditorContext; is_replace : boolean):EditorStr;
-var
-        line        : EditorStr;
+var     line        : EditorStr;
         searchText  : string;
         lineStr     : string;
         start_col   : integer;
@@ -905,7 +891,7 @@ begin
 end;
 
 function hk_find_again(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
+var     r           : integer;
         line        : EditorStr;
         lineStr     : string;
         searchText  : string;
@@ -982,7 +968,7 @@ begin
 end;
 
 function hk_start_find(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
+var     r              : integer;
         sb_y, se_y, clinenum : longint;
         sb_x, se_x     : integer;
         msg            : string;
@@ -1066,7 +1052,7 @@ begin
 end;
 
 function hk_cb_save(var ctx:TEditorContext; event:PEvent):integer;
-var fname : string;
+var     fname      : string;
         msg        : string;
         start_save : boolean;
         errCode    : integer;
@@ -1092,7 +1078,7 @@ begin
 end;
 
 function hk_cb_load(var ctx:TEditorContext; event:PEvent):integer;
-var fname : string;
+var     fname      : string;
         msg        : string;
         start_load : boolean;
         errCode    : integer;
@@ -1131,11 +1117,11 @@ end;
 
 
 function hk_close(var ctx:TEditorContext; event:PEvent):integer;
-var canclose:boolean;
+var     canclose : boolean;
         r, next, prev : PFileContext;
-        msg     : string;
-        res     : integer;
-        errCode : integer;
+        msg      : string;
+        res      : integer;
+        errCode  : integer;
 begin
         res := SCRU_FULL;
         commit(ctx);
@@ -1188,11 +1174,10 @@ begin
 end;
 
 function hk_load(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
+var     r, errCode : integer;
         msg        : string;
         fname      : string;
         start_load : boolean;
-        errCode    : integer;
 begin
         commit(ctx);
         r := SCRU_CLINE;
@@ -1243,13 +1228,11 @@ begin
 end;
 
 function hk_userdef(var ctx:TEditorContext; event:PEvent):integer;
-var     cmd       : string;
-        r         : integer;
-        t         : word;
-        writed    : word;
-        can_run   : boolean;
-        srcctx    : PFileContext;
-        errCode   : integer;
+var     cmd        : string;
+        r, errCode : integer;
+        t, writed  : word;
+        can_run    : boolean;
+        srcctx     : PFileContext;
 begin
         cmd := '';
         r := SCRU_NONE;
@@ -1315,9 +1298,8 @@ begin
 end;
 
 function hk_move_line_up(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
-        s1 : string;
-        s2 : string;
+var     r       : integer;
+        s1, s2  : string;
 begin
         r := SCRU_NONE;
         if not strs.is_first(ctx.current^.cline) then begin
@@ -1337,9 +1319,8 @@ begin
 end;
 
 function hk_move_line_down(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
-        s1 : string;
-        s2 : string;
+var     r      : integer;
+        s1, s2 : string;
 begin
         r := SCRU_NONE;
         if not strs.is_last(ctx.current^.cline) then begin
