@@ -38,7 +38,7 @@ or
 
 	C:\DWED\dwed16.exe filename1 .. filenameN
 
-Use key **F1** to get more documentation (hotkeys, tips etc). I don't want write documentation and put all knowladge to buildin help.
+Use key **F1** to get more documentation (hotkeys, tips etc). I don't want write documentation and put all knowledge to buildin help.
 
 # Screenshots
 
