@@ -39,10 +39,7 @@ begin
 end;
 
 procedure get_str_part(var ctx : TEditorContext; var s : string);
-var len : integer;
-    w   : integer;
-    nl  : integer;
-    sc  : integer;
+var len, w, nl, sc  : integer;
 begin
         len := ord(s[0]);
         w := ctx.current^.config^.width;

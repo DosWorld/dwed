@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
+{$B-}
 unit dwedhl;
 
 interface
@@ -51,7 +52,7 @@ end;
 PLangDesc = ^TLangDesc;
 TLangDesc = record
         st        : SourceType;
-        hlchars   : pchar;
+        hlchars   : string;
         caseSens  : boolean;
         ext       : string[64];
         vocab     : PVocabEntry;
@@ -110,48 +111,30 @@ begin
         lng^.caseSens := caseSens;
         lng^.vocab := nil;
         lng^.ext := ext;
-        lng^.hlchars := hlchars;
         lng^.next := langs;
+        fillchar(lng^.hlchars[1], 255, #0);
+        lng^.hlchars[0] := #255;
+        while hlchars[0] <> #0 do begin
+                lng^.hlchars[ord(hlchars[0]) + 1] := #1;
+                inc(hlchars);
+        end;
         langs := lng;
-end;
-
-function find_char(c : char; p : pchar):integer;assembler;
-asm
-        push       ds
-        mov        ah, c
-        lds        si, p
-        mov        dx, $FFFF
-        mov        bx, si
-        cld
-@cont:
-        lodsb
-        or         al, al
-        jz         @end
-        cmp        al, ah
-        jnz        @cont
-        mov        dx, si
-        sub        dx, bx
-@end:
-        mov        ax, dx
-        pop        ds
 end;
 
 function find_SourceType_by_ext(ext : string): SourceType;
 var lng : PLangDesc;
-        r        : SourceType;
 begin
-        r := SRC_NONE;
         upstr(ext);
         ext := '|' + ext + '|';
         lng := langs;
         while lng <> nil do begin
                 if System.pos(ext, lng^.ext) <> 0 then begin
-                        r := lng^.st;
-                        break;
+                        find_SourceType_by_ext := lng^.st;
+                        exit;
                 end;
                 lng := lng^.next;
         end;
-        find_SourceType_by_ext := r;
+        find_SourceType_by_ext := SRC_NONE;
 end;
 
 procedure add_keyword(st : SourceType; keyword : string);
@@ -174,31 +157,31 @@ begin
 end;
 
 function find_keyword(vocab : PVocabEntry; var str:string):boolean;
-var r : boolean;
-        hash : word;
+var     hash : word;
 begin
-        r := false;
         hash := hcode(str);
         while vocab <> nil do begin
                 if hash = vocab^.hash then begin
                         if vocab^.keyword = str then begin
-                                r := true;
-                                break;
+                                find_keyword := true;
+                                exit;
                         end;
                 end;
                 vocab := vocab^.next;
         end;
-        find_keyword := r;
+        find_keyword := false;
 end;
 
-procedure hl(scr:pchar; width:integer; hlclr, tclr:byte; lng : PLangDesc; syschars:pchar);
+procedure hl(scr:pchar; width:integer; hlclr, tclr:byte; lng : PLangDesc);
 var
         str         : string;
         ch          : char;
         pos         : integer;
         wordStarted : boolean;
         wordStart   : pchar;
+        syschars    : ^string;
 begin
+        syschars := @lng^.hlchars;
         wordStarted := false;
         pos := 0;
         while width >= 0 do begin
@@ -238,9 +221,7 @@ begin
 }                                       
                                 end;
                                 wordStarted := false;
-                                if (ch > ' ') and (not is_id(ch)) then begin
-                                        if find_char(ch, syschars) >= 0 then scr[1] := chr(hlclr);
-                                end;
+                                if syschars^[ord(ch) + 1] <> #0 then scr[1] := chr(hlclr);
                         end;
                 end else begin
                         wordStarted := false;
@@ -263,8 +244,8 @@ begin
         lng := langs;
         while lng <> nil do begin
                 if lng^.st = st then begin
-                        hl(scr, width, hlclr, tclr, lng, lng^.hlchars);
-                        break;
+                        hl(scr, width, hlclr, tclr, lng);
+                        exit;
                 end;
                 lng := lng^.next;
         end;

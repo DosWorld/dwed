@@ -7,10 +7,10 @@ dwed16.exe: dwed16.pas dwedlnch.pas sysext.pas
         tpc -M -$D- -$G- -$R- -$S- -$I- -$R- -$E- dwed16.pas
 
 dwedovl.exe: dwedovl.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas lfn.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas dwedlnch.pas sysext.pas dwedpar.pas mouse.pas event.pas
-        tpc -M -$D- -$G- -$R- -$S- -$I- -$E- -$Q- dwedovl.pas
+        tpc -M -$D- $L- -$G- -$R- -$S- -$I- -$E- -$Q- $B- dwedovl.pas
 
 dwedovlp.exe: dwedovl16.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas lfn.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas dwedlnch.pas sysext.pas dwedpar.pas mouse.pas event.pas
-        bpc -CP -M -$D+ $L+ -$G+ -$R- -$S+ -$I- -$E- -$Q- dwedovlp.pas
+        bpc -CP -M -$D- $L- -$G+ -$R- -$S- -$I- -$E- -$Q- $B- dwedovlp.pas
 
 upx: dwed.exe
         upx -9 --8086 dwed.exe
