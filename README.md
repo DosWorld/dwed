@@ -20,7 +20,7 @@ Restrictions:
 
 * This software is writen in Borland Pascal, so string length is limited to 255 chars.
 * DOS-conventional memory will be enought to load file up to ~300k..400k (expect - 300k border). You can use DPMI-version, if you need more memory and you have modern CPU.
-* DWED don't parse file content in the same way, as compilers - so, some time syntax highlight can fail (be wrong). I know. But it is better then nothing.
+* DWED don't parse file content in the same way, as compilers - so, some time syntax highlight can fail (be wrong). I know it. But it is better then nothing.
 * No Undo/Redo functionality. The reason is the same as why i dont build AST for syntax highlight - here is no memory/CPU speed for it.
 
 Here is small review/intro on FreeDOS channel: http://www.youtube.com/watch?v=7zFomGoKdlQ
