@@ -67,7 +67,9 @@ procedure handle_error(var ctx : TEditorContext; errCode:integer);
 
 implementation
 
-uses kbd, scr, scrui, strs, strutil, lfn, dwedhl, dwedlnch, event;
+uses kbd, scr, scrui, strs, strutil, dwedhl, dwedlnch, event, system2, wincb;
+
+{ wcb - 390 }
 
 procedure commit(var ctx : TEditorContext);
 begin
@@ -383,29 +385,33 @@ begin
         end;
 end;
 
-function save_clipboard(var ctx : TEditorContext; fname:string) : integer;
-var f : word;
+function save_clipboard(var ctx : TEditorContext; fname : string) : integer;
+var f : bfile;
 begin
-        f := lfn.lopen_w(fname);
-        if f <> 0 then begin
-                lfn.lwrite(f, ctx.clipboard[0], strlen(ctx.clipboard));
-                lfn.ltruncate(f);
-                lfn.lclose(f);
+        save_clipboard := 105;
+        assign(f, fname);
+        rewrite(f);
+        if isopen(f) then begin
+                blockwrite(f, ctx.clipboard[0], strlen(ctx.clipboard));
+                truncate(f);
+                close(f);
                 save_clipboard := 0;
-        end else save_clipboard := 105;
+        end;
 end;
 
-function load_clipboard(var ctx : TEditorContext; fname:string) : integer;
-var f : word;
-        readed   : word;
+function load_clipboard(var ctx : TEditorContext; fname : string) : integer;
+var f : bfile;
+readed   : word;
 begin
-        f := lfn.lopen_r(fname);
-        if f <> 0 then begin
-                readed := lfn.lread(f, ctx.clipboard, CB_SIZE - 1);
-                lfn.lclose(f);
+        load_clipboard := 104;
+        assign(f, fname);
+        reset(f);
+        if isopen(f) then begin
+                readed := blockread(f, ctx.clipboard[0], CB_SIZE - 1);
+                close(f);
                 ctx.clipboard[readed] := #0;
-                load_clipboard := 0;
-        end else load_clipboard := 104;
+                if readed <> 0 then load_clipboard := 0;
+        end;
 end;
 
 procedure copy_selected(var ctx : TEditorContext);
@@ -459,6 +465,12 @@ begin
                 line := strs.go_next(line);
         end;
         ctx.clipboard[pos] := #0;
+        if ctx.has_wincb then begin
+                WCB_Open;
+                WCB_Clear;
+                WCB_SetData(ctx.clipboard[0], pos - 1);
+                WCB_Close;
+        end;
 end;
 
 procedure delete_selected(var ctx : TEditorContext);

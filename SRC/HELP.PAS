@@ -1,7 +1,7 @@
 {
  MIT License
 
-Copyright (c) 2020 Viacheslav Komenda
+Copyright (c) 2022 Viacheslav Komenda
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -55,6 +55,8 @@ procedure compile(ifname, ofname : string);
 
 implementation
 
+uses system2;
+
 type
 
 PHelpIntTopic = ^THelpIntTopic;
@@ -71,8 +73,8 @@ begin
 end;
 
 procedure compile(ifname, ofname : string);
-var     ifile        : text;
-        ofile        : file;
+var     ifile        : bfile;
+        ofile        : bfile;
         s            : string;
         tcount       : word;
         root, last, cur : PHelpIntTopic;
@@ -82,14 +84,11 @@ var     ifile        : text;
 begin
         tcount := 0; root := nil; last := nil; ofs := 0;
         assign(ifile, ifname);
-        {$I-}
         reset(ifile);
-        {$I+}
-        if ioresult <> 0 then exit;
+        if ifile.ioresult <> 0 then exit;
         while not eof(ifile) do begin
                 readln(ifile, s);
                 l := length(s);
-                if l > 80 then s := copy(s, 1, 80);
                 if length(s)>4 then begin
                         if (s[1] = '/') and (s[2] = '/') and (s[3] = '/') and is_digit(s[4]) then begin
                                 getmem(cur, sizeof(THelpIntTopic));
@@ -105,8 +104,6 @@ begin
                 end;
                 inc(ofs, length(s) + 2);
         end;
-        close(ifile);
-
         inc(tcount);
 
         while ((tcount * sizeof(THelpTopic)) and $7f) <> 0 do begin
@@ -114,11 +111,11 @@ begin
         end;
 
         assign(ofile, ofname);
-        rewrite(ofile, 1);
+        rewrite(ofile);
 
         ofs := sizeof(THelpTopic) * tcount;
         cur := root;
-        while cur<>nil do begin
+        while cur <> nil do begin
                 inc(cur^.ofs, ofs);
                 topic.recno := cur^.ofs shr 7;
                 topic.ofs := cur^.ofs and $7f;
@@ -141,16 +138,12 @@ begin
                 dec(tcount);
         end;
 
-        reset(ifile);
-        while not eof(ifile) do begin
-                readln(ifile, s);
-                s := s + #13 + #10;
-                blockwrite(ofile, s[1], length(s));
-        end;
+        seek(ifile, 0);
+        blockcopy(ifile, ofile, filesize(ifile));
         l := 128 - (filepos(ofile) and $7f);
-        s := '';
-        for i := 1 to l do s := s + #$1a;
-        blockwrite(ofile, s[1], length(s));
+        fillchar(s[1], l, #$1a);
+        s[0] := chr(l);
+        blockwrite(ofile, s[1], l);
         close(ifile);
         close(ofile);
         while root <> nil do begin
@@ -188,15 +181,13 @@ end;
 
 function from_file(fname : string) : PHelpTopicList;
 var
-        f        : file;
+        f        : bfile;
         r, l, c  : PHelpTopicList;
         nt, fs   : longint;
 begin
         r := nil; c := nil; l := nil;
         assign(f, fname);
-        {$I-}
-        reset(f, 1);
-        {$I+}
+        reset(f);
         while true do begin
                 getmem(c, sizeof(THelpTopicList));
                 blockread(f, c^.topic, sizeof(THelpTopic));

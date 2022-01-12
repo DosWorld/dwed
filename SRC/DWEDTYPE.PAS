@@ -104,6 +104,7 @@ TEditorContext = record
         current        : PFileContext;
         all            : PFileContext;
         clipboard      : pchar;
+        has_wincb      : boolean;
         search         : string[64];
         searchCaseSens : boolean;
         replace        : string[64];

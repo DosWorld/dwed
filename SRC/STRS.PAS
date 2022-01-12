@@ -67,10 +67,10 @@ function is_nil(r : EditorStr) : boolean;
 
 implementation
 
-uses strsd, lfn, dwedtype;
+uses strsd, dwedtype, system2;
 
 const memType : MemoryType = DOS;
-const BUF_SIZE = 8 * 1024;
+const BUF_SIZE = 4 * 1024;
 
 procedure init(mType : MemoryType);
 begin
@@ -89,13 +89,7 @@ end;
 
 function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : EditorStr;
 var     root, cur, last : Pointer;
-        f          : word;
-        buf        : array[0..BUF_SIZE-1] of char;
-        readed     : word;
-        pos        : word;
-        c          : char;
-        strbuf     : array[0..4096] of char;
-        strbufpos  : word;
+        f          : bfile;
         s          : string;
         i          : integer;
         total      : longint;
@@ -106,66 +100,46 @@ var     root, cur, last : Pointer;
 begin
         scrup := TPercentUpdateProc(scrupdate);
         ppercent := -1;
-        pos := 0;
         root := nil; last := nil;
-        f := lfn.lopen_r(fname);
-        if f = 0 then errCode := 104 else errCode := 0;
+        errCode := 0;
+        if not FileExists(fname) then begin
+                errCode := 104;
+        end;
+        if errCode = 0 then begin
+                assign(f, fname);
+                reset(f);
+                if not IsOpen(f) then errCode := 104;
+        end;
         position := 0;
         if errCode = 0 then begin
-                total := lfn.lsize(f);
-                readed := lfn.lread(f, buf[0], BUF_SIZE);
-                strbufpos := 0;
-                while readed <> 0 do begin
-                        while pos < readed do begin
-                                c := buf[pos];
-                                case c of
-                                #$0A: begin
-                                        if strbufpos > 255 then strbufpos := 255;
-                                        move(strbuf[0], s[1], strbufpos);
-                                        s[0] := chr(strbufpos);
-                                        cur := strs.create(nil, last, s);
-                                        if root = nil then root := cur;
-                                        last := cur;
-                                        strbufpos := 0;
-                                        end;
-                                #$09:   for i := 1 to tab_size do begin
-                                                strbuf[strbufpos] := ' ';
-                                                inc(strbufpos);
-                                        end;
-                                #$0D:
-                                else begin
-                                        strbuf[strbufpos] := c;
-                                        inc(strbufpos);
+                total := filesize(f);
+                if total <> 0 then begin
+                        while not eof(f) do begin
+                                readln(f, s);
+                                cur := strs.create(nil, last, s);
+                                if root = nil then root := cur;
+                                last := cur;
+                                position := filepos(f);
+                                if scrupdate <> nil then begin
+                                        percent := (position * 100) div total;
+                                        if percent <> ppercent then begin
+                                                scrup(position, total);
+                                                ppercent := percent;
                                         end;
                                 end;
-                                inc(pos);
                         end;
-                        inc(position, readed);
-                        if scrupdate <> nil then begin
-                                percent := (position * 100) div total;
-                                if percent <> ppercent then begin
-                                        scrup(position, total);
-                                        ppercent := percent;
-                                end;
-                        end;
-                        readed := lfn.lread(f, buf[0], BUF_SIZE);
-                        pos := 0;
+                end else begin
+                        root := strs.new;
                 end;
-                if strbufpos > 255 then strbufpos := 255;
-                move(strbuf[0], s[1], strbufpos);
-                s[0] := chr(strbufpos);
-                cur := strs.create(nil, last, s);
-                if root = nil then root := cur;
-                lfn.lclose(f);
-        end else begin
-                root := strs.new;
+                close(f);
         end;
+        if root = nil then root := strs.new;
         from_file := root;
 end;
 
 procedure to_file(fname : string; r : EditorStr; var errCode : integer; scrupdate : pointer);
 var
-        f       : word;
+        f       : bfile;
         buf     : array[0..BUF_SIZE-1] of char;
         inbuf   : word;
         len     : word;
@@ -176,8 +150,9 @@ var
         ppercent   : integer;
         scrup      : TPercentUpdateProc;
 begin
-        f := lfn.lopen_w(fname);
-        if f = 0 then errCode := 105 else errCode := 0;
+        assign(f, fname);
+        rewrite(f);
+        if not isopen(f) then errCode := 105 else errCode := 0;
         if errCode <> 0 then exit;
         inbuf := 0;
         scrup := TPercentUpdateProc(scrupdate);
@@ -188,7 +163,7 @@ begin
                 strs.get(r, s);
                 len := length(s);
                 if (len + 2) >= (BUF_SIZE - inbuf) then begin
-                        lfn.lwrite(f, buf[0], inbuf);
+                        blockwrite(f, buf[0], inbuf);
                         inbuf := 0;
                 end;
                 move(s[1], buf[inbuf], len);
@@ -209,9 +184,9 @@ begin
                         end;
                 end;
         end;
-        if inbuf <> 0 then lfn.lwrite(f, buf[0], inbuf);
-        lfn.ltruncate(f);
-        lfn.lclose(f);
+        if inbuf <> 0 then blockwrite(f, buf[0], inbuf);
+        truncate(f);
+        close(f);
 end;
 
 function new : EditorStr;

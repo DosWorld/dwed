@@ -1,7 +1,7 @@
 {
  MIT License
 
-Copyright (c) 2020 Viacheslav Komenda
+Copyright (c) 2022 Viacheslav Komenda
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,18 +21,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$M 10240, 128000, 128000}
+{$M 30240, 128000, 128000}
 {$G-,F-,S-,R-,Q-}
-uses help;
+USES help, System2;
 
-begin
-        writeln('CP/M+ Help Compiler  (c) DosWorld 2020  MIT License');
-        writeln;
-        if paramcount <> 2 then begin
-                writeln('Usage:');
-                writeln(#9+'HLPC infile.hlp outfile.dat');
+BEGIN
+        System.writeln('CP/M+ Help Compiler  (c) DosWorld 2020  MIT License');
+        System.writeln;
+        IF paramcount <> 2 THEN BEGIN
+                System.writeln('Usage:');
+                System.writeln(#9+'HLPC infile.hlp outfile.dat');
                 halt(1);
-        end;
+        END;
         compile(paramstr(1), paramstr(2));
         halt(0);
-end.
+END.

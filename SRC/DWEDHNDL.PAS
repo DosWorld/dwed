@@ -31,7 +31,7 @@ function process_event(var ctx : TEditorContext; var e : TEvent) : integer;
 
 implementation
 
-uses scr, kbd, scrui, lfn, strs, strutil, dwedscru, dwedutil, dwedaddo, dwedhl, dwedlnch;
+uses scr, kbd, scrui, strs, strutil, dwedscru, dwedutil, dwedaddo, dwedhl, dwedlnch, system2, wincb;
 
 {$F+}const handlers : PEventHandler = nil;{$F+}
 
@@ -634,8 +634,9 @@ begin
 end;
 
 function hk_cb_paste(var ctx:TEditorContext; event:PEvent):integer;
-var lnum   : word;
-    isfist : boolean;
+var lnum    : word;
+    isfist  : boolean;
+    cb_size : dword;
 begin
         commit(ctx);
         if ctx.current^.editor.selection then begin
@@ -645,6 +646,16 @@ begin
         end;
         with ctx.current^ do begin
                 isfist := strs.is_first(cline);
+                if ctx.has_wincb then begin
+                        cb_size := WCB_GetDataSize;
+                        if cb_size >= CB_SIZE then cb_size := 0;
+                        if cb_size > 0 then begin
+                                WCB_Open;
+                                WCB_GetData(ctx.clipboard[0]);
+                                WCB_Close;
+                                ctx.clipboard[cb_size] := #0;
+                        end;
+                end;
                 cline := strs.append(cline, editor.x, ctx.clipboard, lnum);
                 if isfist then rline := strs.go_first(cline);
                 while (lnum <> 0) and (scry <> config^.height - 2) do begin
@@ -1215,11 +1226,11 @@ begin
         hk_calc := SCRU_FULL;
 end;
 
-procedure serialize_fctx(var t : word; current : PFileContext);
+procedure serialize_fctx(var t : bfile; current : PFileContext);
 begin
         if current = nil then exit;
         if current^.next <> nil then serialize_fctx(t, current^.next);
-        lfn.lwriteln(t, System.concat(itoa(current^.editor.x),
+        writeln(t, System.concat(itoa(current^.editor.x),
         ',', itoa(current^.scrx),
         ',', itoa(current^.scry),
         ',', ltoa(strs.get_num(current^.cline)),
@@ -1230,7 +1241,8 @@ end;
 function hk_userdef(var ctx:TEditorContext; event:PEvent):integer;
 var     cmd        : string;
         r, errCode : integer;
-        t, writed  : word;
+        writed     : word;
+        t          : bfile;
         can_run    : boolean;
         srcctx     : PFileContext;
 begin
@@ -1267,10 +1279,11 @@ begin
         end;
 
         if can_run then begin
-                t := lfn.lopen_w(ctx.temp);
-                if t = 0 then begin handle_error(ctx, 105); can_run := false; end else begin
+                assign(t, ctx.temp);
+                rewrite(t);
+                if not isopen(t) then begin handle_error(ctx, 105); can_run := false; end else begin
                         serialize_fctx(t, ctx.all);
-                        lfn.lclose(t);
+                        close(t);
                 end;
         end;
 
@@ -1286,10 +1299,11 @@ begin
         end;
 
         if can_run then begin 
-                t := lfn.lopen_w(dwedlnch.DEVFILE);
-                if t = 0 then begin handle_error(ctx, 105); can_run := false; end else begin
-                        lfn.lwrite(t, cmd[0], length(cmd) + 1);
-                        lfn.lclose(t);
+                assign(t, dwedlnch.DEVFILE);
+                rewrite(t);
+                if not isopen(t) then begin handle_error(ctx, 105); can_run := false; end else begin
+                        blockwrite(t, cmd[0], length(cmd) + 1);
+                        close(t);
                         ctx.exit_code := 254;
                 end;
         end;

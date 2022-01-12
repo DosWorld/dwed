@@ -29,7 +29,7 @@ procedure dwed_main(exe_path : string);
 
 implementation
 
-uses dos, scr, kbd, strs, strutil, lfn, dwedtype, dwedhndl, dwedutil, dwedhl, dwedscru, dwedlnch, dwedpar, event;
+uses dos, scr, kbd, strs, strutil, dwedtype, dwedhndl, dwedutil, dwedhl, dwedscru, dwedlnch, event, system2, wincb;
 
 procedure edit(var ctx : TEditorContext; welcome_msg : boolean);
 var     scru, prev_scru, i : integer;
@@ -67,8 +67,9 @@ begin
 end;
 
 procedure reset_context(var ctx : TEditorContext);
-var     f      : word;
+var     f      : file;
         path   : string;
+        i      : integer;
 begin
         with ctx do begin
                 all := nil;
@@ -96,22 +97,24 @@ begin
                 config.udef_f9 := '';
                 getmem(clipboard, CB_SIZE);
                 clipboard[0] := #0;
+                has_wincb := WCB_Detect;
                 search := '';
                 replace := '';
                 help_topic_id := 0;
                 temp := '';
         end;
-        f := lopen_r(dwedlnch.DEVFILE);
-        if f <> 0 then begin
-                lfn.lread(f, ctx.temp[0], 256);
-                lfn.lclose(f);
+        system.assign(f, dwedlnch.DEVFILE);
+        system.reset(f, 1);
+        i := ioresult;
+        if i <> 0 then begin
+                system.blockread(f, ctx.temp[0], 256);
+                system.close(f);
         end;
         path := '';
         if length(path) = 0 then path := getenv('TEMP');
         if length(path) = 0 then path := getenv('TMP');
         if (length(path) <> 0) and (path[length(path)] <> '\') then path := path + '\';
         ctx.temp := path + ctx.temp;
-        
 end;
 
 procedure process_param(var ctx : TEditorContext; key, value : string);
@@ -134,7 +137,7 @@ begin
         else if key = 'USR.DEF.F8' then ctx.config.udef_f8 := value
         else if key = 'USR.DEF.F9' then ctx.config.udef_f9 := value
         else if key = 'HL.ENABLE' then ctx.config.hl_enable := (ahtob(value) <> 0)
-        else begin writeln('Unknown parameter ', key, '. Press Enter...'); readln; end;
+        else begin writelnerr('Unknown parameter ' + key + '. Press Enter...'); system.readln; end;
 end;
 
 procedure split(var param, key, value : string);
@@ -161,22 +164,24 @@ begin
 end;
 
 procedure load_config(var ctx : TEditorContext; fname : string);
-var     f          : word;
+var     f          : bfile;
         str        : string;
         key, value : string;
 begin
-        f := lfn.lopen_r(fname);
-        if f = 0 then exit;
-        while not lfn.leof(f) do begin
-                lfn.lreadln(f, str);
+        if not FileExists(fname) then exit;
+        assign(f, fname);
+        reset(f);
+        if not isopen(f) then exit;
+        while not eof(f) do begin
+                readln(f, str);
                 split(str, key, value);
                 process_param(ctx, key, value);
         end;
-        lfn.lclose(f);
+        close(f);
 end;
 
 procedure parse_temp(var ctx : TEditorContext);
-var   f : word;
+var   f : bfile;
       s, ss   : string;
       i, p    : integer;
       errCode : integer;
@@ -184,10 +189,11 @@ var   f : word;
       cline_num       : longint;
       fname   : string;
 begin
-        f := lfn.lopen_r(ctx.temp);
-        if f = 0 then exit;
-        while not lfn.leof(f) do begin
-                lfn.lreadln(f, s);
+        assign(f, ctx.temp);
+        reset(f);
+        if not isopen(f) then exit;
+        while not eof(f) do begin
+                readln(f, s);
                 i := 1;
                 p := 1;
                 while (s[p] <> ',') and (p < length(s)) do inc(p);
@@ -220,7 +226,7 @@ begin
                         norm_xy(ctx, 0);
                 end;
         end;
-        lfn.lclose(f);
+        close(f);
 end;
 
 procedure dwed_main(exe_path : string);
@@ -228,20 +234,20 @@ var     ctx                : TEditorContext;
         i, pCount, errCode : integer;
         param, key, value  : string;
         welcome_msg        : boolean;
-        params             : ParamsContext;
+        pc                 : integer;
 begin
         if not dwedlnch.is_installed then begin
-                writeln('This is overlay. Run DWED.EXE or join to the Dark Side.');
+                writelnerr('This is overlay. Run DWED.EXE or join to the Dark Side.');
                 halt(1);
         end;
+        setdefaultcachesize(0);
         strs.init(strs.DOS);
-        dwedpar.pinit(params, trim(PString(ptr(PrefixSeg, $80))^));
+        pc := paramcount;
         reset_context(ctx);
         load_config(ctx, exe_path + 'DWED.CFG');
         load_config(ctx, 'DWED.CFG');
-        dwedpar.preset(params);
-        while phas_next(params) do begin
-                param := pnext(params);
+        for i := 1 to pc do begin
+                param := paramstr(i);
                 if has_switch(param) then begin
                         System.delete(param, 1, 1);
                         split(param, key, value);
@@ -250,15 +256,14 @@ begin
         end;
         scr.push;
         scr.cls(7);
-        if lfn.file_exists(ctx.temp) then begin
+        if FileExists(ctx.temp) then begin
                 welcome_msg := false;
                 parse_temp(ctx);
-                lfn.file_delete(ctx.temp);
+                FileDelete(ctx.temp);
         end else begin
                 welcome_msg := true;
-                dwedpar.preset(params);
-                while phas_next(params) do begin
-                        param := pnext(params);
+                for i := 1 to pc do begin
+                        param := paramstr(i);
                         if not has_switch(param) then begin
                                 load_file(ctx, param, errCode, @file_progress);
                                 if errCode <> 0 then handle_error(ctx, errCode);

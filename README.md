@@ -11,6 +11,7 @@ Main features:
 * Support unix-like text files for open
 * Dont require DPMI-server or 80286 CPU
 * Support Long File Names (LFN)
+* Support Windows Clipboard (you can use it with DosBox-X)
 * Support user's color scheme (via config-file)
 * Support user's shell script running by hotkeys **F5**, **F8**, **F9**.
 * You can disable highlight and receive good speed with XT.
@@ -69,7 +70,9 @@ Published at Softpanorama in 1993 (SP53A), now here is my remake for dwed.
 ### Calculator addon
 ![Image Calculator addon](https://github.com/DosWorld/dwed/raw/main/DWED-CLC.PNG)
 
-# Build
+# Build and dependency
+
+Requires system2 library - https://github.com/DosWorld/libsystem2
 
 To build binaries, you need Borland Pascal 7.0 in path and my small make. Then - type
 

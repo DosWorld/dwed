@@ -32,7 +32,7 @@ function is_installed : boolean;
 
 implementation
 
-uses dos, strutil, sysext, lfn;
+uses dos, strutil, system2;
 
 Type
 PString = ^String;
@@ -239,7 +239,7 @@ end;
 
 function is_installed : boolean;
 begin
-        is_installed := lfn.file_exists(DEVFILE);
+        is_installed := FileExists(DEVFILE)
 end;
 
 function rchar : char;
@@ -267,29 +267,29 @@ var params   : string;
     i        : integer;
 begin
         if is_installed then begin
-                writeln('DWED cycle execution detected.');
+                writelnerr('DWED cycle execution detected.');
                 halt(1);
         end;
         randomize;
         params := trim(PString(ptr(PrefixSeg, $80))^);
-        cur_drive := sysext.getCurrentDisk;
-        cur_dir := sysext.getCurrentDir;
+        cur_drive := getCurrentDisk;
+        getDir(cur_drive, cur_dir);
         path := getpathname(paramstr(0));
         temp := rfname;
         while true do begin
-                sysext.setCurrentDisk(cur_drive);
-                sysext.setCurrentDir(cur_dir);
+                setCurrentDisk(cur_drive);
+                chdir(cur_dir);
                 init;
                 exec(path + exename, params);
                 code := 1;
                 if DosError = 0 then code := DosExitCode;
                 done;
                 if (code = 254) and (length(requested_cmd) <> 0) then begin
-                        writeln(requested_cmd);
+                        system.writeln(requested_cmd);
                         exec(getenv('COMSPEC'), '/C ' + requested_cmd);
                         asm
-                                xor        ax, ax
-                                int        $16
+                                xor  ax, ax
+                                int  $16
                         end
                 end else break;
         end;

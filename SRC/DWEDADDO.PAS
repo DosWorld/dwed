@@ -26,13 +26,16 @@ unit dwedaddo;
 
 interface
 
-uses scr, scrui, kbd, strs, strutil, lfn, dwedtype, event;
+uses scr, scrui, kbd, strs, strutil, dwedtype, event;
 
 procedure addons_window(var ctx : TEditorContext);
 procedure ascii_table(var ctx : TEditorContext);
 procedure calculator(var ctx : TEditorContext);
 
 implementation
+
+uses system2;
+
 type
 RadixType = (RADIX2, RADIX10, RADIX16);
 
