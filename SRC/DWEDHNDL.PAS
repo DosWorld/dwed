@@ -636,7 +636,7 @@ end;
 function hk_cb_paste(var ctx:TEditorContext; event:PEvent):integer;
 var lnum    : word;
     isfist  : boolean;
-    cb_size : dword;
+    cbsize  : dword;
 begin
         commit(ctx);
         if ctx.current^.editor.selection then begin
@@ -647,13 +647,13 @@ begin
         with ctx.current^ do begin
                 isfist := strs.is_first(cline);
                 if ctx.has_wincb then begin
-                        cb_size := WCB_GetDataSize;
-                        if cb_size >= CB_SIZE then cb_size := 0;
-                        if cb_size > 0 then begin
+                        cbsize := WCB_GetDataSize;
+                        if cbsize >= CB_SIZE then cbsize := 0;
+                        if cbsize > 0 then begin
                                 WCB_Open;
                                 WCB_GetData(ctx.clipboard[0]);
                                 WCB_Close;
-                                ctx.clipboard[cb_size] := #0;
+                                ctx.clipboard[cbsize + 1] := #0;
                         end;
                 end;
                 cline := strs.append(cline, editor.x, ctx.clipboard, lnum);
