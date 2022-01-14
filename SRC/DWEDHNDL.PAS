@@ -31,7 +31,7 @@ function process_event(var ctx : TEditorContext; var e : TEvent) : integer;
 
 implementation
 
-uses scr, kbd, scrui, strs, strutil, dwedscru, dwedutil, dwedaddo, dwedhl, dwedlnch, system2, wincb;
+uses scr, kbd, scrui, strs, strutil, dwedscru, dwedutil, dwedaddo, dwedhl, dwedlnch, system2, wincb, dwedtbl;
 
 {$F+}const handlers : PEventHandler = nil;{$F+}
 
@@ -374,29 +374,31 @@ function hk_enter(var ctx:TEditorContext; event:PEvent):integer;
 var     s    : string;
         i, r : integer;
 begin
-        commit(ctx);
-        if ctx.current^.editor.selection then begin
-                delete_selected(ctx);
-                with ctx.current^ do total := strs.renum(rline);
-        end;
         r := SCRU_FULL;
-        s := '';
-        with ctx.current^ do begin
-                for i := 1 to length(editor.line) do begin
-                        if editor.line[i] = ' ' then s := s + ' ' else break;
+        commit(ctx);
+        if is_in_table(ctx, event) then r := tbl_append_row(ctx, event) else begin
+                if ctx.current^.editor.selection then begin
+                        delete_selected(ctx);
+                        with ctx.current^ do total := strs.renum(rline);
                 end;
-                cline := strs.split(cline, editor.x);
-                if strs.is_first(cline) then rline := cline;
-                if scry <> config^.height - 2 then inc(scry);
-                editor.x := 1;
-                cline := strs.go_next(cline);
-                total := strs.renum(rline);
-                load_ed(ctx);
-                if length(s) <> 0 then editor.line := s + ltrim(editor.line);
-                chg := true;
-                editor.chg := length(s) <> 0;
-                editor.x := length(s) + 1;
-                scrx := 0;
+                s := '';
+                with ctx.current^ do begin
+                        for i := 1 to length(editor.line) do begin
+                                if editor.line[i] = ' ' then s := s + ' ' else break;
+                        end;
+                        cline := strs.split(cline, editor.x);
+                        if strs.is_first(cline) then rline := cline;
+                        if scry <> config^.height - 2 then inc(scry);
+                        editor.x := 1;
+                        cline := strs.go_next(cline);
+                        total := strs.renum(rline);
+                        load_ed(ctx);
+                        if length(s) <> 0 then editor.line := s + ltrim(editor.line);
+                        chg := true;
+                        editor.chg := length(s) <> 0;
+                        editor.x := length(s) + 1;
+                        scrx := 0;
+                end;
         end;
         hk_enter := r;
 end;
@@ -728,7 +730,8 @@ var     i, r       : integer;
         content    : string;
 begin
         r := SCRU_NONE;
-        if ctx.current^.editor.selection then begin
+        if is_in_table(ctx, event) then r := tbl_next_column(ctx, event)
+        else if ctx.current^.editor.selection then begin
                 get_sel_coord(ctx, sb_x, sb_y, se_x, se_y);
                 if se_x = 1 then dec(se_y);
                 commit(ctx);
@@ -759,7 +762,9 @@ begin
                         is_ctrl := false;
                         is_alt := false;
                 end;
-                for i := 1 to ctx.current^.config^.tab_size do hk_default(ctx, event);
+                for i := 1 to
+                        ctx.current^.config^.tab_size - (ctx.current^.editor.x mod ctx.current^.config^.tab_size)
+                        do hk_default(ctx, event);
                 ctx.current^.editor.chg := true;
                 r := SCRU_CLINE;
         end;
@@ -774,7 +779,8 @@ var     i, r       : integer;
         content    : string;
 begin
         r := SCRU_NONE;
-        if ctx.current^.editor.selection then begin
+        if is_in_table(ctx, event) then r := tbl_prev_column(ctx, event)
+        else if ctx.current^.editor.selection then begin
                 get_sel_coord(ctx, sb_x, sb_y, se_x, se_y);
                 if se_x = 1 then dec(se_y);
                 commit(ctx);
@@ -800,7 +806,7 @@ begin
                 r := SCRU_FULL;
         end else begin
                 with ctx.current^ do begin
-                i := ctx.current^.config^.tab_size;
+                i := config^.tab_size - (editor.x mod config^.tab_size);
                 while (i > 0)
                          and (editor.line[1] = ' ')
                          and (length(editor.line) > 0) do begin

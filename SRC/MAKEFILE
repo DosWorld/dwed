@@ -1,18 +1,18 @@
 all : dwed.exe dwed16.exe dwedovl.exe dwedovlp.exe dwclip.exe
 
-dwed.exe: dwed.pas dwedlnch.pas sysext.pas
+dwed.exe: dwed.pas dwedlnch.pas
         tpc -M -$D- -$G- -$R- -$S- -$I- -$E- dwed.pas
 
 dwclip.exe: dwclip.pas
 	tpc -M -$D- -$G- -$R- -$S- -$I- -$E- dwclip.pas
 
-dwed16.exe: dwed16.pas dwedlnch.pas sysext.pas
+dwed16.exe: dwed16.pas dwedlnch.pas
         tpc -M -$D- -$G- -$R- -$S- -$I- -$E- dwed16.pas
 
-dwedovl.exe: dwedovl.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas dwedlnch.pas sysext.pas mouse.pas event.pas
+dwedovl.exe: dwedovl.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas dwedlnch.pas mouse.pas event.pas dwedtbl.pas
         tpc -M -$D- -$L- -$G- -$R- -$S- -$I- -$E- -$Q- -$B- dwedovl.pas
 
-dwedovlp.exe: dwedovl16.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas dwedlnch.pas sysext.pas mouse.pas event.pas
+dwedovlp.exe: dwedovl16.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas dwedlnch.pas mouse.pas event.pas dwedtbl.pas
         bpc -CP -M -$D- -$L- -$G+ -$R- -$S- -$I- -$E- -$Q- -$B- dwedovlp.pas
 
 dwed.hlp: dwed.txt hlpc.exe
