@@ -87,6 +87,24 @@ begin
         create := strsd.create(next, prev, body);
 end;
 
+procedure remove_tabs(var s : string; var tabs : string);
+var     i : integer;
+        r : string;
+begin
+        i := 1;
+        r := '';
+        while (i <= ord(s[0])) and (ord(r[0]) < 255) do begin
+                if s[i] = #9 then begin
+                        r := r + tabs;
+                end else begin
+                        r[ord(r[0]) + 1] := s[i];
+                        inc(r[0]);
+                end;
+                inc(i);
+        end;
+        s := r;
+end;
+
 function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : EditorStr;
 var     root, cur, last : Pointer;
         f          : bfile;
@@ -97,8 +115,11 @@ var     root, cur, last : Pointer;
         percent    : integer;
         ppercent   : integer;
         scrup      : TPercentUpdateProc;
+        tabs       : string;
 begin
         scrup := TPercentUpdateProc(scrupdate);
+        fillchar(tabs[0], 256, #32);
+        tabs[0] := chr(tab_size);
         ppercent := -1;
         root := nil; last := nil;
         errCode := 0;
@@ -116,6 +137,7 @@ begin
                 if total <> 0 then begin
                         while not eof(f) do begin
                                 readln(f, s);
+                                remove_tabs(s, tabs);
                                 cur := strs.create(nil, last, s);
                                 if root = nil then root := cur;
                                 last := cur;

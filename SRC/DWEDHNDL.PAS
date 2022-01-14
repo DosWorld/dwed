@@ -645,17 +645,8 @@ begin
                 ctx.current^.editor.selection := false;
         end;
         with ctx.current^ do begin
+                if ctx.has_wincb then WCB_Paste(ctx.clipboard[0], CB_SIZE);
                 isfist := strs.is_first(cline);
-                if ctx.has_wincb then begin
-                        cbsize := WCB_GetDataSize;
-                        if cbsize >= CB_SIZE then cbsize := 0;
-                        if cbsize > 0 then begin
-                                WCB_Open;
-                                WCB_GetData(ctx.clipboard[0]);
-                                WCB_Close;
-                                ctx.clipboard[cbsize + 1] := #0;
-                        end;
-                end;
                 cline := strs.append(cline, editor.x, ctx.clipboard, lnum);
                 if isfist then rline := strs.go_first(cline);
                 while (lnum <> 0) and (scry <> config^.height - 2) do begin

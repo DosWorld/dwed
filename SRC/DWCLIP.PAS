@@ -20,29 +20,31 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
+{$M 32768,131072,131072}
+
 USES System2, WinCB;
 
-FUNCTION Status : BOOLEAN;
-VAR     r : BOOLEAN;
-BEGIN
-        r := WCB_Detect;
-        System.Write('Windows Clipboard support - ');
-        IF r THEN System.Write('OK')
-        ELSE System.Write('NONE');
-        System.WriteLn;
-        Status := r;
-END;
+CONST
+
+ERR_NO_MEMORY = 'ERROR: No memory.';
+ERR_NO_FILE   = 'ERROR: Could not read ';
+
+ERROR = 1;
+OK    = 0;
 
 PROCEDURE Help;
 BEGIN
-        System.WriteLn('usage: DWCLIP [C filename] [P]');
+        System.WriteLn('usage: DWCLIP [C fname] [P]');
         System.WriteLn;
-        System.WriteLn('C filename - copy file to clipbaord');
-        System.WriteLn('P          - paste from clipbaord to STDOUT');
+        System.WriteLn('C fname - copy text file to clipboard');
+        System.WriteLn('P       - paste from clipboard to STDOUT');
         System.WriteLn;
-        System.WriteLn('NOTE: 64kb restictions!');
-        Status;
-        Halt(1);
+        System.WriteLn('NOTE: 64kb restiction. DOS LFN - supported, use name with quotes.');
+        System.WriteLn;
+        System.Write('Check Windows Clipboard status: ');
+        IF WCB_Detect THEN System.Write('OK')
+        ELSE System.Write('NONE');
+        System.WriteLn;
 END;
 
 PROCEDURE Copy(fname : STRING);
@@ -50,59 +52,58 @@ VAR     p    : PCHAR;
         f    : BFile;
         w    : WORD;
 BEGIN
-        IF NOT Status THEN EXIT;
-        GetMem(p, 65001);
+        IF NOT WCB_Detect THEN EXIT;
+        GetMem(p, 65000);
         IF p = NIL THEN BEGIN
-                WriteLnErr('Error: No memory.');
-                Halt(1);
+                Help;
+                System.WriteLn;
+                WriteLnErr(ERR_NO_MEMORY);
+                Halt(ERROR);
         END;
         Assign(f, fname);
         Reset(f);
-        IF IsOpen(f) THEN BEGIN
-                w := BlockRead(f, p[0], 65000);
-                p[w] := #0;
-                WCB_Open;
-                WCB_Clear;
-                WCB_SetData(p[0], w);
-                WCB_Close;
-                Close(f);
-        END ELSE BEGIN
-                WriteLnErr('Error: Could not read ' + fname);
+        IF NOT IsOpen(f) THEN BEGIN
+                FreeMem(p, 65000);
+                Help;
+                System.WriteLn;
+                WriteLnErr(ERR_NO_FILE + fname);
+                Halt(ERROR);
         END;
-        FreeMem(p, 65001);
+        w := BlockRead(f, p[0], 65000 - 1);
+        Close(f);
+        p[w] := #0;
+        WCB_Copy(p, w + 1);
+        FreeMem(p, 65000);
+        Halt(OK);
 END;
 
 PROCEDURE Paste;
 VAR     p    : PCHAR;
-        w    : WORD;
-        size : DWORD;
 BEGIN
         IF NOT WCB_Detect THEN EXIT;
-        size := WCB_GetDataSize;
-        IF size > 65000 THEN BEGIN
-                WriteLnErr('Error: clipboard content has size more 64Kb');
-                EXIT;
-        END;
-        GetMem(p, 65001);
+        GetMem(p, 65000);
         IF p = NIL THEN BEGIN
-                WriteLnErr('Error: No memory.');
-                Halt(1);
+                Help;
+                System.WriteLn;
+                WriteLnErr(ERR_NO_MEMORY);
+                Halt(ERROR);
         END;
-        WCB_Open;
-        WCB_GetData(p[0]);
-        WCB_Close;
-        p[w] := #0;
-        System.WriteLn(p);
-        FreeMem(p, 65001);
+        IF WCB_Paste(p[0], 65000) THEN System.WriteLn(p);
+        FreeMem(p, 65000);
+        Halt(OK);
 END;
 
 VAR     pc  : INTEGER;
         cmd : STRING;
 BEGIN
         pc := ParamCount;
-        IF pc = 0 THEN Help;
-        cmd := ParamStr(1);
-        IF (UPCASE(cmd[1]) = 'C') AND (pc = 2) THEN Copy(ParamStr(2))
-        ELSE IF UPCASE(cmd[1]) = 'P'THEN Paste
-        ELSE Help;
+        IF pc > 0 THEN BEGIN
+                cmd := ParamStr(1);
+                CASE UPCASE(cmd[1]) OF
+                'C': IF pc = 2 THEN Copy(ParamStr(2));
+                'P': Paste;
+                END;
+        END;
+        Help;
+        Halt(ERROR);
 END.

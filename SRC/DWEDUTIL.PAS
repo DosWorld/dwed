@@ -411,6 +411,7 @@ begin
                 close(f);
                 ctx.clipboard[readed] := #0;
                 if readed <> 0 then load_clipboard := 0;
+                WCB_Copy(ctx.clipboard[0], readed + 1);
         end;
 end;
 
@@ -466,10 +467,7 @@ begin
         end;
         ctx.clipboard[pos] := #0;
         if ctx.has_wincb then begin
-                WCB_Open;
-                WCB_Clear;
-                WCB_SetData(ctx.clipboard[0], pos - 1);
-                WCB_Close;
+                WCB_Copy(ctx.clipboard[0], pos + 1);
         end;
 end;
 
