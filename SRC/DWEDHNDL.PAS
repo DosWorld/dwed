@@ -762,9 +762,7 @@ begin
                         is_ctrl := false;
                         is_alt := false;
                 end;
-                for i := 1 to
-                        ctx.current^.config^.tab_size - (ctx.current^.editor.x mod ctx.current^.config^.tab_size)
-                        do hk_default(ctx, event);
+                for i := 1 to ctx.current^.config^.tab_size do hk_default(ctx, event);
                 ctx.current^.editor.chg := true;
                 r := SCRU_CLINE;
         end;
@@ -806,7 +804,7 @@ begin
                 r := SCRU_FULL;
         end else begin
                 with ctx.current^ do begin
-                i := config^.tab_size - (editor.x mod config^.tab_size);
+                i := config^.tab_size;
                 while (i > 0)
                          and (editor.line[1] = ' ')
                          and (length(editor.line) > 0) do begin

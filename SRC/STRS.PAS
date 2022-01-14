@@ -67,7 +67,7 @@ function is_nil(r : EditorStr) : boolean;
 
 implementation
 
-uses strsd, dwedtype, system2;
+uses strsd, dwedtype, system2, strutil;
 
 const memType : MemoryType = DOS;
 const BUF_SIZE = 4 * 1024;
@@ -171,7 +171,14 @@ var
         percent    : integer;
         ppercent   : integer;
         scrup      : TPercentUpdateProc;
+        fnamebak   : STRING;
 begin
+        if FileExists(fname) THEN BEGIN
+                fnamebak := change_ext(fname, 'bak');
+                if FileExists(fnamebak) then FileDelete(fnamebak);
+                assign(f, fname);
+                rename(f, fnamebak);
+        END;
         assign(f, fname);
         rewrite(f);
         if not isopen(f) then errCode := 105 else errCode := 0;
