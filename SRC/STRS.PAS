@@ -174,7 +174,7 @@ var
         fnamebak   : STRING;
 begin
         if FileExists(fname) THEN BEGIN
-                fnamebak := change_ext(fname, 'bak');
+                fnamebak := change_ext(fname, '.bak');
                 if FileExists(fnamebak) then FileDelete(fnamebak);
                 assign(f, fname);
                 rename(f, fnamebak);

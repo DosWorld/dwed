@@ -203,22 +203,17 @@ begin
 end;
 
 function change_ext(s : string; new_ext : string):string;
-var r       : string;
-    i, p, l : integer;
+var     i : integer;
 begin
-        l := length(s);
-        p := 0;
-        for i := l downto 0 do begin
+        i := length(s);
+        while i > 0 do begin
                 case s[i] of
-                '.': break;
-                '/', '\', ':': begin p:=0; break; end;
+                '.': begin s[0] := chr(i - 1); break; end;
+                '/', '\', ':': break;
                 end;
-                p := i;
+                dec(i);
         end;
-        if p = 0 then r := s else begin
-                r := copy(s, 1, p - 1);
-        end;
-        change_ext := r + new_ext;
+        change_ext := s + new_ext;
 end;
 
 function hcode(var s : string):word;assembler;

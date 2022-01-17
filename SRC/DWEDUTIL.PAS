@@ -76,6 +76,8 @@ procedure handle_error(var ctx : TEditorContext; errCode:integer);
 function create_fast_jmp_list(var ctx:TEditorContext) : pfast_jmp_list;
 function fast_jmp(var ctx:TEditorContext; fjl : pfast_jmp_list) : integer;
 
+function get_err_msg(errCode:integer) : string;
+
 implementation
 
 uses kbd, scr, scrui, strs, strutil, dwedhl, dwedlnch, event, system2, wincb;
@@ -639,8 +641,8 @@ begin
         load_file := r;
 end;
 
-procedure handle_error(var ctx : TEditorContext; errCode:integer);
-var errMsg : string;
+function get_err_msg(errCode:integer) : string;
+var     errMsg : string;
 begin
         case errCode of
         1: errMsg := 'Invalid function number';
@@ -691,8 +693,15 @@ begin
         216: errMsg := 'General Protection fault';
         else errMsg := 'Unknown error code';
         end;
+        get_err_msg := concat('#', itoa(errCode), ': ', errMsg)
+end;
+
+procedure handle_error(var ctx : TEditorContext; errCode:integer);
+var errMsg : string;
+begin
+        errMsg := get_err_msg(errCode);
         scr.push;
-        scrui.msg_box(ctx.current^.config^.color.top_hl, 'Error', concat('#', itoa(errCode), ': ', errMsg), '[ OK ]');
+        scrui.msg_box(ctx.current^.config^.color.top_hl, 'Error', errMsg, '[ OK ]');
         scr.show;
         kbd.reset;
         while true do begin

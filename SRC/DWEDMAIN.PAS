@@ -229,6 +229,18 @@ begin
         close(f);
 end;
 
+{$F+}
+var prevExitProc : pointer;
+procedure err_handler;
+begin
+        IF (ErrorAddr <> NIL) AND (ExitCode <> 0) THEN BEGIN
+                scr.pop;
+                scr.show;
+                System.Writeln(get_err_msg(ExitCode));
+        END;
+        exitProc := prevExitProc;
+end;
+
 procedure dwed_main(exe_path : string);
 var     ctx                : TEditorContext;
         i, pCount, errCode : integer;
@@ -240,7 +252,9 @@ begin
                 writelnerr('This is overlay. Run DWED.EXE or join to the Dark Side.');
                 halt(1);
         end;
-        setdefaultcachesize(0);
+        prevExitProc := exitProc;
+        exitProc := @err_handler;
+        setDefaultCacheSize(0);
         strs.init(strs.DOS);
         pc := paramcount;
         reset_context(ctx);
