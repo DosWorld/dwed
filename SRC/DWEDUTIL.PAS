@@ -710,7 +710,9 @@ var     r, l, c  : pfast_jmp_list;
         line     : string;
         uline    : string;
         lnum     : longint;
+        i        : integer;
         t        : string;
+        name     : string;
         need_add : boolean;
 begin
         r := nil; l := nil;
@@ -723,10 +725,30 @@ begin
                         uline := trim(line);
                         upstr(uline);
                         if starts_with(uline, 'PROCEDURE ') then begin
-                                line := 'P:' + copy(line, 10, length(line) - 9);
+                                line := copy(line, 11, length(line) - 10);
+                                i := 1;
+                                while i < ord(line[0]) do begin
+                                        if not(line[i] in ['a'..'z','A'..'Z','0'..'9','_'])
+                                                then break;
+                                        inc(i);
+                                end;
+                                name := copy(line, 1, i - 1);
+                                system.delete(line, 1, i - 1);
+                                while length(name) < 16 do name := name + ' ';
+                                line := 'P: ' + name + ' ' + line;
                                 need_add := true
                         end else if starts_with(uline, 'FUNCTION ') then begin
-                                line := 'F:' + copy(line, 9, length(line) - 8);
+                                line := copy(line, 10, length(line) - 9);
+                                i := 1;
+                                while i < ord(line[0]) do begin
+                                        if not(line[i] in ['a'..'z','A'..'Z','0'..'9','_'])
+                                                then break;
+                                        inc(i);
+                                end;
+                                name := copy(line, 1, i - 1);
+                                system.delete(line, 1, i - 1);
+                                while length(name) < 16 do name := name + ' ';
+                                line := 'F: ' + name + ' ' + line;
                                 need_add := true
                         end else if starts_with(uline, 'INTERFACE') then begin
                                 upstr(line);
