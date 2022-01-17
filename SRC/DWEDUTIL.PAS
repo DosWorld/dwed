@@ -786,25 +786,28 @@ var     r         : integer;
         i, sitem  : integer;
         rline     : EditorStr;
         e         : TEvent;
+        clnum     : longint;
 begin
         r := SCRU_NONE;
         scr.cursor_off;
         f := fjl; size := 0;
+        clnum := strs.get_num(ctx.current^.cline);
         while f <> nil do begin
                 inc(size, length(f^.text) + 1);
                 f := f^.next;
         end;
         getmem(p, size);
-        f := fjl; ofs := 0;
+        f := fjl; ofs := 0; sitem := 0; i := 0;
         while f <> nil do begin
+                if f^.line <= clnum  then sitem := i;
                 move(f^.text[1], p[ofs], length(f^.text));
                 inc(ofs, length(f^.text));
                 if f^.next <> nil then p[ofs] := #$0a else p[ofs] := #0;
                 inc(ofs);
+                inc(i);
                 f := f^.next;
         end;
         while true do begin
-                sitem := 0;
                 scrui.vmenu(e, 1, 2, scr.getwidth - 4, scr.getheight - 3,
                         ctx.config.color.menu,
                         ctx.config.color.menu_sel,
