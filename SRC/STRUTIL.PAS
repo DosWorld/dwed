@@ -61,6 +61,8 @@ function ltrim(s : string):string;
 function rtrim(s : string):string;
 function trim(s : string):string;
 
+function starts_with(var s : string; start : string):boolean;
+
 function rpad(s : string; len : integer):string;
 function lpad(s : string; len : integer):string;
 
@@ -511,6 +513,16 @@ begin
                 r := (r shl 4) or (k and $0F);
         end;
         ahtob := r;
+end;
+
+function starts_with(var s : string; start : string):boolean;
+var n : string;
+begin
+        n := s;
+        if s[0] >= start[0] then begin
+                n := s; n[0] := start[0];
+                starts_with := n = start;
+        end else starts_with := false;
 end;
 
 function unquote(str : string) : string;

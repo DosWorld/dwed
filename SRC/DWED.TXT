@@ -45,6 +45,7 @@ and ~N~ or ~ESC~ - to answer ~NO~.
                     next word.
 
 ~Ctrl~+~L~ - Go to line number.
+~Ctrl~+~O~ - Fast jump to procedure/function (Pascal).
 ///2CLIPBOARD
         Clipboard operations.
 
@@ -208,4 +209,3 @@ it is mean ~7~ - foreground color and ~0~ - background.
 Full text of license you can read at
 
         ~htttps://mit-license.org/~
-

@@ -27,6 +27,14 @@ interface
 
 uses dwedtype;
 
+type
+pfast_jmp_list = ^fast_jmp_list;
+fast_jmp_list = record
+        text : string[80];
+        line : longint;
+        next : pfast_jmp_list;
+end;
+
 procedure get_sel_coord(
         var ctx : TEditorContext;
         var sb_x : integer;
@@ -64,6 +72,9 @@ function load_file(var ctx : TEditorContext; fname : string; var errCode : integ
 procedure file_progress(value, total : longint);
 
 procedure handle_error(var ctx : TEditorContext; errCode:integer);
+
+function create_fast_jmp_list(var ctx:TEditorContext) : pfast_jmp_list;
+function fast_jmp(var ctx:TEditorContext; fjl : pfast_jmp_list) : integer;
 
 implementation
 
@@ -524,7 +535,7 @@ var r : PFileContext;
         p               : pchar;
         e               : TEvent;
 begin
-        scr.cursor_off;        
+        scr.cursor_off;
         i := 0;
         memlen := 0; sitem := 0; cctx := 0;
         r := ctx.all;
@@ -691,6 +702,121 @@ begin
                 end;
         end;
         scr.pop;
+end;
+
+function create_fast_jmp_list(var ctx:TEditorContext) : pfast_jmp_list;
+var     r, l, c  : pfast_jmp_list;
+        rline    : EditorStr;
+        line     : string;
+        uline    : string;
+        lnum     : longint;
+        t        : string;
+        need_add : boolean;
+begin
+        r := nil; l := nil;
+        rline := ctx.current^.rline;
+        if ctx.current^.st = SRC_PAS then begin
+                while true do begin
+                        need_add := false;
+                        lnum := strs.get_num(rline);
+                        strs.get(rline, line);
+                        uline := trim(line);
+                        upstr(uline);
+                        if starts_with(uline, 'PROCEDURE ') then begin
+                                line := 'P:' + copy(line, 10, length(line) - 9);
+                                need_add := true
+                        end else if starts_with(uline, 'FUNCTION ') then begin
+                                line := 'F:' + copy(line, 9, length(line) - 8);
+                                need_add := true
+                        end else if starts_with(uline, 'INTERFACE') then begin
+                                upstr(line);
+                                line := '    ' + line;
+                                need_add := true
+                        end else if starts_with(uline, 'IMPLEMENTATION') then begin
+                                upstr(line);
+                                line := '    ' + line;
+                                need_add := true;
+                        end;
+                        if need_add then begin
+                                getmem(c, sizeof(fast_jmp_list));
+                                str(lnum, t);
+                                while length(t) < 6 do t := ' ' + t;
+                                c^.line := lnum;
+{                                c^.text := t + ':' + line;}
+                                c^.text := line;
+                                c^.next := nil;
+                                if l <> nil then l^.next := c;
+                                if r = nil then r := c;
+                                l := c;
+                        end;
+                        if strs.is_last(rline) then break;
+                        rline := strs.go_next(rline);
+                end;
+        end;
+        create_fast_jmp_list := r;
+end;
+
+function fast_jmp(var ctx:TEditorContext; fjl : pfast_jmp_list) : integer;
+var     r         : integer;
+        f         : pfast_jmp_list;
+        size, ofs : word;
+        p         : pchar;
+        i, sitem  : integer;
+        rline     : EditorStr;
+        e         : TEvent;
+begin
+        r := SCRU_NONE;
+        scr.cursor_off;
+        f := fjl; size := 0;
+        while f <> nil do begin
+                inc(size, length(f^.text) + 1);
+                f := f^.next;
+        end;
+        getmem(p, size);
+        f := fjl; ofs := 0;
+        while f <> nil do begin
+                move(f^.text[1], p[ofs], length(f^.text));
+                inc(ofs, length(f^.text));
+                if f^.next <> nil then p[ofs] := #$0a else p[ofs] := #0;
+                inc(ofs);
+                f := f^.next;
+        end;
+        while true do begin
+                sitem := 0;
+                scrui.vmenu(e, 1, 2, scr.getwidth - 4, scr.getheight - 3,
+                        ctx.config.color.menu,
+                        ctx.config.color.menu_sel,
+                        'Source tree',
+                        p, sitem);
+                if e.scancode = SCAN_ESC then break;
+                if (e.scancode = SCAN_ENTER) or (e.scancode = SCAN_SPACE) then begin
+                        i := 0;
+                        f := fjl;
+                        while f <> nil do begin
+                                if i = sitem then begin
+                                        rline := strs.find_num(ctx.current^.rline, f^.line);
+                                        if rline <> nil then begin
+                                                commit(ctx);
+                                                ctx.current^.cline := rline;
+                                                load_ed(ctx);
+                                        end;
+                                        break;
+                                end;
+                                inc(i);
+                                f := f^.next;
+                        end;
+                        break;
+                end;
+        end;
+        r := SCRU_FULL;
+        freemem(p, size);
+        scr.cursor_on;
+        while fjl <> nil do begin
+                f := fjl;
+                fjl := fjl^.next;
+                freemem(f, sizeof(fast_jmp_list));
+        end;
+        fast_jmp := r;
 end;
 
 {$F+}

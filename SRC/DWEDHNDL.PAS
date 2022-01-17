@@ -1221,6 +1221,15 @@ begin
         hk_calc := SCRU_FULL;
 end;
 
+function hk_fast_jmp(var ctx:TEditorContext; event:PEvent):integer;
+var     fjl  : pfast_jmp_list;
+begin
+        fjl := create_fast_jmp_list(ctx);
+        if fjl <> nil then begin
+                hk_fast_jmp := fast_jmp(ctx, fjl);
+        end else hk_fast_jmp := SCRU_NONE;
+end;
+
 procedure serialize_fctx(var t : bfile; current : PFileContext);
 begin
         if current = nil then exit;
@@ -1420,6 +1429,8 @@ begin
 
         reg_handler(SCAN_Y, true, false, false, false, @hk_cb_cutline);
         reg_handler(SCAN_U, true, false, false, false, @hk_cb_paste);
+
+        reg_handler(SCAN_O, true, false, false, true, @hk_fast_jmp);
 
         reg_handler(SCAN_L, true, false, false, true, @hk_goto_line);
         reg_handler(SCAN_F, true, false, false, true, @hk_start_find);
