@@ -808,7 +808,7 @@ begin
                 f := f^.next;
         end;
         while true do begin
-                scrui.vmenu(e, 1, 2, scr.getwidth - 4, scr.getheight - 3,
+                scrui.vmenu(e, 1, 2, scr.getwidth - 2, scr.getheight - 3,
                         ctx.config.color.menu,
                         ctx.config.color.menu_sel,
                         'Source tree',
@@ -824,6 +824,7 @@ begin
                                                 commit(ctx);
                                                 ctx.current^.cline := rline;
                                                 load_ed(ctx);
+                                                ctx.current^.editor.x := 1;
                                         end;
                                         break;
                                 end;
