@@ -20,7 +20,7 @@ Main features:
 Restrictions:
 
 * This software is writen in Borland Pascal, so string length is limited to 255 chars.
-* DOS-conventional memory will be enought to load file up to ~300k..400k (expect - 300k border). You can use DPMI-version, if you need more memory and you have modern CPU.
+* DOS-conventional memory will be enought to load file up to ~300k..400k (expect - 300k border).
 * DWED don't parse file content in the same way, as compilers - so, some time syntax highlight can fail (be wrong). I know it. But it is better then nothing.
 * No Undo/Redo functionality. The reason is the same as why i dont build AST for syntax highlight - here is no memory/CPU speed for it.
 
@@ -30,14 +30,10 @@ Here is small review/intro on FreeDOS channel: http://www.youtube.com/watch?v=7z
 Use:
 
 * `dwed.exe` - in DOS Real Mode
-* `dwed16.exe` - recompiled for 16bit DPMI (more memory)
 
 Command line example:
 
 	C:\DWED\dwed.exe filename1 .. filenameN
-or
-
-	C:\DWED\dwed16.exe filename1 .. filenameN
 
 Use key **F1** to get more documentation (hotkeys, tips etc). I don't want write documentation and put all knowledge to buildin help.
 
@@ -74,7 +70,7 @@ Published at Softpanorama in 1993 (SP53A), now here is my remake for dwed.
 
 Requires system2 library - https://github.com/DosWorld/libsystem2
 
-To build binaries, you need Borland Pascal 7.0 in path and my small make. Then - type
+To build binaries, you need Borland Pascal 7.0 in path, SPHINX C-- by Michael Sheker and my small make. Then - type
 
       make
 
