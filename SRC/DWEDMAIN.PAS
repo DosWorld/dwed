@@ -29,7 +29,7 @@ procedure dwed_main(exe_path : string);
 
 implementation
 
-uses dos, scr, kbd, strs, strutil, dwedtype, dwedhndl, dwedutil, dwedhl, dwedscru, dwedlnch, event, system2, wincb;
+uses dos, scr, kbd, strs, strutil, dwedtype, dwedhndl, dwedutil, dwedhl, dwedscru, dwedlnch, event, system2, wincb, ansi;
 
 procedure edit(var ctx : TEditorContext; welcome_msg : boolean);
 var     scru, prev_scru, i : integer;
@@ -95,6 +95,7 @@ begin
                 config.udef_f5 := '';
                 config.udef_f8 := '';
                 config.udef_f9 := '';
+                config.memory_strategy := 1;
                 getmem(clipboard, CB_SIZE);
                 clipboard[0] := #0;
                 has_wincb := WCB_Detect;
@@ -103,13 +104,7 @@ begin
                 help_topic_id := 0;
                 temp := '';
         end;
-        system.assign(f, dwedlnch.DEVFILE);
-        system.reset(f, 1);
-        i := ioresult;
-        if i <> 0 then begin
-                system.blockread(f, ctx.temp[0], 256);
-                system.close(f);
-        end;
+        ctx.temp := get_temp_name;
         path := '';
         if length(path) = 0 then path := getenv('TEMP');
         if length(path) = 0 then path := getenv('TMP');
@@ -137,6 +132,7 @@ begin
         else if key = 'USR.DEF.F8' then ctx.config.udef_f8 := value
         else if key = 'USR.DEF.F9' then ctx.config.udef_f9 := value
         else if key = 'HL.ENABLE' then ctx.config.hl_enable := (ahtob(value) <> 0)
+        else if key = 'MEMORY.STRATEGY' then ctx.config.memory_strategy := ahtob(value)
         else begin writelnerr('Unknown parameter ' + key + '. Press Enter...'); system.readln; end;
 end;
 
@@ -236,7 +232,16 @@ begin
         IF (ErrorAddr <> NIL) AND (ExitCode <> 0) THEN BEGIN
                 scr.pop;
                 scr.show;
-                System.Writeln(get_err_msg(ExitCode));
+                System.Writeln(bg(red), ' ', get_err_msg(ExitCode), ' at '
+                        , fg(cyan), hexw(seg(pchar(errorAddr)[0]))
+                        , ':'
+                        , hexw(ofs(pchar(errorAddr)[0]))
+                        , fg(white), ' ', bg(black));
+                if ExitCode = 203 then begin
+                   System.Writeln(fg(green), 'Largest free block: ', maxavail, fg(white));
+                   System.Writeln(fg(green), 'Total free memory:  ', memavail, fg(white));
+                end;
+                errorAddr := nil;
         END;
         exitProc := prevExitProc;
 end;
@@ -249,13 +254,11 @@ var     ctx                : TEditorContext;
         pc                 : integer;
 begin
         if not dwedlnch.is_installed then begin
-                writelnerr('This is overlay. Run DWED.EXE or join to the Dark Side.');
+                writelnerr('This is overlay. Run DWED.EXE.');
                 halt(1);
         end;
         prevExitProc := exitProc;
         exitProc := @err_handler;
-        setDefaultCacheSize(0);
-        strs.init(strs.DOS);
         pc := paramcount;
         reset_context(ctx);
         load_config(ctx, exe_path + 'DWED.CFG');
@@ -267,6 +270,13 @@ begin
                         split(param, key, value);
                         process_param(ctx, key, value);
                 end;
+        end;
+        case ctx.config.memory_strategy of
+        0: strs.init(strs.MT_DOS);
+        1: strs.init(strs.MT_TEMP_WO_CACHE);
+        2: strs.init(strs.MT_TEMP_WITH_CACHE);
+        3: strs.init(strs.MT_BIGMEM);
+        else strs.init(strs.MT_DOS);
         end;
         scr.push;
         scr.cls(7);

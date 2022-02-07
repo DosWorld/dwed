@@ -861,10 +861,10 @@ begin
         percent := (value * 100) div total;
         if percent < 0 then percent := 0;
         if percent > 100 then percent := 100;
-        scr.hprint(0, scr.getheight - 1, $70, #$B2, scr.getwidth);
+        scr.hprint(0, scr.getheight - 1, $30, #$B2, scr.getwidth);
         if percent = 0 then w := 0 else w := ((scr.getwidth - 5) * percent) div 100;
-        scr.hprint(5, scr.getheight - 1, $70, #$B0, w);
-        scr.print(0, scr.getheight - 1, $70, lpad(itoa(percent) + '%', 4) + ' ');
+        scr.hprint(5, scr.getheight - 1, $07, #$DB,  w);
+        scr.print(0, scr.getheight - 1, $07, lpad(itoa(percent),3) + '% ');
         scr.show;
 end;
 

@@ -22,11 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
 {$A-}
-unit strsd;
+unit strsb;
 
-{ Conventional memory string storage }
+{ ems/xms memory string storage }
 
 interface
+
+uses strs;
+
+procedure init(mType : MemoryType);
 
 function new : pointer;
 
@@ -55,7 +59,10 @@ function split(r : pointer; pos : integer) : pointer;
 
 implementation
 
-uses strutil;
+uses strutil, system2, dbu;
+
+const
+BLK_SIZE = 64;
 
 type
 
@@ -68,6 +75,10 @@ TString = record
         len        : byte;
         body       : array[1..1] of char;
 end;
+
+var     oldexitproc : pointer;
+        idx : bfile;
+        db  : DBUFile;
 
 function norm_len(len : word) : word;
 var w : word;
@@ -114,7 +125,7 @@ begin
                 old := r;
                 r := PString(create(PString(r)^.next, PString(r)^.prev, body));
                 PString(r)^.num := old^.num;
-                strsd.free_str(old);
+                free_str(old);
         end;
         put := r;
 end;
@@ -175,7 +186,7 @@ var o : pointer;
 begin
         while r <> nil do begin
                 o := PString(r)^.next;
-                strsd.free_str(r);
+                free_str(r);
                 r := o;
         end;
 end;
@@ -241,10 +252,10 @@ begin
         if PString(r)^.next <> nil then begin
                 t1 := r;
                 t2 := t1^.next;
-                strsd.get(t1, s1);
-                strsd.get(t2, s2);
+                get(t1, s1);
+                get(t2, s2);
                 if length(s1) + length(s2) <= 255 then begin
-                        r := strsd.create(t2^.next, t1^.prev, s1 + s2);
+                        r := strsb.create(t2^.next, t1^.prev, s1 + s2);
                         free_str(t1);
                         free_str(t2);
                 end;
@@ -260,7 +271,7 @@ begin
         lnum := 0;
         if not ((r = nil) or (p = nil)) then begin
                 s := '';
-                strsd.get(r, src);
+                strsb.get(r, src);
                 while p[0] <> #0 do begin
                         c := p[0];
                         case c of
@@ -272,8 +283,8 @@ begin
                                 if len > 0 then s1 := copy(src, 1, pos - 1);
                                 if pos <= len then s2 := copy(src, pos, len - pos + 1);
                                 s1 := s1 + s;
-                                r := strsd.put(r, s1);
-                                r := strsd.create(Pstring(r)^.next, r, s2);
+                                r := strsb.put(r, s1);
+                                r := strsb.create(Pstring(r)^.next, r, s2);
                                 src := s2;
                                 pos := 1;
                                 s := '';
@@ -283,10 +294,10 @@ begin
                         inc(p);
                 end;
                 if length(s) <> 0 then begin
-                        strsd.get(r, s1);
+                        strsb.get(r, s1);
                         System.insert(s, s1, pos);
                         inc(pos, length(s));
-                        r := strsd.put(r, s1);
+                        r := strsb.put(r, s1);
                 end;
         end;
         append := r;
@@ -295,12 +306,45 @@ end;
 function split(r : pointer; pos : integer) : pointer;
 var s1, s2 : string;
 begin
-        strsd.get(r, s1);
+        strsb.get(r, s1);
         s2 := copy(s1, pos, length(s1) - pos + 1);
         s1 := rtrim(copy(s1, 1, pos - 1));
-        r := strsd.put(r, s1);
-        strsd.create(PString(r)^.next, r, s2);
+        r := strsb.put(r, s1);
+        strsb.create(PString(r)^.next, r, s2);
         split := r;
+end;
+
+procedure onexit;far;
+begin
+        close(idx);
+        dbu_close(db);
+        exitProc := oldexitproc;
+end;
+
+procedure init(mType : MemoryType);
+begin
+        oldexitproc := exitProc;
+        FillChar(idx, SizeOf(BFile), #0);
+        FillChar(db, SizeOf(DBUFile), #0);
+        case mType of
+        strs.MT_TEMP_WO_CACHE: BEGIN
+                SetUseTempFiles(TRUE);
+                SetDefaultCacheSize(0);
+                dbu_rewrite_temp(db, BLK_SIZE);
+                ReWriteTemp (idx);
+                END;
+        strs.MT_TEMP_WITH_CACHE: BEGIN
+                SetUseTempFiles(TRUE);
+                SetDefaultCacheSize(CACHE_PAGES_PER_FILE);
+                dbu_rewrite_temp(db, BLK_SIZE);
+                SetDefaultCacheSize(4);
+                ReWriteTemp(idx);
+                END;
+        strs.MT_BIGMEM: BEGIN
+                dbu_rewrite_memfile(db, BLK_SIZE);
+                ReWriteMemFile(idx);
+                END;
+        end;
 end;
 
 end.

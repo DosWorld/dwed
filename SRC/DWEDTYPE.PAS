@@ -62,14 +62,15 @@ end;
 
 PConfig =^ TConfig;
 TConfig = record
-        width         : integer;
-        height        : integer;
-        color         : TColorConfig;
-        hl_enable     : boolean;
-        tab_size      : integer;
-        udef_f5       : string;
-        udef_f8       : string;
-        udef_f9       : string;
+        width           : integer;
+        height          : integer;
+        color           : TColorConfig;
+        hl_enable       : boolean;
+        tab_size        : integer;
+        udef_f5         : string;
+        udef_f8         : string;
+        udef_f9         : string;
+        memory_strategy : byte;
 end;
 
 TLineEditorContext = record

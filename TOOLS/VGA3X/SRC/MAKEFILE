@@ -1,0 +1,15 @@
+all: vga30.com vga34.com
+
+vga30.com: vga3x.asm
+	nasm -f bin vga3x.asm -DVGA30 -o vga30.com
+
+vga34.com: vga3x.asm
+	nasm -f bin vga3x.asm -DVGA34 -o vga34.com
+
+install: all
+	copy vga3*.com ..\BIN
+
+clean:
+	del vga30.com
+	del vga34.com
+	del *.bak

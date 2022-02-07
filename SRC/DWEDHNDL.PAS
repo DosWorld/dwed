@@ -686,7 +686,7 @@ begin
         end;
         if start_find then begin
                 lnum := atol(lNumStr, -1);
-                if (lnum < 1) or (lnum > ctx.current^.total) then start_find := false;
+                start_find := (lnum >= 1) and (lnum <= ctx.current^.total);
         end;
         if start_find then begin
                 newLine := strs.find_num(ctx.current^.rline, lnum);
@@ -1302,14 +1302,9 @@ begin
                 end;
         end;
 
-        if can_run then begin 
-                assign(t, dwedlnch.DEVFILE);
-                rewrite(t);
-                if not isopen(t) then begin handle_error(ctx, 105); can_run := false; end else begin
-                        blockwrite(t, cmd[0], length(cmd) + 1);
-                        close(t);
-                        ctx.exit_code := 254;
-                end;
+        if can_run then begin
+                set_exec_cmd(cmd);
+                ctx.exit_code := EXEC_USER_CMD;
         end;
         if can_run then r := SCRU_QUIT;
         hk_userdef := r;
