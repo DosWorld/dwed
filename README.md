@@ -29,10 +29,6 @@ Here is small review/intro on FreeDOS channel: http://www.youtube.com/watch?v=7z
 # How to run and use
 Use:
 
-* `dwed.exe` - in DOS Real Mode
-
-Command line example:
-
 	C:\DWED\dwed.exe filename1 .. filenameN
 
 Use key **F1** to get more documentation (hotkeys, tips etc). I don't want write documentation and put all knowledge to buildin help.
