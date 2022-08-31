@@ -9,7 +9,7 @@ Main features:
 * Support multiple file editing at the same time
 * Support internal clipboard (size up to 32k)
 * Support unix-like text files for open
-* Dont require DPMI-server or 80286 CPU
+* Dont require DPMI-server or 80286 CPU, but support EMS/XMS
 * Support Long File Names (LFN)
 * Support Windows Clipboard (you can use it with DosBox-X)
 * Support user's color scheme (via config-file)

@@ -22,15 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
 {$A-}
-unit strsb;
+unit strsdbu;
 
-{ ems/xms memory string storage }
+{ DBU string storage }
 
 interface
 
-uses strs;
-
-procedure init(mType : MemoryType);
+procedure init_tempfile;
+procedure init_memfile;
+procedure done;
 
 function new : pointer;
 
@@ -59,48 +59,29 @@ function split(r : pointer; pos : integer) : pointer;
 
 implementation
 
-uses strutil, system2, dbu;
-
-const
-BLK_SIZE = 64;
+uses strutil, dbu;
 
 type
 
-PString =^ TString;
+PString = ^TString;
 TString = record
         next       : PString;
         prev       : PString;
-        allocated  : word;
         num        : longint;
-        len        : byte;
-        body       : array[1..1] of char;
+        dbu_recno  : Longint;
 end;
 
-var     oldexitproc : pointer;
-        idx : bfile;
-        db  : DBUFile;
-
-function norm_len(len : word) : word;
-var w : word;
-begin
-        w := len shr 3;
-        if (len and $07) <> 0 then inc(w);
-        w := w shl 3;
-        norm_len := w;
-end;
+const   STRSDBU_BLK_SIZE = 32;
+var     dbumemfile : DBUFile;
 
 function create(next, prev : pointer; body : string) : pointer;
-var len, nlen : word;
-        r : PString;
+var     r : PString;
 begin
-        len := length(body);
-        nlen := norm_len(len);
-        getmem(r, sizeof(TString) + nlen - 1);
+        getmem(r, sizeof(TString));
         r^.next := PString(next);
         r^.prev := PString(prev);
-        r^.len := len;
-        r^.allocated := nlen;
-        move(body[1], r^.body[1], len);
+        r^.num := 0;
+        r^.dbu_recno := dbu_put(dbumemfile, body, ord(body[0]) + 1);
         if prev <> nil then PString(prev)^.next := r;
         if next <> nil then PString(next)^.prev := r;
         create := r;
@@ -109,24 +90,14 @@ end;
 procedure free_str(r : pointer);
 begin
         if r = nil then exit;
-        freemem(r, sizeof(TString) + PString(r)^.allocated - 1);
+        dbu_free(dbumemfile, PString(r)^.dbu_recno);
+        freemem(r, sizeof(TString));
 end;
 
 function put(r : pointer; var body : string) : pointer;
-var len : word;
-        old : PString;
 begin
-        len := norm_len(length(body));
-        if len = PString(r)^.allocated then begin
-                len := length(body);
-                move(body[1], PString(r)^.body[1], len);
-                PString(r)^.len := len;
-        end else begin
-                old := r;
-                r := PString(create(PString(r)^.next, PString(r)^.prev, body));
-                PString(r)^.num := old^.num;
-                free_str(old);
-        end;
+        dbu_free(dbumemfile, PString(r)^.dbu_recno);
+        PString(r)^.dbu_recno := dbu_put(dbumemfile, body, ord(body[0]) + 1);
         put := r;
 end;
 
@@ -138,8 +109,7 @@ end;
 procedure get(r : pointer; var dest : string);
 begin
         if r <> nil then begin
-                move(PString(r)^.body[1], dest[1], PString(r)^.len);
-                dest[0] := chr(PString(r)^.len);
+                dbu_get(dbumemfile, PString(r)^.dbu_recno, dest, dbu_size(dbumemfile, PString(r)^.dbu_recno));
         end else dest := '';
 end;
 
@@ -186,7 +156,7 @@ var o : pointer;
 begin
         while r <> nil do begin
                 o := PString(r)^.next;
-                free_str(r);
+                strsdbu.free_str(r);
                 r := o;
         end;
 end;
@@ -252,10 +222,10 @@ begin
         if PString(r)^.next <> nil then begin
                 t1 := r;
                 t2 := t1^.next;
-                get(t1, s1);
-                get(t2, s2);
+                strsdbu.get(t1, s1);
+                strsdbu.get(t2, s2);
                 if length(s1) + length(s2) <= 255 then begin
-                        r := strsb.create(t2^.next, t1^.prev, s1 + s2);
+                        r := strsdbu.create(t2^.next, t1^.prev, s1 + s2);
                         free_str(t1);
                         free_str(t2);
                 end;
@@ -271,7 +241,7 @@ begin
         lnum := 0;
         if not ((r = nil) or (p = nil)) then begin
                 s := '';
-                strsb.get(r, src);
+                strsdbu.get(r, src);
                 while p[0] <> #0 do begin
                         c := p[0];
                         case c of
@@ -283,8 +253,8 @@ begin
                                 if len > 0 then s1 := copy(src, 1, pos - 1);
                                 if pos <= len then s2 := copy(src, pos, len - pos + 1);
                                 s1 := s1 + s;
-                                r := strsb.put(r, s1);
-                                r := strsb.create(Pstring(r)^.next, r, s2);
+                                r := strsdbu.put(r, s1);
+                                r := strsdbu.create(Pstring(r)^.next, r, s2);
                                 src := s2;
                                 pos := 1;
                                 s := '';
@@ -294,10 +264,10 @@ begin
                         inc(p);
                 end;
                 if length(s) <> 0 then begin
-                        strsb.get(r, s1);
+                        strsdbu.get(r, s1);
                         System.insert(s, s1, pos);
                         inc(pos, length(s));
-                        r := strsb.put(r, s1);
+                        r := strsdbu.put(r, s1);
                 end;
         end;
         append := r;
@@ -306,45 +276,27 @@ end;
 function split(r : pointer; pos : integer) : pointer;
 var s1, s2 : string;
 begin
-        strsb.get(r, s1);
+        strsdbu.get(r, s1);
         s2 := copy(s1, pos, length(s1) - pos + 1);
         s1 := rtrim(copy(s1, 1, pos - 1));
-        r := strsb.put(r, s1);
-        strsb.create(PString(r)^.next, r, s2);
+        r := strsdbu.put(r, s1);
+        strsdbu.create(PString(r)^.next, r, s2);
         split := r;
 end;
 
-procedure onexit;far;
+procedure init_tempfile;
 begin
-        close(idx);
-        dbu_close(db);
-        exitProc := oldexitproc;
+        dbu_rewrite_temp(dbumemfile, STRSDBU_BLK_SIZE);
 end;
 
-procedure init(mType : MemoryType);
+procedure init_memfile;
 begin
-        oldexitproc := exitProc;
-        FillChar(idx, SizeOf(BFile), #0);
-        FillChar(db, SizeOf(DBUFile), #0);
-        case mType of
-        strs.MT_TEMP_WO_CACHE: BEGIN
-                SetUseTempFiles(TRUE);
-                SetDefaultCacheSize(0);
-                dbu_rewrite_temp(db, BLK_SIZE);
-                ReWriteTemp (idx);
-                END;
-        strs.MT_TEMP_WITH_CACHE: BEGIN
-                SetUseTempFiles(TRUE);
-                SetDefaultCacheSize(CACHE_PAGES_PER_FILE);
-                dbu_rewrite_temp(db, BLK_SIZE);
-                SetDefaultCacheSize(4);
-                ReWriteTemp(idx);
-                END;
-        strs.MT_BIGMEM: BEGIN
-                dbu_rewrite_memfile(db, BLK_SIZE);
-                ReWriteMemFile(idx);
-                END;
-        end;
+        dbu_rewrite_memfile(dbumemfile, STRSDBU_BLK_SIZE);
+end;
+
+procedure done;
+begin
+        dbu_close(dbumemfile);
 end;
 
 end.

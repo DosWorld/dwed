@@ -132,7 +132,7 @@ begin
         else if key = 'USR.DEF.F8' then ctx.config.udef_f8 := value
         else if key = 'USR.DEF.F9' then ctx.config.udef_f9 := value
         else if key = 'HL.ENABLE' then ctx.config.hl_enable := (ahtob(value) <> 0)
-        else if key = 'MEMORY.STRATEGY' then ctx.config.memory_strategy := ahtob(value)
+        else if key = 'MEMORY' then ctx.config.memory_strategy := ahtob(value)
         else begin writelnerr('Unknown parameter ' + key + '. Press Enter...'); system.readln; end;
 end;
 
@@ -254,7 +254,7 @@ var     ctx                : TEditorContext;
         pc                 : integer;
 begin
         if not dwedlnch.is_installed then begin
-                writelnerr('This is overlay. Run DWED.EXE.');
+                writelnerr('This is overlay. Run DWED.EXE');
                 halt(1);
         end;
         prevExitProc := exitProc;
@@ -296,6 +296,7 @@ begin
         end;
         if ctx.all = nil then new_file(ctx, 'NONAME.TXT');
         edit(ctx, welcome_msg);
+        strs.done;
         scr.pop;
         scr.show;
         scr.set_cursor(scr.cursor);

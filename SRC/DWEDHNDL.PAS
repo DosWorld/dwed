@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
 unit dwedhndl;
-
+{ TODO: Refactor it. Too big. }
 interface
 
 uses dwedtype, dwedhelp, event;
