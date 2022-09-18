@@ -43,7 +43,7 @@ function in_bound(x1, y1, x2, y2 : integer; x, y : integer):boolean;
 
 implementation
 
-uses scr, kbd, strutil, wincb;
+uses scr, kbd, str, wincb;
 
 procedure box(x, y, w, h :integer; clr:byte);
 begin
@@ -135,7 +135,7 @@ begin
                         end;
                 end;
                 if e.etype <> KEYBOARD then break;
-                if e.is_shift or e.is_ctrl or e.is_alt then break;
+                if e.ctrl_keys <> 0 then break;
                 case e.scancode of
                 SCAN_UP: begin
                         if selItem <> 0 then dec(selItem);
@@ -254,7 +254,7 @@ begin
                 wait_event(e);
                 if e.etype = KEYBOARD then begin
                         hi_key := e.scancode;
-                        if e.is_ctrl and (not e.is_shift) and (not e.is_alt) then begin
+                        if e.ctrl_keys = key_ctrl then begin
                                 case e.scancode of
                                 SCAN_C: if has_cb then begin
                                         copy_selected(str, selb, sele);
@@ -290,7 +290,7 @@ begin
                                 end;
                                 continue;
                         end;
-                        if e.is_ctrl or e.is_alt then continue;
+                        if (e.ctrl_keys and (key_ctrl or key_alt)) <> 0 then continue;
                         case e.scancode of
                         SCAN_BS: begin
                                 if (selb = 0) and (sele = 0) then begin
@@ -312,30 +312,30 @@ begin
                                 sele := 0;
                         end;
                         SCAN_HOME: begin
-                                if e.is_shift and (selb = 0) then selb := pos;
+                                if (e.ctrl_keys = key_shift) and (selb = 0) then selb := pos;
                                 pos := 1;
                                 ofs_x := 0;
-                                if e.is_shift then sele := pos;
-                                if not e.is_shift then begin selb := 0; sele := 0; end;
+                                if e.ctrl_keys = key_shift then sele := pos
+                                else begin selb := 0; sele := 0; end;
                         end;
                         SCAN_END: begin
-                                if e.is_shift and (selb = 0) then selb := pos;
+                                if (e.ctrl_keys = key_shift) and (selb = 0) then selb := pos;
                                 pos := length(str) + 1;
                                 ofs_x := 0;
-                                if e.is_shift then sele := pos;
-                                if not e.is_shift then begin selb := 0; sele := 0; end;
+                                if e.ctrl_keys = key_shift then sele := pos
+                                else begin selb := 0; sele := 0; end;
                         end;
                         SCAN_LEFT: begin
-                                if e.is_shift and (selb = 0) then selb := pos;
+                                if (e.ctrl_keys = key_shift) and (selb = 0) then selb := pos;
                                 if pos > 1 then dec(pos);
-                                if e.is_shift then sele := pos;
-                                if not e.is_shift then begin selb := 0; sele := 0; end;
+                                if e.ctrl_keys = key_shift then sele := pos
+                                else begin selb := 0; sele := 0; end;
                         end;
                         SCAN_RIGHT: begin
-                                if e.is_shift and (selb = 0) then selb := pos;
+                                if (e.ctrl_keys = key_shift) and (selb = 0) then selb := pos;
                                 if pos <= length(str) then inc(pos);
-                                if e.is_shift then sele := pos;
-                                if not e.is_shift then begin selb := 0; sele := 0; end;
+                                if e.ctrl_keys = key_shift then sele := pos
+                                else begin selb := 0; sele := 0; end;
                         end;
                         SCAN_ENTER: break;
                         SCAN_ESC: break;

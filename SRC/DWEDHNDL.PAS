@@ -25,13 +25,13 @@ unit dwedhndl;
 { TODO: Refactor it. Too big. }
 interface
 
-uses dwedtype, dwedhelp, event;
+uses dwedtype, event;
 
 function process_event(var ctx : TEditorContext; var e : TEvent) : integer;
 
 implementation
 
-uses scr, kbd, scrui, strs, strutil, dwedscru, dwedutil, dwedaddo, dwedhl, dwedlnch, system2, wincb, dwedtbl;
+uses dwedhelp, scr, kbd, scrui, strs, str, dwedscru, dwedutil, dwedaddo, dwedhl, dwedlnch, system2, wincb, dwedtbl;
 
 {$F+}const handlers : PEventHandler = nil;{$F+}
 
@@ -43,9 +43,7 @@ begin
         h^.proc := proc;
         h^.reset_selection := reset_selection;
         h^.event.scancode := scancode;
-        h^.event.is_ctrl := is_ctrl;
-        h^.event.is_alt := is_alt;
-        h^.event.is_shift := is_shift;
+        h^.event.ctrl_keys := ctrl_key_word(is_ctrl, is_shift, is_alt);
         handlers := h;
 end;
 
@@ -60,9 +58,7 @@ function hk_cb_cut(var ctx:TEditorContext; event:PEvent):integer;forward;
 function compare_event(var e1, e2 : TEvent) : boolean;
 begin
         compare_event := (e1.scancode = e2.scancode)
-                        and (e1.is_shift = e2.is_shift)
-                        and (e1.is_alt = e2.is_alt)
-                        and (e1.is_ctrl = e2.is_ctrl);
+                        and (e1.ctrl_keys = e2.ctrl_keys);
 end;
 {$F+}
 
@@ -144,7 +140,7 @@ begin
                         ctx.current^.editor.selection := false;
                         r := SCRU_FULL;
                 end else begin
-                        if event^.is_shift then begin
+                        if event^.ctrl_keys = key_shift then begin
                                 check_begin_selection(ctx);
                                 r := goto_mouse(ctx, event);
                                 r := SCRU_FULL;
@@ -429,7 +425,7 @@ begin
                                                 scr.cln(0, 0, config^.color.top);
                                                 scr.print(1, 0, config^.color.top, 'Save "' + sfname + '"');
                                                 scr.show;
-                                                strs.to_file(fname, rline, errCode, @file_progress);
+                                                strs.to_file(fname, rline, errCode, @save_file_progress);
                                                 r := SCRU_FULL;
                                                 if errCode <> 0 then begin
                                                         handle_error(ctx, errCode);
@@ -456,7 +452,7 @@ var    srcctx  : PFileContext;
 begin
         srcctx := ctx.current;
         commit(ctx);
-        if event^.is_shift then begin
+        if event^.ctrl_keys = key_shift then begin
                 ctx.current := ctx.all;
                 while (ctx.current <> nil) do begin
                         commit(ctx);
@@ -465,7 +461,7 @@ begin
                                         scr.cln(0, 0, config^.color.top);
                                         scr.print(1, 0, config^.color.top, 'Save "' + sfname + '"');
                                         scr.show;
-                                        strs.to_file(fname, rline, errCode, @file_progress);
+                                        strs.to_file(fname, rline, errCode, @save_file_progress);
                                         if errCode <> 0 then begin
                                                 handle_error(ctx, errCode);
                                         end else chg := false;
@@ -477,7 +473,7 @@ begin
                 scr.cln(0, 0, config^.color.top);
                 scr.print(1, 0, config^.color.top, 'Save "' + sfname + '"');
                 scr.show;
-                strs.to_file(fname, rline, errCode, @file_progress);
+                strs.to_file(fname, rline, errCode, @save_file_progress);
                 if errCode <> 0 then handle_error(ctx, errCode) else chg := false;
         end;
         ctx.current := srcctx;
@@ -508,7 +504,7 @@ begin
                 scr.cln(0, 0, ctx.current^.config^.color.top);
                 scr.print(1, 0, ctx.current^.config^.color.top, 'Save "' + newname + '"');
                 scr.show;
-                strs.to_file(newname, ctx.current^.rline, errCode, @file_progress);
+                strs.to_file(newname, ctx.current^.rline, errCode, @save_file_progress);
                 if errCode <> 0 then handle_error(ctx, errCode) else ctx.current^.chg := false;
                 if errCode = 0 then begin
                         ctx.current^.fname := newname;
@@ -758,9 +754,7 @@ begin
                 with event^ do begin
                         ascii := ' ';
                         scancode := SCAN_SPACE;
-                        is_shift := false;
-                        is_ctrl := false;
-                        is_alt := false;
+                        ctrl_keys := 0;
                 end;
                 for i := 1 to ctx.current^.config^.tab_size do hk_default(ctx, event);
                 ctx.current^.editor.chg := true;
@@ -829,8 +823,7 @@ begin
         changed := false;
         len := length(ctx.current^.editor.line);
 
-        if event^.is_ctrl then c:=#0;
-        if event^.is_alt then c:=#0;
+        if (event^.ctrl_keys and (key_ctrl or key_alt)) <> 0 then c:=#0;
 
         if (c >= ' ') then begin
                 r := SCRU_CLINE;
@@ -983,7 +976,7 @@ var     r              : integer;
         start_find     : boolean;
         searchCaseSens : boolean;
 begin
-        searchCaseSens := event^.is_shift;
+        searchCaseSens := event^.ctrl_keys = key_shift;
         if ctx.current^.editor.selection then begin
                 get_sel_coord(ctx, sb_x, sb_y, se_x, se_y);
                 clinenum := strs.get_num(ctx.current^.cline);
@@ -1146,7 +1139,7 @@ begin
                                 scr.cln(0, 0, config^.color.top);
                                 scr.print(1, 0, config^.color.top, 'Save "' + sfname + '"');
                                 scr.show;
-                                strs.to_file(fname, rline, errCode, @file_progress);
+                                strs.to_file(fname, rline, errCode, @save_file_progress);
                                 if errCode <> 0 then begin
                                         handle_error(ctx, errCode);
                                         canclose := false;
@@ -1202,7 +1195,7 @@ begin
                 end;
         end;
         if start_load then begin
-                load_file(ctx, fname, errCode, @file_progress);
+                load_file(ctx, fname, errCode, @load_file_progress);
                 if errCode <> 0 then handle_error(ctx, errCode);
                 r := SCRU_FULL;
         end;

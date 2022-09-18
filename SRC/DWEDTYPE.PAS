@@ -70,7 +70,7 @@ TConfig = record
         udef_f5         : string;
         udef_f8         : string;
         udef_f9         : string;
-        memory_strategy : byte;
+        memory          : string;
 end;
 
 TLineEditorContext = record

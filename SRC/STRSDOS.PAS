@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
 {$A-}
-unit strsd;
+unit strsdos;
 
 { Conventional memory string storage }
 
@@ -55,7 +55,7 @@ function split(r : pointer; pos : integer) : pointer;
 
 implementation
 
-uses strutil;
+uses str;
 
 type
 
@@ -114,7 +114,7 @@ begin
                 old := r;
                 r := PString(create(PString(r)^.next, PString(r)^.prev, body));
                 PString(r)^.num := old^.num;
-                strsd.free_str(old);
+                strsdos.free_str(old);
         end;
         put := r;
 end;
@@ -175,7 +175,7 @@ var o : pointer;
 begin
         while r <> nil do begin
                 o := PString(r)^.next;
-                strsd.free_str(r);
+                strsdos.free_str(r);
                 r := o;
         end;
 end;
@@ -241,10 +241,10 @@ begin
         if PString(r)^.next <> nil then begin
                 t1 := r;
                 t2 := t1^.next;
-                strsd.get(t1, s1);
-                strsd.get(t2, s2);
+                strsdos.get(t1, s1);
+                strsdos.get(t2, s2);
                 if length(s1) + length(s2) <= 255 then begin
-                        r := strsd.create(t2^.next, t1^.prev, s1 + s2);
+                        r := strsdos.create(t2^.next, t1^.prev, s1 + s2);
                         free_str(t1);
                         free_str(t2);
                 end;
@@ -260,7 +260,7 @@ begin
         lnum := 0;
         if not ((r = nil) or (p = nil)) then begin
                 s := '';
-                strsd.get(r, src);
+                strsdos.get(r, src);
                 while p[0] <> #0 do begin
                         c := p[0];
                         case c of
@@ -272,8 +272,8 @@ begin
                                 if len > 0 then s1 := copy(src, 1, pos - 1);
                                 if pos <= len then s2 := copy(src, pos, len - pos + 1);
                                 s1 := s1 + s;
-                                r := strsd.put(r, s1);
-                                r := strsd.create(Pstring(r)^.next, r, s2);
+                                r := strsdos.put(r, s1);
+                                r := strsdos.create(Pstring(r)^.next, r, s2);
                                 src := s2;
                                 pos := 1;
                                 s := '';
@@ -283,10 +283,10 @@ begin
                         inc(p);
                 end;
                 if length(s) <> 0 then begin
-                        strsd.get(r, s1);
+                        strsdos.get(r, s1);
                         System.insert(s, s1, pos);
                         inc(pos, length(s));
-                        r := strsd.put(r, s1);
+                        r := strsdos.put(r, s1);
                 end;
         end;
         append := r;
@@ -295,11 +295,11 @@ end;
 function split(r : pointer; pos : integer) : pointer;
 var s1, s2 : string;
 begin
-        strsd.get(r, s1);
+        strsdos.get(r, s1);
         s2 := copy(s1, pos, length(s1) - pos + 1);
         s1 := rtrim(copy(s1, 1, pos - 1));
-        r := strsd.put(r, s1);
-        strsd.create(PString(r)^.next, r, s2);
+        r := strsdos.put(r, s1);
+        strsdos.create(PString(r)^.next, r, s2);
         split := r;
 end;
 

@@ -33,7 +33,7 @@ procedure dwed_help(var topic_id:integer;
 
 implementation
 
-uses scr, scrui, kbd, strutil, help, event;
+uses scr, scrui, kbd, str, help, event;
 
 procedure helpbin;external;
 {$L dwedhelp.obj}

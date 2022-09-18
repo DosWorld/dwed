@@ -21,10 +21,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
+{$DEFINE DEBUG1}
+{$IFDEF DEBUG}
+{$M 16000, 128000, 256000}
+{$ENDIF}
+{$IFNDEF DEBUG}
 {$M 16000, 128000, 655360}
-uses dwedmain, strutil, system2;
+{$ENDIF}
+uses dwedmain, str, system2;
 
 begin
-        system2.setDefaultCacheSize(0);
         dwed_main(getpathname(paramstr(0)));
 end.

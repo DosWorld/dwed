@@ -69,7 +69,8 @@ function mk_short_name(fname : string) : string;
 procedure new_file(var ctx : TEditorContext; fname : string);
 function load_file(var ctx : TEditorContext; fname : string; var errCode : integer; percent_proc : pointer) : integer;
 
-procedure file_progress(value, total : longint);
+procedure load_file_progress(value, total : longint);
+procedure save_file_progress(value, total : longint);
 
 procedure handle_error(var ctx : TEditorContext; errCode:integer);
 
@@ -80,9 +81,10 @@ function get_err_msg(errCode:integer) : string;
 
 implementation
 
-uses kbd, scr, scrui, strs, strutil, dwedhl, dwedlnch, event, system2, wincb;
+uses kbd, scr, scrui, strs, str, dwedhl, dwedlnch, event, system2, wincb;
 
-{ wcb - 390 }
+const
+SPINNER : string[8] = '|/-\|/-\';
 
 procedure commit(var ctx : TEditorContext);
 begin
@@ -770,7 +772,7 @@ begin
                         end;
                         if need_add then begin
                                 getmem(c, sizeof(fast_jmp_list));
-                                str(lnum, t);
+                                t := ltoa(lnum);
                                 while length(t) < 6 do t := ' ' + t;
                                 c^.line := lnum;
 {                                c^.text := t + ':' + line;}
@@ -854,17 +856,45 @@ begin
         fast_jmp := r;
 end;
 
+function get_spinner(value : longint) : char;
+begin
+        get_spinner := SPINNER[(value mod length(SPINNER)) + 1];
+end;
+
 {$F+}
-procedure file_progress(value, total : longint);
-var percent, w : integer;
+procedure load_file_progress(value, total : longint);
+var     percent, w : integer;
+        msg        : string;
+        scry       : integer;
 begin
         percent := (value * 100) div total;
         if percent < 0 then percent := 0;
         if percent > 100 then percent := 100;
-        scr.hprint(0, scr.getheight - 1, $30, #$B2, scr.getwidth);
-        if percent = 0 then w := 0 else w := ((scr.getwidth - 5) * percent) div 100;
-        scr.hprint(5, scr.getheight - 1, $07, #$DB,  w);
-        scr.print(0, scr.getheight - 1, $07, lpad(itoa(percent),3) + '% ');
+        scry := (scr.getheight div 2) - 1;
+        box(1, scry, scr.getwidth - 2, 3, $70);
+        scr.hprint(2, scry + 1, $70, #$B0, scr.getwidth - 4);
+        if percent = 0 then w := 0 else w := ((scr.getwidth - 4) * percent) div 100;
+        scr.hprint(2, scry + 1, $70, #$DB,  w);
+        msg := '[ ' + get_spinner(percent) + ' Load ' + lpad(itoa(percent), 3) + '% ]';
+        scr.print(3, scry, $70, msg);
+        scr.show;
+end;
+
+procedure save_file_progress(value, total : longint);
+var     percent, w : integer;
+        msg        : string;
+        scry       : integer;
+begin
+        percent := (value * 100) div total;
+        if percent < 0 then percent := 0;
+        if percent > 100 then percent := 100;
+        scry := (scr.getheight div 2) - 1;
+        box(1, scry, scr.getwidth - 2, 3, $70);
+        scr.hprint(2, scry + 1, $70, #$B0, scr.getwidth - 4);
+        if percent = 0 then w := 0 else w := ((scr.getwidth - 4) * percent) div 100;
+        scr.hprint(2, scry + 1, $70, #$DB,  w);
+        msg := '[ ' + get_spinner(percent) + ' Save ' + lpad(itoa(percent), 3) + '% ]';
+        scr.print(3, scry, $70, msg);
         scr.show;
 end;
 

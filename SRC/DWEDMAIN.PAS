@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
+{$DEFINE DEBUG1}
 unit dwedmain;
 
 interface
@@ -29,7 +30,7 @@ procedure dwed_main(exe_path : string);
 
 implementation
 
-uses dos, scr, kbd, strs, strutil, dwedtype, dwedhndl, dwedutil, dwedhl, dwedscru, dwedlnch, event, system2, wincb, ansi;
+uses dos,scr,kbd,strs,str,strutil,dwedtype,dwedhndl,dwedutil,dwedhl, dwedscru,dwedlnch,event,system2,wincb,ansi;
 
 procedure edit(var ctx : TEditorContext; welcome_msg : boolean);
 var     scru, prev_scru, i : integer;
@@ -95,7 +96,7 @@ begin
                 config.udef_f5 := '';
                 config.udef_f8 := '';
                 config.udef_f9 := '';
-                config.memory_strategy := 1;
+                config.memory := '';
                 getmem(clipboard, CB_SIZE);
                 clipboard[0] := #0;
                 has_wincb := WCB_Detect;
@@ -104,7 +105,12 @@ begin
                 help_topic_id := 0;
                 temp := '';
         end;
+{$IFDEF DEBUG}
+        ctx.temp := 'TEMP.CFG';
+{$ENDIF}
+{$IFNDEF DEBUG}
         ctx.temp := get_temp_name;
+{$ENDIF}
         path := '';
         if length(path) = 0 then path := getenv('TEMP');
         if length(path) = 0 then path := getenv('TMP');
@@ -132,7 +138,7 @@ begin
         else if key = 'USR.DEF.F8' then ctx.config.udef_f8 := value
         else if key = 'USR.DEF.F9' then ctx.config.udef_f9 := value
         else if key = 'HL.ENABLE' then ctx.config.hl_enable := (ahtob(value) <> 0)
-        else if key = 'MEMORY' then ctx.config.memory_strategy := ahtob(value)
+        else if key = 'MEMORY' then ctx.config.memory := value
         else begin writelnerr('Unknown parameter ' + key + '. Press Enter...'); system.readln; end;
 end;
 
@@ -212,7 +218,7 @@ begin
                 cline_num := atol(ss, 1);
                 inc(p);
                 fname := copy(s, p, length(s) - p + 1);
-                load_file(ctx, fname, errCode, @file_progress);
+                load_file(ctx, fname, errCode, @load_file_progress);
                 if errCode <> 0 then handle_error(ctx, errCode) else begin
                         ctx.current^.editor.x := x;
                         ctx.current^.scrx := scrx;
@@ -253,10 +259,12 @@ var     ctx                : TEditorContext;
         welcome_msg        : boolean;
         pc                 : integer;
 begin
+{$IFNDEF DEBUG}
         if not dwedlnch.is_installed then begin
                 writelnerr('This is overlay. Run DWED.EXE');
                 halt(1);
         end;
+{$ENDIF}
         prevExitProc := exitProc;
         exitProc := @err_handler;
         pc := paramcount;
@@ -271,13 +279,13 @@ begin
                         process_param(ctx, key, value);
                 end;
         end;
-        case ctx.config.memory_strategy of
-        0: strs.init(strs.MT_DOS);
-        1: strs.init(strs.MT_TEMP_WO_CACHE);
-        2: strs.init(strs.MT_TEMP_WITH_CACHE);
-        3: strs.init(strs.MT_BIGMEM);
+
+        upstr(ctx.config.memory);
+        if ctx.config.memory = 'SWAP' then strs.init(strs.MT_TEMP)
+        else if ctx.config.memory = 'XMS' then strs.init(strs.MT_EXTENDED)
+        else if ctx.config.memory = 'EMS' then strs.init(strs.MT_EXTENDED)
         else strs.init(strs.MT_DOS);
-        end;
+
         scr.push;
         scr.cls(7);
         if FileExists(ctx.temp) then begin
@@ -289,7 +297,7 @@ begin
                 for i := 1 to pc do begin
                         param := paramstr(i);
                         if not has_switch(param) then begin
-                                load_file(ctx, param, errCode, @file_progress);
+                                load_file(ctx, param, errCode, @load_file_progress);
                                 if errCode <> 0 then handle_error(ctx, errCode);
                         end;
                 end;

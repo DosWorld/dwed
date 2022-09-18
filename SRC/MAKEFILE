@@ -7,7 +7,7 @@ dwclip.exe: dwclip.pas
 	tpc -M -$D- -$G- -$R- -$S- -$I- -$E- dwclip.pas
 	upx -9 --8086 dwclip.exe
 
-dwedovl.exe: dwedovl.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsd.pas strsdbu.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas dwedlnch.pas mouse.pas event.pas dwedtbl.pas
+dwedovl.exe: dwedovl.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsdos.pas strsdbu.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedmain.pas dwedaddo.pas dwedlnch.pas mouse.pas event.pas dwedtbl.pas
         tpc -M -$D- -$L- -$G- -$R- -$S- -$I- -$E- -$Q- -$B- dwedovl.pas
 
 dwed.hlp: dwed.txt hlpc.exe

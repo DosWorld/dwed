@@ -24,6 +24,10 @@ SOFTWARE.
 unit event;
 
 interface
+CONST
+key_ctrl = 1;
+key_shift = 2;
+key_alt = 4;
 
 Type
 EventType = (NONE,
@@ -38,9 +42,7 @@ TEvent = record
         etype          : EventType;
         scancode       : byte;
         ascii          : char;
-        is_ctrl        : boolean;
-        is_shift       : boolean;
-        is_alt         : boolean;
+        ctrl_keys      : word;
         mouse_left     : boolean;
         mouse_right    : boolean;
         mouse_x        : integer;
@@ -48,7 +50,8 @@ TEvent = record
 end;
 
 procedure wait_event(var e : TEvent);
-function has_event:boolean;
+function has_event : boolean;
+function ctrl_key_word(is_ctrl, is_shift, is_alt : boolean) : word;
 
 implementation
 
@@ -69,9 +72,7 @@ begin
         e.scancode := 0;
         e.ascii := #0;
         e.etype := NONE;
-        e.is_ctrl := false;
-        e.is_alt := false;
-        e.is_shift := false;
+        e.ctrl_keys := 0;
         if mouse.mavail then begin
                 state := mouse.mbuttons;
                 e.mouse_x := mouse.mgetx;
@@ -121,10 +122,18 @@ begin
         end;
         if e.etype <> MOUSE_MOVE  then begin
                 flags := kbd.getflags;
-                e.is_ctrl := kbd.is_ctrl(flags);
-                e.is_alt := kbd.is_alt(flags);
-                e.is_shift := kbd.is_shift(flags);
+                e.ctrl_keys := ctrl_key_word(kbd.is_ctrl(flags), kbd.is_shift(flags), kbd.is_alt(flags));
         end;
+end;
+
+function ctrl_key_word(is_ctrl, is_shift, is_alt : boolean) : word;
+var     r : word;
+begin
+        r := 0;
+        if is_ctrl then r := r or key_ctrl;
+        if is_shift then r := r or key_shift;
+        if is_alt then r := r or key_alt;
+        ctrl_key_word := r;
 end;
 
 end.

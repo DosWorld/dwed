@@ -185,6 +185,8 @@ it is mean ~7~ - foreground color and ~0~ - background.
 ///2ALL_OPTIONS
         All configuration options.
 
+~hl.enable~ = 1
+~memory~ = dos~|~swap~|~xms~|~ems
 ~tab_size~ = 8
 ~color.top~ = 70
 ~color.top_hl~ = 74
@@ -201,7 +203,6 @@ it is mean ~7~ - foreground color and ~0~ - background.
 ~usr.def.f5~ = make clean
 ~usr.def.f8~ = make all
 ~usr.def.f9~ = make run
-~hl.enable~ = 1
 ///1LICENSE
         The MIT License (MIT)
         Copyright (c) 2020 DosWorld

@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$B-}
+{$B-,D-,L-}
 unit dwedhl;
 
 interface
@@ -38,7 +38,7 @@ procedure change_hl(var st : SourceType; color, color_sel : byte);
 
 implementation
 
-uses scr, scrui, kbd, strutil, event;
+uses scr, scrui, kbd, str, event;
 
 type
 

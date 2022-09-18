@@ -26,7 +26,7 @@ unit dwedaddo;
 
 interface
 
-uses scr, scrui, kbd, strs, strutil, dwedtype, event;
+uses dwedtype;
 
 procedure addons_window(var ctx : TEditorContext);
 procedure ascii_table(var ctx : TEditorContext);
@@ -34,7 +34,7 @@ procedure calculator(var ctx : TEditorContext);
 
 implementation
 
-uses system2;
+uses system2, strutil, str, kbd, scr, scrui, strs, event;
 
 type
 RadixType = (RADIX2, RADIX10, RADIX16);
@@ -136,7 +136,7 @@ begin
                 SCAN_LEFT: ascii_tbl_sel := (ascii_tbl_sel and $F0) or ((ascii_tbl_sel - 1) and $0F);
                 SCAN_RIGHT: ascii_tbl_sel := (ascii_tbl_sel and $F0) or ((ascii_tbl_sel + 1) and $0F);
                 SCAN_ENTER: begin
-                        if e.is_shift then begin
+                        if e.ctrl_keys = key_shift then begin
                                 insert_str(ctx, '' + hexb(ascii_tbl_sel));
                                 break;
                         end else begin
@@ -213,7 +213,7 @@ begin
                 case e.scancode of
                 SCAN_ESC: begin insertStr := ''; break; end;
                 SCAN_ENTER: begin
-                        if not e.is_shift then begin
+                        if e.ctrl_keys <> key_shift then begin
                                 case calc_op of
                                 '+': calc_op1 := calc_op2 + calc_op1;
                                 '-': calc_op1 := calc_op2 - calc_op1;
