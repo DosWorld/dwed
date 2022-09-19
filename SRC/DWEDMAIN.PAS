@@ -30,7 +30,7 @@ procedure dwed_main(exe_path : string);
 
 implementation
 
-uses system2,dos,scr,input,strs,str,strutil,dwedtype,dwedhndl,dwedutil,dwedhl,dwedscru,dwedlnch,event,wincb,ansi;
+uses system2,dos,scr,kminput,strs,str,strutil,dwedtype,dwedhndl,dwedutil,dwedhl,dwedscru,dwedlnch,event,wincb,ansi;
 
 procedure edit(var ctx : TEditorContext; welcome_msg : boolean);
 var     scru, prev_scru, i : integer;
@@ -50,13 +50,13 @@ begin
                         end;
                         scru := SCRU_NONE;
                 end;
-                if not haskey then begin
+                if not kbd_haskey then begin
                         wait_event(event);
                         scru := process_event(ctx, event);
                 end else begin
                         i := 0;
                         prev_scru := 0;
-                        while (i < 8) and haskey do begin
+                        while (i < 8) and kbd_haskey do begin
                                 wait_event(event);
                                 scru := process_event(ctx, event);
                                 if prev_scru < scru then prev_scru := scru;

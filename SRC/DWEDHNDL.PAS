@@ -31,7 +31,7 @@ function process_event(var ctx : TEditorContext; var e : TEvent) : integer;
 
 implementation
 
-uses dwedhelp, scr, input, scrui, strs, str, dwedscru, dwedutil, dwedaddo, dwedhl, dwedlnch, system2, wincb, dwedtbl;
+uses dwedhelp, scr, kminput, scrui, strs, str, dwedscru, dwedutil, dwedaddo, dwedhl, dwedlnch, system2, wincb, dwedtbl;
 
 {$F+}const handlers : PEventHandler = nil;{$F+}
 
@@ -518,8 +518,8 @@ function hk_dos_screen(var ctx:TEditorContext; event:PEvent):integer;
 begin
         scr.pop;
         scr.show;
-        input.reset;
-        getkey;
+        kbd_reset;
+        kbd_getkey;
         scr.push;
         hk_dos_screen := SCRU_FULL;
 end;
@@ -655,7 +655,7 @@ begin
                 chg := true;
         end;
         load_ed(ctx);
-        input.reset;
+        kbd_reset;
         hk_cb_paste := SCRU_FULL;
 end;
 
@@ -884,8 +884,8 @@ begin
         scr.push;
         scrui.msg_box(ctx.current^.config^.color.top, 'Search / Replace', 'Substring not found.', '[ OK ]');
         scr.show;
-        input.reset;
-        getkey;
+        kbd_reset;
+        kbd_getkey;
         scr.pop;
 end;
 
@@ -952,8 +952,8 @@ begin
                                 ltoa(count) +
                                 ' string(s).', '[ OK ]');
                         scr.show;
-                        input.reset;
-                        getkey;
+                        kbd_reset;
+                        kbd_getkey;
                         scr.pop;
                 end;
                 r := SCRU_FULL;
@@ -1029,7 +1029,7 @@ begin
                         config.color.help_menu_sel,
                         config.color.help,
                         config.color.help_hl);
-        input.reset;
+        kbd_reset;
         hk_help := SCRU_FULL;
 end;
 

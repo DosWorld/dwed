@@ -32,7 +32,7 @@ procedure update(var ctx : TEditorContext; scru : integer);
 
 implementation
 
-uses scr, input, str, strutil, strs, dwedhndl, dwedutil, dwedhl;
+uses scr, kminput, str, strutil, strs, dwedhndl, dwedutil, dwedhl;
 
 function line_full_in_sel(num : longint; y1 : longint; y2 : longint) : boolean;
 begin

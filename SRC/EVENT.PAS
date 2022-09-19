@@ -55,11 +55,11 @@ function ctrl_key_word(is_ctrl, is_shift, is_alt : boolean) : word;
 
 implementation
 
-uses input;
+uses kminput;
 
 function has_event:boolean;
 begin
-        has_event := haskey;
+        has_event := kbd_haskey;
 end;
 
 procedure wait_event(var e : TEvent);
@@ -73,12 +73,12 @@ begin
         e.ascii := #0;
         e.etype := NONE;
         e.ctrl_keys := 0;
-        if mavail then begin
-                state := mbuttons;
-                e.mouse_x := mgetx;
-                mx := mgetx;
-                my := mgety;
-                e.mouse_y := mgety;
+        if mouse_avail then begin
+                state := mouse_buttons;
+                e.mouse_x := mouse_getx;
+                mx := mouse_getx;
+                my := mouse_gety;
+                e.mouse_y := mouse_gety;
         end else begin
                 e.mouse_x := 0;
                 e.mouse_y := 0;
@@ -86,15 +86,15 @@ begin
                 e.mouse_right := false;
         end;
         while e.etype = NONE do begin
-                if haskey then begin
-                        key := getkey;
+                if kbd_haskey then begin
+                        key := kbd_getkey;
                         e.etype := KEYBOARD;
                         e.scancode := hi(key);
                         e.ascii := chr(lo(key));
-                end else if mavail then begin
-                        newstate := mbuttons;
-                        e.mouse_x := mgetx;
-                        e.mouse_y := mgety;
+                end else if mouse_avail then begin
+                        newstate := mouse_buttons;
+                        e.mouse_x := mouse_getx;
+                        e.mouse_y := mouse_gety;
                         e.mouse_left := (newstate and MOUSE_B1) <> 0;
                         e.mouse_right := (newstate and MOUSE_B2) <> 0;
                         if state <> newstate then begin
@@ -121,7 +121,7 @@ begin
                 end;
         end;
         if e.etype <> MOUSE_MOVE  then begin
-                flags := getflags;
+                flags := kbd_getflags;
                 e.ctrl_keys := ctrl_key_word(is_ctrl(flags), is_shift(flags), is_alt(flags));
         end;
 end;

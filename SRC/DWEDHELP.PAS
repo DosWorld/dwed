@@ -33,7 +33,7 @@ procedure dwed_help(var topic_id:integer;
 
 implementation
 
-uses scr, scrui, input, str, help, event;
+uses scr, scrui, kminput, str, help, event;
 
 procedure helpbin;external;
 {$L dwedhelp.obj}
@@ -116,7 +116,7 @@ begin
                 SCAN_SPACE: topic_id := selItem;
                 end;
         end;
-        input.reset;
+        kbd_reset;
 end;
 
 procedure init;
