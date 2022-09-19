@@ -1,0 +1,313 @@
+/*
+ MIT License
+
+Copyright (c) 2022 Viacheslav Komenda
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+/*
+   New launcher for DWED (2022)
+
+   Don't touch this options, if don't known "why" and "what is it".
+*/
+?argc FALSE
+?parsecommandline FALSE
+?codesize
+?stack 32
+?pragma option TEXE
+?startuptomain
+?pragma option X
+?pragma option OC
+?pragma option DE
+?pragma option OST
+?pragma option STM
+?use8086
+
+?define PARENT_PSP    0x16
+?define ENV_IN_PSP    0x2C
+?define ENV_COMSPEC   "COMSPEC"
+?define UPTIME_LOW    0x46c
+?define OVL_NAME      "DWEDOVL.EXE";
+
+char *rndchars = "QWERTYUIOPASDFGHJKLZXCVBNM1234567890";
+char cur_drive;
+char cur_dir[256];
+char dwed[256];
+char comspec[256];
+word seed;
+
+struct {
+        char sign[5];
+        char ini_name[13];
+        char cmd[256];
+} dwed_info;
+
+void PUTS(SI) {
+        WHILE(TRUE) {
+                $LODSB;
+                IF(AL == 0) BREAK;
+                $INT 0x29;
+        }
+        AL = 0x0D; $INT 0x29;
+        AL = 0x0A; $INT 0x29;
+}
+
+inline char GETCURDRIVE() {
+        AH = 0x19;
+        $INT  0x21
+}
+
+inline void SETCURDRIVE(DL) {
+        AH = 0x0E;
+        $INT  0x21
+}
+
+inline void GETDIR(DL, SI) {
+        AX = 0x7147;
+        $STC;
+        $PUSH DX, SI;
+        $INT 0x21;
+        $POP SI, DX;
+        IF(CARRYFLAG) {
+                AH = 0x47;
+                $INT 0x21;
+        }
+}
+
+inline void CHDIR(DX) {
+        AX = 0x713B;
+        $PUSH DX;
+        $STC;
+        $INT  0x21;
+        $POP DX;
+        IF(CARRYFLAG) {
+                AH = 0x3b;
+                $INT  0x21;
+        }
+}
+
+//  return ES:DI = env string 
+inline void ENVSTR(AX) {
+        ES = DSWORD[ENV_IN_PSP];
+        DI = 0;
+        WHILE (ESBYTE[DI] != 0) {
+                SI = AX;
+                CX = 128;
+                $REPZ
+                $CMPSB
+                SI--;
+                DI--;
+                BH = DSBYTE[SI];
+                BL = ESBYTE[DI];
+                IF(BX == '=') RETURN;
+                WHILE(ESBYTE[DI] != 0) DI++;
+                DI++;
+        }
+}
+
+// DX = fname
+// BX = args
+// CX = env
+word SPAWN(DX, BX, CX) {
+        $PUSH CS
+        AX = 0x6C;
+        $PUSH AX
+        $PUSH CS
+        AX = 0x5C;
+        $PUSH AX
+        $PUSH DS
+        $PUSH BX;
+        $PUSH CX;
+        ES = SS;
+        BX = SP;
+        AX = 0x4B00;
+        $INT 0x21
+        IF(NOTCARRYFLAG) {
+                AX = 0;
+        }
+        SP += 14;
+        $PUSH CS, CS;
+        $POP DS, ES;
+}
+/*  RETURNS:  If successful:
+                  AX = 0
+              If unsuccessful:
+                  AX = error code */
+
+inline char GETEXITCODE() {
+        AH = 0x4d;
+        $INT 0x21;
+}
+
+char RANDOM_CHR() {
+        $PUSH CX;
+
+        DX = AX = seed;
+        CL = 7;
+        AX = AX << CL;
+        AX ^= DX;
+        CL = 9;
+        AX = AX >> CL;
+        AX ^= DX;
+        CL = 8;
+        AX = AX << CL;
+        AX ^= DX;
+        seed = AX;
+        DX = 0;
+        BX = 38;
+        $DIV BX;
+
+        DH = 0;
+        $POP CX;
+        return DSBYTE[DX + rndchars];
+}
+
+inline char CHECK_INSTALL(BX) {
+        AL = FALSE;
+        $PUSH CS;
+        WHILE(BX != 0) {
+                DS = BX;
+                CX = BX;
+                BX = DSWORD[5];
+                BX++;
+                IF(DSWORD[BX] == 'WD')
+                        IF(DSWORD[BX+2] == 'DE') {
+                                AL = TRUE;
+                                BREAK;
+                        }
+                BX = DSWORD[PARENT_PSP];
+                IF (BX == CX) {
+                        BX = 0;
+                }
+        }
+        $POP DS;
+}
+
+inline void INIT() {
+        // save current state of FS: drive and dir
+        cur_drive = @GETCURDRIVE();
+        @GETDIR(cur_drive, #cur_dir);
+
+        // Init random session id
+        $PUSH CS;
+        DS = 0;
+        AX = DSWORD[UPTIME_LOW];
+        $POP DS;
+        seed = AX;
+        // fill signature
+        BX = #dwed_info.sign;
+        DSBYTE[BX] = 4;
+        BX++;
+        DSWORD[BX] = 'WD';
+        DSWORD[BX+2] = 'DE';
+        // fill session id
+        DI = #dwed_info.ini_name;
+        AL = 12;
+        $STOSB;
+        CX = 8;
+        WHILE(CX != 0) {
+                RANDOM_CHR();
+                $STOSB;
+                CX--;
+        }
+        AL = '.';
+        $STOSB;
+        // ext
+        CX = 3;
+        WHILE(CX != 0) {
+                RANDOM_CHR();
+                $STOSB;
+                CX--;
+        }
+
+        // Eval path to DWEDOVL.EXE
+        DS = DSWORD[ENV_IN_PSP];
+        SI = 0;
+        DI = #dwed;
+        AL = 1;
+        WHILE(AX != 0) {
+                AH = AL;
+                $LODSB;
+        }
+        SI += 2;
+        WHILE(TRUE) {
+                $LODSB;
+                IF(AL == 0) BREAK;
+                $STOSB;
+        }
+        $PUSH CS;
+        $POP DS;
+        WHILE(DI != #dwed) {
+                AL = DSWORD[DI];
+                IF(AL == ':') BREAK;
+                IF(AL == '\\') BREAK;
+                DI--;
+        }
+        DI++;
+        SI = OVL_NAME;
+        WHILE(TRUE) {
+                $LODSB;
+                $STOSB;
+                IF(AL == 0) BREAK;
+        }
+
+        // Save COMSPEC env-var
+        ENVSTR(ENV_COMSPEC);
+        SI = DI;
+        DI = #comspec;
+        $PUSH ES;
+        $POP DS;
+        $PUSH CS;
+        $POP ES;
+        WHILE(TRUE) {
+                $LODSB;
+                $STOSB;
+                IF(AL == 0) BREAK;
+        }
+        $PUSH CS;
+        $POP DS;
+        // CP/M BDOS API call - not need :)
+        DSWORD[5] = #dwed_info;
+}
+
+int main() {
+        @INIT();
+        IF(@CHECK_INSTALL(DSWORD[PARENT_PSP])) {
+                PUTS("Cycle!");
+                AL = 1;
+        } ELSE {
+                WHILE(TRUE) {
+                        SPAWN(#dwed, 0x80, DSWORD[ENV_IN_PSP]);
+                        IF(AX != 0) { AL = 1; BREAK; }
+                        @GETEXITCODE();
+                        IF(AL != 254) BREAK;
+                        // show command line
+                        PUTS(#dwed_info.cmd + 5);
+                        SPAWN(#comspec, #dwed_info.cmd, DSWORD[ENV_IN_PSP]);
+                        // restore FS state
+                        @SETCURDRIVE(cur_drive);
+                        @CHDIR(#cur_dir);
+                        // wait key
+                        AX = 0;
+                        $INT 0x16;
+                }
+        }
+        AH = 0x4c; $INT 0x21;
+}
