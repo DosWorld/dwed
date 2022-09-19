@@ -34,7 +34,7 @@ procedure calculator(var ctx : TEditorContext);
 
 implementation
 
-uses system2, strutil, str, kbd, scr, scrui, strs, event;
+uses system2, strutil, str, input, scr, scrui, strs, event;
 
 type
 RadixType = (RADIX2, RADIX10, RADIX16);

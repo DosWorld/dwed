@@ -43,7 +43,7 @@ function in_bound(x1, y1, x2, y2 : integer; x, y : integer):boolean;
 
 implementation
 
-uses scr, kbd, str, wincb;
+uses scr, input, str, wincb;
 
 procedure box(x, y, w, h :integer; clr:byte);
 begin
@@ -115,7 +115,7 @@ begin
                         if i >= (scr_ofs + h) then break;
                 end;
                 scr.show;
-                kbd.reset;
+                input.reset;
                 while true do begin
                         wait_event(e);
                         if e.etype = KEYBOARD then break;
@@ -250,7 +250,7 @@ begin
                                 , selse);
                 end;
                 scr.show;
-                kbd.reset;
+                input.reset;
                 wait_event(e);
                 if e.etype = KEYBOARD then begin
                         hi_key := e.scancode;
@@ -377,8 +377,8 @@ begin
         scr.cursor_off;
         r  := MAYBE;
         while r = MAYBE do begin
-                kbd.reset;
-                case hi(kbd.getkey) of
+                input.reset;
+                case hi(getkey) of
                 SCAN_ESC: r := NO;
                 SCAN_N: r := NO;
                 SCAN_ENTER: r := YES;
@@ -395,8 +395,8 @@ begin
         scr.cursor_off;
         r  := MAYBE;
         while r = MAYBE do begin
-                kbd.reset;
-                case hi(kbd.getkey) of
+                input.reset;
+                case hi(getkey) of
                 SCAN_ESC: r := CANCEL;
                 SCAN_N: r := NO;
                 SCAN_ENTER: r := YES;
@@ -414,8 +414,8 @@ begin
         scr.cursor_off;
         r  := MAYBE;
         while r = MAYBE do begin
-                kbd.reset;
-                case hi(kbd.getkey) of
+                input.reset;
+                case hi(getkey) of
                 SCAN_ESC: r := NO;
                 SCAN_N: r := NO;
                 SCAN_ENTER: r := YES;

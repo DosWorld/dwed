@@ -34,7 +34,7 @@ function tbl_append_row(var ctx:TEditorContext; event:PEvent) : integer;
 
 implementation
 
-uses kbd, scr, scrui, strs, strutil, dwedhl, dwedlnch, dwedutil;
+uses input, scr, scrui, strs, strutil, dwedhl, dwedlnch, dwedutil;
 
 const
 tbl_column_chars : string = '³º';

@@ -30,7 +30,7 @@ procedure dwed_main(exe_path : string);
 
 implementation
 
-uses dos,scr,kbd,strs,str,strutil,dwedtype,dwedhndl,dwedutil,dwedhl, dwedscru,dwedlnch,event,system2,wincb,ansi;
+uses system2,dos,scr,input,strs,str,strutil,dwedtype,dwedhndl,dwedutil,dwedhl,dwedscru,dwedlnch,event,wincb,ansi;
 
 procedure edit(var ctx : TEditorContext; welcome_msg : boolean);
 var     scru, prev_scru, i : integer;
@@ -172,7 +172,7 @@ var     f          : bfile;
 begin
         if not FileExists(fname) then exit;
         assign(f, fname);
-        reset(f);
+        system2.reset(f);
         if not isopen(f) then exit;
         while not eof(f) do begin
                 readln(f, str);
@@ -192,7 +192,7 @@ var   f : bfile;
       fname   : string;
 begin
         assign(f, ctx.temp);
-        reset(f);
+        system2.reset(f);
         if not isopen(f) then exit;
         while not eof(f) do begin
                 readln(f, s);

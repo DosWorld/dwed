@@ -24,9 +24,12 @@ SOFTWARE.
 {$A-}
 unit strsdos;
 
-{ Conventional memory string storage }
+{ Conventional memory string-storage }
 
 interface
+
+procedure init;
+procedure done;
 
 function new : pointer;
 
@@ -301,6 +304,14 @@ begin
         r := strsdos.put(r, s1);
         strsdos.create(PString(r)^.next, r, s2);
         split := r;
+end;
+
+procedure init;
+begin
+end;
+
+procedure done;
+begin
 end;
 
 end.

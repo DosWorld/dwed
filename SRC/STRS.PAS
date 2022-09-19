@@ -82,19 +82,17 @@ begin
 { FIXME: libsystem2 have a bug with cache, need fix and enable }
         SetDefaultCacheSize(0);
 
-        CASE mType OF
-        MT_TEMP: BEGIN
-                strsdbu.init_tempfile;
-        END;
-        MT_EXTENDED: BEGIN
-                strsdbu.init_memfile;
-        END;
-        END;
+        case mType of
+        MT_TEMP:     strsdbu.init_tempfile;
+        MT_EXTENDED: strsdbu.init_memfile;
+        ELSE strsdos.done;
+        end;
 end;
 
 procedure done;
 begin
-        if memType <> MT_DOS then strsdbu.done;
+        if memType = MT_DOS then strsdos.done
+        else strsdbu.done;
 end;
 
 function put(r : EditorStr; var body : string) : EditorStr;

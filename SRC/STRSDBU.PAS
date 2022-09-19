@@ -24,7 +24,7 @@ SOFTWARE.
 {$A-}
 unit strsdbu;
 
-{ DBU string storage }
+{ External memory string-storage }
 
 interface
 

@@ -66,7 +66,7 @@ procedure scroll_down(stx, sty, w, h, lines : integer);
 
 implementation
 
-uses mouse;
+uses input;
 
 const vseg : word = 0;
 
@@ -455,5 +455,5 @@ begin
         line_size := scr.getwidth shl 1;
         getmem(screen, screen_size);
         move(mem[vseg:0], screen[0], screen_size);
-        mouse.mshow;
+        mshow;
 end.

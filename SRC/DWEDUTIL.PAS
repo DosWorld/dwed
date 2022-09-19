@@ -81,7 +81,7 @@ function get_err_msg(errCode:integer) : string;
 
 implementation
 
-uses kbd, scr, scrui, strs, str, dwedhl, dwedlnch, event, system2, wincb;
+uses input, scr, scrui, strs, str, dwedhl, dwedlnch, event, system2, wincb;
 
 const
 SPINNER : string[8] = '|/-\|/-\';
@@ -705,9 +705,9 @@ begin
         scr.push;
         scrui.msg_box(ctx.current^.config^.color.top_hl, 'Error', errMsg, '[ OK ]');
         scr.show;
-        kbd.reset;
+        input.reset;
         while true do begin
-                case hi(kbd.getkey) of
+                case hi(getkey) of
                 SCAN_ESC: break;
                 SCAN_ENTER: break;
                 end;

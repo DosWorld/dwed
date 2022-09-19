@@ -38,7 +38,7 @@ procedure change_hl(var st : SourceType; color, color_sel : byte);
 
 implementation
 
-uses scr, scrui, kbd, str, event;
+uses scr, scrui, input, str, event;
 
 type
 
