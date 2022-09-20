@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
 {$A-}
-unit strsdbu;
+unit strsext;
 
 { External memory string-storage }
 
@@ -62,13 +62,12 @@ implementation
 uses system2, str, dbu;
 
 type
-
 TString = record
-        next       : longint;
-        prev       : longint;
-        len        : word;
-        num        : longint;
-        dbu_recno  : longint;
+        next   : longint;
+        prev   : longint;
+        len    : word;
+        num    : longint;
+        recno  : longint;
 end;
 
 const   MEM_BLK_SIZE = 32;
@@ -85,7 +84,7 @@ begin
         rec.prev := prev;
         rec.num := 0;
         rec.len := length(body) + 1;
-        rec.dbu_recno := dbu_add(dbu_mem, body, rec.len);
+        rec.recno := dbu_add(dbu_mem, body, rec.len);
         r := dbu_add(dbu_idx, rec, IDX_BLK_SIZE);
         if prev <> 0 then begin
                 dbu_get(dbu_idx, prev, rec, IDX_BLK_SIZE);
@@ -105,7 +104,7 @@ var     rec : TString;
 begin
         if r = 0 then exit;
         dbu_get(dbu_idx, r, rec, IDX_BLK_SIZE);
-        dbu_free(dbu_mem, rec.dbu_recno);
+        dbu_free(dbu_mem, rec.recno);
         dbu_free(dbu_idx, r);
 end;
 
@@ -115,7 +114,7 @@ begin
         dbu_get(dbu_idx, r, rec, IDX_BLK_SIZE);
         rec.len := length(body) + 1;
         dbu_put(dbu_idx, r, rec, IDX_BLK_SIZE);
-        dbu_put(dbu_mem, rec.dbu_recno, body, rec.len);
+        dbu_put(dbu_mem, rec.recno, body, rec.len);
         put := r;
 end;
 
@@ -129,7 +128,7 @@ var     rec : TString;
 begin
         if r <> 0 then begin
                 dbu_get(dbu_idx, r, rec, IDX_BLK_SIZE);
-                dbu_get(dbu_mem, rec.dbu_recno, dest, rec.len);
+                dbu_get(dbu_mem, rec.recno, dest, rec.len);
         end else dest := '';
 end;
 
@@ -199,7 +198,7 @@ begin
         while r <> 0 do begin
                 dbu_get(dbu_idx, r, rec, IDX_BLK_SIZE);
                 dbu_free(dbu_idx, r);
-                dbu_free(dbu_mem, rec.dbu_recno);
+                dbu_free(dbu_mem, rec.recno);
                 r := rec.next;
         end;
 end;
@@ -227,47 +226,45 @@ begin
 end;
 
 function delete(r : longint; num_from, num_to : longint) : longint;
-var     t      : longint;
-        n      : longint;
-        lstart : longint;
-        lend   : longint;
-        rec    : TString;
+var     rno, lrno   : longint;
+        line, lline : longint;
+        rec         : TString;
 begin
-        t := r;
-        n := 1;
-        lstart := 0;
-        lend := 0;
-        while t <> 0 do begin
-                dbu_get(dbu_idx, t, rec, IDX_BLK_SIZE);
-                if rec.num = num_from then break;
-                if rec.prev = 0 then r := t;
-                rec.num := n; inc(n);
-                lstart := t;
-                t := rec.next;
+        rno := r;
+        line := 1;
+        lrno := 0;
+        while (rno <> 0) and (line < num_from) do begin
+                lrno := rno;
+                dbu_get(dbu_idx, rno, rec, IDX_BLK_SIZE);
+                rno := rec.next;
+                inc(line);
         end;
-        while (t <> 0) and (rec.num <= num_to) do begin
-                dbu_free(dbu_mem, rec.dbu_recno);
-                dbu_free(dbu_idx, t);
-                t := rec.next;
-                dbu_get(dbu_idx, t, rec, IDX_BLK_SIZE);
-                lend := t;
-                if rec.prev = 0 then r := t;
+        lline := line;
+        while (rno <> 0) and (line <= num_to) do begin
+                dbu_get(dbu_idx, rno, rec, IDX_BLK_SIZE);
+                dbu_free(dbu_mem, rec.recno);
+                dbu_free(dbu_idx, rno);
+                rno := rec.next;
+                inc(line);
         end;
-        while (t <> 0) do begin
-                dbu_get(dbu_idx, t, rec, IDX_BLK_SIZE);
-                rec.num := n; inc(n);
-                dbu_put(dbu_idx, t, rec, IDX_BLK_SIZE);
-                t := rec.next;
+        if lrno = 0 then r := rno;
+        if lrno <> 0 then begin
+                dbu_get(dbu_idx, lrno, rec, IDX_BLK_SIZE);
+                rec.next := rno;
+                dbu_put(dbu_idx, lrno, rec, IDX_BLK_SIZE);
         end;
-        if lstart <> 0 then begin
-                dbu_get(dbu_idx, lstart, rec, IDX_BLK_SIZE);
-                rec.next := lend;
-                dbu_put(dbu_idx, lstart, rec, IDX_BLK_SIZE);
+        if rno <> 0 then begin
+                dbu_get(dbu_idx, rno, rec, IDX_BLK_SIZE);
+                rec.prev := lrno;
+                dbu_put(dbu_idx, rno, rec, IDX_BLK_SIZE);
         end;
-        if lend <> 0 then begin
-                dbu_get(dbu_idx, lend, rec, IDX_BLK_SIZE);
-                rec.prev := lstart;
-                dbu_put(dbu_idx, lend, rec, IDX_BLK_SIZE);
+        line := lline;
+        while rno <> 0 do begin
+                dbu_get(dbu_idx, rno, rec, IDX_BLK_SIZE);
+                rec.num := line;
+                dbu_put(dbu_idx, rno, rec, IDX_BLK_SIZE);
+                inc(line);
+                rno := rec.next;
         end;
         delete := r;
 end;
@@ -275,19 +272,27 @@ end;
 function merge(r : longint) : longint;
 var     s1, s2 : string;
         t1, t2 : TString;
+        r1, r2 : longint;
 begin
-        dbu_get(dbu_idx, r, t1, IDX_BLK_SIZE);
-        if t1.next <> 0 then begin
-                dbu_get(dbu_idx, t1.next, t2, IDX_BLK_SIZE);
-                dbu_get(dbu_mem, t1.dbu_recno, s1, t1.len);
-                dbu_get(dbu_mem, t2.dbu_recno, s2, t2.len);
+        r1 := r;
+        dbu_get(dbu_idx, r1, t1, IDX_BLK_SIZE);
+        r2 := t1.next;
+        if r2 <> 0 then begin
+                dbu_get(dbu_idx, r2, t2, IDX_BLK_SIZE);
+                dbu_get(dbu_mem, t1.recno, s1, t1.len);
+                dbu_get(dbu_mem, t2.recno, s2, t2.len);
                 if length(s1) + length(s2) <= 255 then begin
                         s1 := s1 + s2;
-                        t1.len := length(s1);
+                        t1.len := length(s1) + 1;
                         t1.next := t2.next;
-                        dbu_put(dbu_mem, t1.dbu_recno, s1, t1.len);
+                        dbu_put(dbu_idx, r1, t1, IDX_BLK_SIZE);
+                        dbu_put(dbu_mem, t1.recno, s1, t1.len);
+
+                        dbu_free(dbu_idx, r2);
+                        dbu_free(dbu_mem, t2.recno);
+
                         dbu_get(dbu_idx, t1.next, t2, IDX_BLK_SIZE);
-                        t2.prev := r;
+                        t2.prev := r1;
                         dbu_put(dbu_idx, t1.next, t2, IDX_BLK_SIZE);
                 end;
         end;
@@ -304,7 +309,7 @@ begin
         if not ((r = 0) or (p = nil)) then begin
                 s := '';
                 dbu_get(dbu_idx, r, rec, IDX_BLK_SIZE);
-                dbu_put(dbu_mem, rec.dbu_recno, src, rec.len);
+                dbu_get(dbu_mem, rec.recno, src, rec.len);
                 while p[0] <> #0 do begin
                         c := p[0];
                         case c of
@@ -318,8 +323,8 @@ begin
                                 s1 := s1 + s;
                                 rec.len := length(s1) + 1;
                                 dbu_put(dbu_idx, r, rec, IDX_BLK_SIZE);
-                                dbu_put(dbu_mem, rec.dbu_recno, s1, rec.len);
-                                r := strsdbu.create(rec.next, r, s2);
+                                dbu_put(dbu_mem, rec.recno, s1, rec.len);
+                                r := strsext.create(rec.next, r, s2);
                                 dbu_get(dbu_idx, r, rec, IDX_BLK_SIZE);
                                 src := s2;
                                 pos := 1;
@@ -330,10 +335,10 @@ begin
                         inc(p);
                 end;
                 if length(s) <> 0 then begin
-                        strsdbu.get(r, s1);
+                        strsext.get(r, s1);
                         System.insert(s, s1, pos);
                         inc(pos, length(s));
-                        r := strsdbu.put(r, s1);
+                        r := strsext.put(r, s1);
                 end;
         end;
         append := r;
@@ -344,13 +349,13 @@ var     s1, s2 : string;
         rec : TString;
 begin
         dbu_get(dbu_idx, r, rec, IDX_BLK_SIZE);
-        dbu_get(dbu_mem, rec.dbu_recno, s1, rec.len);
+        dbu_get(dbu_mem, rec.recno, s1, rec.len);
         s2 := copy(s1, pos, length(s1) - pos + 1);
         s1 := rtrim(copy(s1, 1, pos - 1));
         rec.len := length(s1) + 1;
         dbu_get(dbu_idx, r, rec, IDX_BLK_SIZE);
-        dbu_put(dbu_mem, rec.dbu_recno, s1, rec.len);
-        split := strsdbu.create(rec.next, r, s2);
+        dbu_put(dbu_mem, rec.recno, s1, rec.len);
+        split := strsext.create(rec.next, r, s2);
 end;
 
 procedure init_tempfile;
@@ -362,10 +367,8 @@ end;
 
 procedure init_memfile;
 begin
-        SetUseTempFiles(TRUE);
         dbu_rewrite_memfile(dbu_mem, MEM_BLK_SIZE);
         dbu_rewrite_memfile(dbu_idx, IDX_BLK_SIZE);
-{        dbu_rewrite_temp(dbu_idx, IDX_BLK_SIZE);}
 end;
 
 procedure done;

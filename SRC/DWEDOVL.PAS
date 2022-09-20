@@ -31,5 +31,8 @@ SOFTWARE.
 uses dwedmain, str, system2;
 
 begin
+{ FIXME: libsystem2 have a bug with cache, need fix it and enable }
+        SetDefaultCacheSize(0);
+
         dwed_main(getpathname(paramstr(0)));
 end.

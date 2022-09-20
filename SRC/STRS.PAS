@@ -70,7 +70,7 @@ function is_nil(r : EditorStr) : boolean;
 
 implementation
 
-uses strsdos, strsdbu, dwedtype, system2, str;
+uses strsdos, strsext, dwedtype, system2, str;
 
 const memType : MemoryType = MT_DOS;
 const BUF_SIZE = 4 * 1024;
@@ -79,12 +79,9 @@ procedure init(mType : MemoryType);
 begin
         memType := mType;
 
-{ FIXME: libsystem2 have a bug with cache, need fix and enable }
-        SetDefaultCacheSize(0);
-
         case mType of
-        MT_TEMP:     strsdbu.init_tempfile;
-        MT_EXTENDED: strsdbu.init_memfile;
+        MT_TEMP:     strsext.init_tempfile;
+        MT_EXTENDED: strsext.init_memfile;
         ELSE strsdos.done;
         end;
 end;
@@ -92,19 +89,19 @@ end;
 procedure done;
 begin
         if memType = MT_DOS then strsdos.done
-        else strsdbu.done;
+        else strsext.done;
 end;
 
 function put(r : EditorStr; var body : string) : EditorStr;
 begin
         if memType = MT_DOS then put := strsdos.put(r, body)
-        else put := EditorStr(strsdbu.put(longint(r), body));
+        else put := EditorStr(strsext.put(longint(r), body));
 end;
 
 function create(next, prev : EditorStr; var body : string) : EditorStr;
 begin
         if memType = MT_DOS then create := strsdos.create(next, prev, body)
-        else create := EditorStr(strsdbu.create(longint(next), longint(prev), body));
+        else create := EditorStr(strsext.create(longint(next), longint(prev), body));
 end;
 
 procedure remove_tabs(var s : string; var tabs : string);
@@ -224,67 +221,67 @@ end;
 function new : EditorStr;
 begin
         if memType = MT_DOS then new := strsdos.new
-        else new := EditorStr(strsdbu.new);
+        else new := EditorStr(strsext.new);
 end;
 
 procedure get(r : EditorStr; var dest : string);
 begin
         if memType = MT_DOS then strsdos.get(r, dest)
-        else strsdbu.get(longint(r), dest);
+        else strsext.get(longint(r), dest);
 end;
 
 function is_first(r : EditorStr) : boolean;
 begin
         if memType = MT_DOS then is_first := strsdos.is_first(r)
-        else is_first := strsdbu.is_first(longint(r));
+        else is_first := strsext.is_first(longint(r));
 end;
 
 function is_last(r : EditorStr) : boolean;
 begin
         if memType = MT_DOS then is_last := strsdos.is_last(r)
-        else is_last := strsdbu.is_last(longint(r));
+        else is_last := strsext.is_last(longint(r));
 end;
 
 function go_first(r : EditorStr) : EditorStr;
 begin
         if memType = MT_DOS then go_first := strsdos.go_first(r)
-        else go_first := EditorStr(strsdbu.go_first(longint(r)));
+        else go_first := EditorStr(strsext.go_first(longint(r)));
 end;
 
 function go_last(r : EditorStr) : EditorStr;
 begin
         if memType = MT_DOS then go_last := strsdos.go_last(r)
-        else go_last := EditorStr(strsdbu.go_last(longint(r)));
+        else go_last := EditorStr(strsext.go_last(longint(r)));
 end;
 
 function go_prev(r : EditorStr) : EditorStr;
 begin
         if memType = MT_DOS then go_prev := strsdos.go_prev(r)
-        else go_prev := EditorStr(strsdbu.go_prev(longint(r)));
+        else go_prev := EditorStr(strsext.go_prev(longint(r)));
 end;
 
 function go_next(r : EditorStr) : EditorStr;
 begin
         if memType = MT_DOS then go_next := strsdos.go_next(r)
-        else go_next := EditorStr(strsdbu.go_next(longint(r)));
+        else go_next := EditorStr(strsext.go_next(longint(r)));
 end;
 
 procedure free(r : EditorStr);
 begin
         if memType = MT_DOS then strsdos.free(r)
-        else strsdbu.free(longint(r));
+        else strsext.free(longint(r));
 end;
 
 function renum(r : EditorStr) : longint;
 begin
         if memType = MT_DOS then renum := strsdos.renum(r)
-        else renum := strsdbu.renum(longint(r));
+        else renum := strsext.renum(longint(r));
 end;
 
 function get_num(r : EditorStr) : longint;
 begin
         if memType = MT_DOS then get_num := strsdos.get_num(r)
-        else get_num := strsdbu.get_num(longint(r));
+        else get_num := strsext.get_num(longint(r));
 end;
 
 function find_num(r : EditorStr; num : longint) : EditorStr;
@@ -299,25 +296,25 @@ end;
 function delete(r : EditorStr; num_from, num_to : longint) : EditorStr;
 begin
         if memType = MT_DOS then delete := strsdos.delete(r, num_from, num_to)
-        else delete := EditorStr(strsdbu.delete(longint(r), num_from, num_to));
+        else delete := EditorStr(strsext.delete(longint(r), num_from, num_to));
 end;
 
 function merge(r : EditorStr) : EditorStr;
 begin
         if memType = MT_DOS then merge := strsdos.merge(r)
-        else merge := EditorStr(strsdbu.merge(longint(r)));
+        else merge := EditorStr(strsext.merge(longint(r)));
 end;
 
 function append(r : EditorStr; var pos : integer; p : pchar; var lnum:word) : EditorStr;
 begin
         if memType = MT_DOS then append := strsdos.append(r, pos, p, lnum)
-        else append := EditorStr(strsdbu.append(longint(r), pos, p, lnum));
+        else append := EditorStr(strsext.append(longint(r), pos, p, lnum));
 end;
 
 function split(r : EditorStr; pos : integer) : EditorStr;
 begin
         if memType = MT_DOS then split := strsdos.split(r, pos)
-        else split := EditorStr(strsdbu.split(longint(r), pos));
+        else split := EditorStr(strsext.split(longint(r), pos));
 end;
 
 function is_nil(r : EditorStr) : boolean;
