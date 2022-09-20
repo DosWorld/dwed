@@ -144,10 +144,30 @@ To configure actions, put into ~DWED.CFG~ lines like:
 ~usr.def.f5~ = %COMSPEC%
 ~usr.def.f8~ = make all
 ~usr.def.f9~ = make run
-///1EXT-MEM
-        Ex~t~ended~/~Ex~p~anded Memory.
+///1EXT-MEMORY
+        Ex~t~ended (XMS) ~/~ Ex~p~anded (EMS) memory.
 
-~DWED~ does not use Extended~/~Expanded Memory, now. ~TBD~
+~DWED~ have two memory model - conventional (OS) memory
+and "external string storage". External string storage is
+file on disk (into ~TMP~ or ~TEMP~ dir) or the same file but
+into EMS/XMS memory.
+
+Memory model could be configured via config setting:
+
+~memory~ = dos~|~swap~|~xms~|~ems~
+
+   Values:
+
+~dos~     - Use MS-DOS conventional memory. IRL up to 350K.
+~swap~    - Temporary files as string storage (with or
+          without EMS/XMS cache). In theory, up to 2G.
+          Require free space into ~TMP~ (or ~TEMP~) dir.
+~xms~|~ems~ - EMS/XMS string storage (synonym).
+          In theory, up to 2G/4G.
+
+At the same time, you can specify one option only.
+~xms~ and ~ems~ is synonym. By default, value - ~dos~.
+
 ///1ADDONS
 You can active Addons window with ~Alt~+~F10~ or ~F12~.
 ///2FASTKBD.COM
@@ -175,7 +195,7 @@ Every text-editor ~must have~ a buildin Tetris. ~TBD~
 
 ~DWED~ have config file ~DWED.CFG~. At first, try to
 load from current dir and then - from dir with ~DWED.EXE~.
-Format is text - ~key~=~value~ in each line.
+File format is text - ~key~=~value~ in each line.
 
 Colors is coded as hex. For example:
 
@@ -186,7 +206,7 @@ it is mean ~7~ - foreground color and ~0~ - background.
         All configuration options.
 
 ~hl.enable~ = 1
-~memory~ = dos~|~swap~|~xms~|~ems
+~memory~ = dos~|~swap~|~xms~|~ems   (see ~EXT-MEMORY~)
 ~tab_size~ = 8
 ~color.top~ = 70
 ~color.top_hl~ = 74
