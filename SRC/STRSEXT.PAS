@@ -29,7 +29,6 @@ unit strsext;
 interface
 
 procedure init_tempfile;
-procedure init_memfile;
 procedure done;
 
 function new : longint;
@@ -360,17 +359,9 @@ end;
 
 procedure init_tempfile;
 begin
-        SetUseTempFiles(TRUE);
         dbu_rewrite_temp(dbu_mem, MEM_BLK_SIZE);
         dbu_rewrite_temp(dbu_idx, IDX_BLK_SIZE);
 end;
-
-procedure init_memfile;
-begin
-        dbu_rewrite_memfile(dbu_mem, MEM_BLK_SIZE);
-        dbu_rewrite_memfile(dbu_idx, IDX_BLK_SIZE);
-end;
-
 procedure done;
 begin
         dbu_close(dbu_mem);

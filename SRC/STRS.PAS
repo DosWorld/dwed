@@ -30,7 +30,7 @@ interface
 
 type
 
-MemoryType = (MT_DOS, MT_TEMP, MT_EXTENDED);
+MemoryType = (MT_DOS, MT_TEMP);
 
 EditorStr = pointer;
 
@@ -81,7 +81,6 @@ begin
 
         case mType of
         MT_TEMP:     strsext.init_tempfile;
-        MT_EXTENDED: strsext.init_memfile;
         ELSE strsdos.done;
         end;
 end;

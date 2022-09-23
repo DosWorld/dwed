@@ -282,8 +282,6 @@ begin
 
         upstr(ctx.config.memory);
         if ctx.config.memory = 'SWAP' then strs.init(strs.MT_TEMP)
-        else if ctx.config.memory = 'XMS' then strs.init(strs.MT_EXTENDED)
-        else if ctx.config.memory = 'EMS' then strs.init(strs.MT_EXTENDED)
         else strs.init(strs.MT_DOS);
 
         scr.push;
