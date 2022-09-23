@@ -66,10 +66,10 @@ Published at Softpanorama in 1993 (SP53A), now here is my remake for dwed.
 
 Requires system2 library - https://github.com/DosWorld/libsystem2
 
-To build binaries, you need Borland Pascal 7.0 in path, SPHINX C-- by Michael Sheker and my small make. Then - type
+To build binaries, you need Turbo Pascal 6.0/7.0 in path, SPHINX C-- by Michael Sheker and my small make. Then - type
 
       make
 
 # License
 
-MIT License
+MIT License. See LICENSE file.
