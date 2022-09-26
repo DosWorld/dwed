@@ -288,16 +288,13 @@ begin
         if r2 <> 0 then begin
                 s1 := '';
                 s2 := '';
-                dbu_get(dbu_idx, r1, t1, IDX_BLK_SIZE);
                 dbu_get(dbu_idx, r2, t2, IDX_BLK_SIZE);
                 if t1.recno <> 0 then dbu_get(dbu_mem, t1.recno, s1, t1.len);
                 if t2.recno <> 0 then dbu_get(dbu_mem, t2.recno, s2, t2.len);
                 if length(s1) + length(s2) <= 255 then begin
                         s1 := s1 + s2;
                         strsext.put(r, s1);
-
                         dbu_get(dbu_idx, r1, t1, IDX_BLK_SIZE);
-                        dbu_get(dbu_idx, r2, t2, IDX_BLK_SIZE);
                         t1.next := t2.next;
                         dbu_put(dbu_idx, r1, t1, IDX_BLK_SIZE);
                         dbu_free(dbu_idx, r2);
@@ -321,7 +318,8 @@ begin
         if not ((r = 0) or (p = nil)) then begin
                 s := '';
                 dbu_get(dbu_idx, r, rec, IDX_BLK_SIZE);
-                dbu_get(dbu_mem, rec.recno, src, rec.len);
+                src := '';
+                if (rec.recno <> 0) and (rec.len <> 1) then dbu_get(dbu_mem, rec.recno, src, rec.len);
                 while p[0] <> #0 do begin
                         c := p[0];
                         case c of
@@ -334,8 +332,10 @@ begin
                                 if pos <= len then s2 := copy(src, pos, len - pos + 1);
                                 s1 := s1 + s;
                                 rec.len := length(s1) + 1;
-                                if rec.len <> 1 then dbu_put(dbu_mem, rec.recno, s1, rec.len)
-                                else begin
+                                if rec.len <> 1 then begin
+                                        if rec.recno <> 0 then dbu_put(dbu_mem, rec.recno, s1, rec.len)
+                                        else rec.recno := dbu_add(dbu_mem, s1, rec.len);
+                                end else begin
                                         dbu_free(dbu_mem, rec.recno);
                                         rec.recno := 0;
                                 end;
