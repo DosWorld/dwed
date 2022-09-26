@@ -113,10 +113,13 @@ var     rec : TString;
 begin
         dbu_get(dbu_idx, r, rec, IDX_BLK_SIZE);
         rec.len := length(body) + 1;
-        if rec.len <> 1 then dbu_put(dbu_mem, rec.recno, body, rec.len)
-        else begin
+        if rec.len = 1 then begin
                 dbu_free(dbu_mem, rec.recno);
                 rec.recno := 0;
+        end else if rec.recno = 0 then begin
+                rec.recno := dbu_add(dbu_mem, body, rec.len)
+        end else begin
+                dbu_put(dbu_mem, rec.recno, body, rec.len)
         end;
         dbu_put(dbu_idx, r, rec, IDX_BLK_SIZE);
         put := r;
@@ -245,9 +248,9 @@ begin
                 inc(line);
         end;
         lline := line;
-        while (rno <> 0) and (line <= num_to) do begin
+        while (rno <> 0) and (line < num_to) do begin
                 dbu_get(dbu_idx, rno, rec, IDX_BLK_SIZE);
-                if rec.recno <> 0 then dbu_free(dbu_mem, rec.recno);
+                dbu_free(dbu_mem, rec.recno);
                 dbu_free(dbu_idx, rno);
                 rno := rec.next;
                 inc(line);
@@ -283,18 +286,19 @@ begin
         dbu_get(dbu_idx, r1, t1, IDX_BLK_SIZE);
         r2 := t1.next;
         if r2 <> 0 then begin
+                s1 := '';
+                s2 := '';
+                dbu_get(dbu_idx, r1, t1, IDX_BLK_SIZE);
                 dbu_get(dbu_idx, r2, t2, IDX_BLK_SIZE);
-                dbu_get(dbu_mem, t1.recno, s1, t1.len);
-                dbu_get(dbu_mem, t2.recno, s2, t2.len);
+                if t1.recno <> 0 then dbu_get(dbu_mem, t1.recno, s1, t1.len);
+                if t2.recno <> 0 then dbu_get(dbu_mem, t2.recno, s2, t2.len);
                 if length(s1) + length(s2) <= 255 then begin
                         s1 := s1 + s2;
-                        t1.len := length(s1) + 1;
+                        strsext.put(r, s1);
+
+                        dbu_get(dbu_idx, r1, t1, IDX_BLK_SIZE);
+                        dbu_get(dbu_idx, r2, t2, IDX_BLK_SIZE);
                         t1.next := t2.next;
-                        if t1.len <> 1 then dbu_put(dbu_mem, t1.recno, s1, t1.len)
-                        else begin
-                                dbu_free(dbu_mem, t1.recno);
-                                t1.recno := 0;
-                        end;
                         dbu_put(dbu_idx, r1, t1, IDX_BLK_SIZE);
                         dbu_free(dbu_idx, r2);
                         dbu_free(dbu_mem, t2.recno);
