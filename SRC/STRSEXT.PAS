@@ -82,6 +82,7 @@ begin
         FillChar(rec, SizeOf(TString), #0);
         rec.next := next;
         rec.prev := prev;
+        rec.recno := 0;
         rec.num := 0;
         rec.len := length(body) + 1;
         if rec.len <> 1 then rec.recno := dbm_add(dbm_mem, body, rec.len);
@@ -362,16 +363,15 @@ function split(r : longint; pos : integer) : longint;
 var     s1, s2 : string;
         rec : TString;
 begin
+        s1 := '';
         dbb_get(dbb_idx, r, rec);
-        dbm_get(dbm_mem, rec.recno, s1, rec.len);
-        s2 := copy(s1, pos, length(s1) - pos + 1);
+        if rec.recno <> 0 then dbm_get(dbm_mem, rec.recno, s1, rec.len);
+        dbm_free(dbm_mem, rec.recno);
+        rec.recno := 0;
+        s2 := trim(copy(s1, pos, length(s1) - pos + 1));
         s1 := rtrim(copy(s1, 1, pos - 1));
         rec.len := length(s1) + 1;
-        if rec.len <> 1 then dbm_put(dbm_mem, rec.recno, s1, rec.len)
-        else begin
-                dbm_free(dbm_mem, rec.recno);
-                rec.recno := 0;
-        end;
+        if rec.len <> 1 then rec.recno := dbm_add(dbm_mem, s1, rec.len);
         dbb_put(dbb_idx, r, rec);
         strsext.create(rec.next, r, s2);
         split := r;

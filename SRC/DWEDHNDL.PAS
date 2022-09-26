@@ -511,7 +511,7 @@ begin
                         ctx.current^.sfname := mk_short_name(newname);
                 end;
         end;
-        hk_save_as := SCRU_CLINE;
+        hk_save_as := SCRU_FULL;
 end;
 
 function hk_dos_screen(var ctx:TEditorContext; event:PEvent):integer;

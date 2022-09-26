@@ -21,18 +21,53 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$M 30240, 128000, 128000}
-{$G-,F-,S-,R-,Q-}
-USES help, System2;
+{$A-}
+unit unredo;
 
-BEGIN
-        System.writeln('CP/M+ Help Compiler  (c) DosWorld 2020  MIT License');
-        System.writeln;
-        IF paramcount <> 2 THEN BEGIN
-                System.writeln('Usage:');
-                System.writeln(#9+'HLPC infile.txt outfile.dat');
-                halt(1);
-        END;
-        compile(paramstr(1), paramstr(2));
-        halt(0);
-END.
+interface
+
+const
+ALINE : char = 'a';
+RLINE : char = 'r';
+
+procedure init;
+procedure done;
+
+implementation
+
+uses system2, str, dbm, dbb;
+
+type
+TString = record
+        next   : longint;
+        prev   : longint;
+        utype  : char;
+        len    : word;
+        num    : longint;
+        recno  : longint;
+end;
+
+const   MEM_BLK_SIZE = 32;
+        IDX_BLK_SIZE = sizeof(TString);
+
+var     dbm_mem : DBMFile;
+        dbb_idx : DBBFile;
+
+
+procedure init;
+begin
+        dbm_rewrite_temp(dbm_mem, MEM_BLK_SIZE);
+        dbb_rewrite_temp(dbb_idx, IDX_BLK_SIZE);
+end;
+
+procedure done;
+begin
+        dbm_close(dbm_mem);
+        dbb_close(dbb_idx);
+end;
+
+begin
+        FillChar(dbm_mem, SizeOf(DBMFile), #0);
+        FillChar(dbb_idx, SizeOf(DBBFile), #0);
+end.
+

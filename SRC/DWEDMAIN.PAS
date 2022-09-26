@@ -30,7 +30,7 @@ procedure dwed_main(exe_path : string);
 
 implementation
 
-uses system2,dos,scr,kminput,strs,str,strutil,dwedtype,dwedhndl,dwedutil,dwedhl,dwedscru,dwedlnch,event,wincb,ansi;
+uses system2,dos,scr,kminput,strs,str,strutil,dwedtype,dwedhndl,dwedutil,dwedhl,dwedscru,dwedlnch,event,wincb,ansi,unredo;
 
 procedure edit(var ctx : TEditorContext; welcome_msg : boolean);
 var     scru, prev_scru, i : integer;
@@ -250,6 +250,8 @@ begin
                 errorAddr := nil;
         END;
         exitProc := prevExitProc;
+        strs.done;
+        unredo.done;
 end;
 
 procedure dwed_main(exe_path : string);
@@ -283,7 +285,7 @@ begin
         upstr(ctx.config.memory);
         if ctx.config.memory = 'SWAP' then strs.init(strs.MT_TEMP)
         else strs.init(strs.MT_DOS);
-
+        unredo.init;
         scr.push;
         scr.cls(7);
         if FileExists(ctx.temp) then begin
@@ -302,7 +304,6 @@ begin
         end;
         if ctx.all = nil then new_file(ctx, 'NONAME.TXT');
         edit(ctx, welcome_msg);
-        strs.done;
         scr.pop;
         scr.show;
         scr.set_cursor(scr.cursor);
