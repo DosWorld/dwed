@@ -79,11 +79,12 @@ function create(next, prev : longint; body : string) : longint;
 var     r   : longint;
         rec : TString;
 begin
+        FillChar(rec, SizeOf(TString), #0);
         rec.next := next;
         rec.prev := prev;
         rec.num := 0;
         rec.len := length(body) + 1;
-        rec.recno := dbu_add(dbu_mem, body, rec.len);
+        if rec.len <> 1 then rec.recno := dbu_add(dbu_mem, body, rec.len);
         r := dbu_add(dbu_idx, rec, IDX_BLK_SIZE);
         if prev <> 0 then begin
                 dbu_get(dbu_idx, prev, rec, IDX_BLK_SIZE);
@@ -112,8 +113,12 @@ var     rec : TString;
 begin
         dbu_get(dbu_idx, r, rec, IDX_BLK_SIZE);
         rec.len := length(body) + 1;
+        if rec.len <> 1 then dbu_put(dbu_mem, rec.recno, body, rec.len)
+        else begin
+                dbu_free(dbu_mem, rec.recno);
+                rec.recno := 0;
+        end;
         dbu_put(dbu_idx, r, rec, IDX_BLK_SIZE);
-        dbu_put(dbu_mem, rec.recno, body, rec.len);
         put := r;
 end;
 
@@ -125,10 +130,11 @@ end;
 procedure get(r : longint; var dest : string);
 var     rec : TString;
 begin
+        dest := '';
         if r <> 0 then begin
                 dbu_get(dbu_idx, r, rec, IDX_BLK_SIZE);
-                dbu_get(dbu_mem, rec.recno, dest, rec.len);
-        end else dest := '';
+                if rec.recno <> 0 then dbu_get(dbu_mem, rec.recno, dest, rec.len);
+        end;
 end;
 
 function is_first(r : longint) : boolean;
@@ -241,7 +247,7 @@ begin
         lline := line;
         while (rno <> 0) and (line <= num_to) do begin
                 dbu_get(dbu_idx, rno, rec, IDX_BLK_SIZE);
-                dbu_free(dbu_mem, rec.recno);
+                if rec.recno <> 0 then dbu_free(dbu_mem, rec.recno);
                 dbu_free(dbu_idx, rno);
                 rno := rec.next;
                 inc(line);
@@ -284,9 +290,12 @@ begin
                         s1 := s1 + s2;
                         t1.len := length(s1) + 1;
                         t1.next := t2.next;
+                        if t1.len <> 1 then dbu_put(dbu_mem, t1.recno, s1, t1.len)
+                        else begin
+                                dbu_free(dbu_mem, t1.recno);
+                                t1.recno := 0;
+                        end;
                         dbu_put(dbu_idx, r1, t1, IDX_BLK_SIZE);
-                        dbu_put(dbu_mem, t1.recno, s1, t1.len);
-
                         dbu_free(dbu_idx, r2);
                         dbu_free(dbu_mem, t2.recno);
 
@@ -321,8 +330,12 @@ begin
                                 if pos <= len then s2 := copy(src, pos, len - pos + 1);
                                 s1 := s1 + s;
                                 rec.len := length(s1) + 1;
+                                if rec.len <> 1 then dbu_put(dbu_mem, rec.recno, s1, rec.len)
+                                else begin
+                                        dbu_free(dbu_mem, rec.recno);
+                                        rec.recno := 0;
+                                end;
                                 dbu_put(dbu_idx, r, rec, IDX_BLK_SIZE);
-                                dbu_put(dbu_mem, rec.recno, s1, rec.len);
                                 r := strsext.create(rec.next, r, s2);
                                 dbu_get(dbu_idx, r, rec, IDX_BLK_SIZE);
                                 src := s2;
@@ -352,11 +365,16 @@ begin
         s2 := copy(s1, pos, length(s1) - pos + 1);
         s1 := rtrim(copy(s1, 1, pos - 1));
         rec.len := length(s1) + 1;
-        dbu_get(dbu_idx, r, rec, IDX_BLK_SIZE);
-        dbu_put(dbu_mem, rec.recno, s1, rec.len);
-        split := strsext.create(rec.next, r, s2);
+        if rec.len <> 1 then dbu_put(dbu_mem, rec.recno, s1, rec.len)
+        else begin
+                dbu_free(dbu_mem, rec.recno);
+                rec.recno := 0;
+        end;
+        dbu_put(dbu_idx, r, rec, IDX_BLK_SIZE);
+        strsext.create(rec.next, r, s2);
+        split := r;
 end;
-
+        
 procedure init_tempfile;
 begin
         dbu_rewrite_temp(dbu_mem, MEM_BLK_SIZE);

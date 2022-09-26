@@ -5,11 +5,11 @@ Text file editor and IDE for MS-DOS and 8086/88 CPU (IBM XT-grade PC) designed i
 Main features:
 
 * Support files with size over 64k
+* Dont require DPMI-server or 80286 CPU, but support huge swap-file (could be placed on ramdisk) - up to 2G
 * Support basic syntax highlight (C/C++/C--, Pascal, Basic, Assembler, Xml/Html, text files etc)
 * Support multiple file editing at the same time
 * Support internal clipboard (size up to 32k)
 * Support unix-like text files for open
-* Dont require DPMI-server or 80286 CPU, but support huge swap-file (could be placed on ramdisk) - up to 2G
 * Support Long File Names (LFN)
 * Support Windows Clipboard (you can use it with DosBox-X)
 * Support user's color scheme (via config-file)
