@@ -32,7 +32,6 @@ procedure init_tempfile;
 procedure done;
 
 function new : longint;
-
 procedure free(r : longint);
 
 function create(next, prev : longint; body : string) : longint;
@@ -56,9 +55,12 @@ function get_num(r : longint) : longint;
 function append(r : longint; var pos : integer; p : pchar; var lnum:word) : longint;
 function split(r : longint; pos : integer) : longint;
 
+function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : longint;
+procedure to_file(fname : string; r : longint; var errCode : integer; scrupdate : pointer);
+
 implementation
 
-uses system2, str, dbm, dbb;
+uses system2, str, dbm, dbb, dwedtype, strutil;
 
 type
 TString = record
@@ -382,10 +384,126 @@ begin
         dbm_rewrite_temp(dbm_mem, MEM_BLK_SIZE);
         dbb_rewrite_temp(dbb_idx, IDX_BLK_SIZE);
 end;
+
 procedure done;
 begin
         dbm_close(dbm_mem);
         dbb_close(dbb_idx);
+end;
+
+function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : longint;
+var     root       : longint;
+        f          : bfile;
+        s          : string;
+        total      : longint;
+        position   : longint;
+        percent    : integer;
+        ppercent   : integer;
+        scrup      : TPercentUpdateProc;
+        tabs       : string;
+        prec, crec : TString;
+        pno, cno   : longint;
+begin
+        scrup := TPercentUpdateProc(scrupdate);
+        fillchar(tabs[0], 256, #32);
+        tabs[0] := chr(tab_size);
+        fillchar(prec, sizeof(TString), #0);
+        pno := 0;
+        cno := 0;
+        ppercent := -1;
+        root := 0;
+        errCode := 0;
+        
+        if not FileExists(fname) then begin
+                errCode := 104;
+        end;
+        if errCode = 0 then begin
+                assign(f, fname);
+                reset(f);
+                if not IsOpen(f) then errCode := 104;
+        end;
+
+        position := 0;
+        if errCode = 0 then begin
+                total := filesize(f);
+                if total <> 0 then begin
+                        while not eof(f) do begin
+                                readln(f, s);
+                                remove_tabs(s, tabs);
+                                fillchar(crec, sizeof(TString), #0);
+                                crec.prev := pno;
+                                crec.len := length(s) + 1;
+                                if s[0] <> #0 then crec.recno := dbm_add(dbm_mem, s, crec.len);
+                                cno := dbb_add(dbb_idx, crec);
+                                if root = 0 then root := cno;
+                                if pno <> 0 then begin
+                                        prec.next := cno;
+                                        dbb_put(dbb_idx, pno, prec);
+                                end;
+                                if scrupdate <> nil then begin
+                                        position := filepos(f);
+                                        percent := (position * 100) div total;
+                                        if percent <> ppercent then begin
+                                                scrup(position, total);
+                                                ppercent := percent;
+                                        end;
+                                end;
+                                prec := crec;
+                                pno := cno;
+
+                        end;
+                end;
+                close(f);
+        end;
+        if root = 0 then root := strsext.new;
+        from_file := root;
+end;
+
+procedure to_file(fname : string; r : longint; var errCode : integer; scrupdate : pointer);
+var
+        f          : bfile;
+        s          : string;
+        total      : longint;
+        position   : longint;
+        percent    : integer;
+        ppercent   : integer;
+        scrup      : TPercentUpdateProc;
+        rec        : TString;
+        one_step   : word;
+        sone_step  : word;
+begin
+        assign(f, fname);
+        rewrite(f);
+        if not isopen(f) then errCode := 105 else errCode := 0;
+        if errCode <> 0 then exit;
+        scrup := TPercentUpdateProc(scrupdate);
+        total := strsext.renum(r);
+        position := 0;
+        ppercent := -1;
+        one_step := 1;
+        sone_step := total div 100;
+        if sone_step = 0 then sone_step := 1;
+        while r <> 0 do begin
+                dbb_get(dbb_idx, r, rec);
+                if rec.recno <> 0 then dbm_get(dbm_mem, rec.recno, s, rec.len)
+                else s[0] := #0;
+                writeln(f, s);
+                r := rec.next;
+                dec(one_step);
+                inc(position);
+                if one_step = 0 then begin
+                        if scrupdate <> nil then begin
+                                percent := (position * 100) div total;
+                                if percent <> ppercent then begin
+                                        scrup(position, total);
+                                        ppercent := percent;
+                                end;
+                        end;
+                        one_step := sone_step;
+                end;
+        end;
+        truncate(f);
+        close(f);
 end;
 
 begin

@@ -56,9 +56,12 @@ function get_num(r : pointer) : longint;
 function append(r : pointer; var pos : integer; p : pchar; var lnum:word) : pointer;
 function split(r : pointer; pos : integer) : pointer;
 
+function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : pointer;
+procedure to_file(fname : string; r : pointer; var errCode : integer; scrupdate : pointer);
+
 implementation
 
-uses str;
+uses system2, str, dwedtype, strutil;
 
 type
 
@@ -304,6 +307,93 @@ begin
         r := strsdos.put(r, s1);
         strsdos.create(PString(r)^.next, r, s2);
         split := r;
+end;
+
+function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : pointer;
+var     root, cur, last : Pointer;
+        f          : bfile;
+        s          : string;
+        i          : integer;
+        total      : longint;
+        position   : longint;
+        percent    : integer;
+        ppercent   : integer;
+        scrup      : TPercentUpdateProc;
+        tabs       : string;
+begin
+        scrup := TPercentUpdateProc(scrupdate);
+        fillchar(tabs[0], 256, #32);
+        tabs[0] := chr(tab_size);
+        ppercent := -1;
+        root := nil; last := nil;
+        errCode := 0;
+        if not FileExists(fname) then begin
+                errCode := 104;
+        end;
+        if errCode = 0 then begin
+                assign(f, fname);
+                reset(f);
+                if not IsOpen(f) then errCode := 104;
+        end;
+        position := 0;
+        if errCode = 0 then begin
+                total := filesize(f);
+                if total <> 0 then begin
+                        while not eof(f) do begin
+                                readln(f, s);
+                                remove_tabs(s, tabs);
+                                cur := strsdos.create(nil, last, s);
+                                if root = nil then root := cur;
+                                last := cur;
+                                if scrupdate <> nil then begin
+                                        position := filepos(f);
+                                        percent := (position * 100) div total;
+                                        if percent <> ppercent then begin
+                                                scrup(position, total);
+                                                ppercent := percent;
+                                        end;
+                                end;
+                        end;
+                end;
+                close(f);
+        end;
+        if root = nil then root := strsdos.new;
+        from_file := root;
+end;
+
+procedure to_file(fname : string; r : pointer; var errCode : integer; scrupdate : pointer);
+var
+        f       : bfile;
+        s       : string;
+        total      : longint;
+        position   : longint;
+        percent    : integer;
+        ppercent   : integer;
+        scrup      : TPercentUpdateProc;
+begin
+        assign(f, fname);
+        rewrite(f);
+        if not isopen(f) then errCode := 105 else errCode := 0;
+        if errCode <> 0 then exit;
+        scrup := TPercentUpdateProc(scrupdate);
+        total := renum(r);
+        position := 0;
+        ppercent := -1;
+        while r <> nil do begin
+                strsdos.get(r, s);
+                writeln(f, s);
+                r := strsdos.go_next(r);
+                if scrupdate <> nil then begin
+                        inc(position);
+                        percent := (position * 100) div total;
+                        if percent <> ppercent then begin
+                                scrup(position, total);
+                                ppercent := percent;
+                        end;
+                end;
+        end;
+        truncate(f);
+        close(f);
 end;
 
 procedure init;

@@ -38,7 +38,11 @@ function octb(b : byte):string;
 
 function unquote(str : string) : string;
 
+procedure remove_tabs(var s : string; var tabs : string);
+
 implementation
+
+uses str;
 
 function hexb(b : byte):string;
 const a : string[16] = '0123456789ABCDEF';
@@ -95,6 +99,25 @@ begin
                 end;
         end;
         unquote := str;
+end;
+
+procedure remove_tabs(var s : string; var tabs : string);
+var     i : integer;
+        r : string;
+begin
+        if poschr(s, #9) = -1 then exit;
+        i := 1;
+        r := '';
+        while (i <= ord(s[0])) and (ord(r[0]) < 255) do begin
+                if s[i] = #9 then begin
+                        r := r + tabs;
+                end else begin
+                        r[ord(r[0]) + 1] := s[i];
+                        inc(r[0]);
+                end;
+                inc(i);
+        end;
+        s := r;
 end;
 
 end.

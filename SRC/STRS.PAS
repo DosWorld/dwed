@@ -70,7 +70,7 @@ function is_nil(r : EditorStr) : boolean;
 
 implementation
 
-uses strsdos, strsext, dwedtype, system2, str;
+uses strsdos, strsext, dwedtype, system2, str, strutil;
 
 const memType : MemoryType = MT_DOS;
 const BUF_SIZE = 4 * 1024;
@@ -103,118 +103,31 @@ begin
         else create := EditorStr(strsext.create(longint(next), longint(prev), body));
 end;
 
-procedure remove_tabs(var s : string; var tabs : string);
-var     i : integer;
-        r : string;
-begin
-        i := 1;
-        r := '';
-        while (i <= ord(s[0])) and (ord(r[0]) < 255) do begin
-                if s[i] = #9 then begin
-                        r := r + tabs;
-                end else begin
-                        r[ord(r[0]) + 1] := s[i];
-                        inc(r[0]);
-                end;
-                inc(i);
-        end;
-        s := r;
-end;
-
 function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : EditorStr;
-var     root, cur, last : Pointer;
-        f          : bfile;
-        s          : string;
-        i          : integer;
-        total      : longint;
-        position   : longint;
-        percent    : integer;
-        ppercent   : integer;
-        scrup      : TPercentUpdateProc;
-        tabs       : string;
+var     root : EditorStr;
 begin
-        scrup := TPercentUpdateProc(scrupdate);
-        fillchar(tabs[0], 256, #32);
-        tabs[0] := chr(tab_size);
-        ppercent := -1;
-        root := nil; last := nil;
-        errCode := 0;
-        if not FileExists(fname) then begin
-                errCode := 104;
-        end;
-        if errCode = 0 then begin
-                assign(f, fname);
-                reset(f);
-                if not IsOpen(f) then errCode := 104;
-        end;
-        position := 0;
-        if errCode = 0 then begin
-                total := filesize(f);
-                if total <> 0 then begin
-                        while not eof(f) do begin
-                                readln(f, s);
-                                remove_tabs(s, tabs);
-                                cur := strs.create(nil, last, s);
-                                if root = nil then root := cur;
-                                last := cur;
-                                position := filepos(f);
-                                if scrupdate <> nil then begin
-                                        percent := (position * 100) div total;
-                                        if percent <> ppercent then begin
-                                                scrup(position, total);
-                                                ppercent := percent;
-                                        end;
-                                end;
-                        end;
-                end else begin
-                        root := strs.new;
-                end;
-                close(f);
-        end;
-        if root = nil then root := strs.new;
+        if memType = MT_DOS then
+                root := EditorStr(strsdos.from_file(fname, tab_size, errCode, scrupdate))
+        else
+                root := EditorStr(strsext.from_file(fname, tab_size, errCode, scrupdate));
         from_file := root;
 end;
 
 procedure to_file(fname : string; r : EditorStr; var errCode : integer; scrupdate : pointer);
-var
-        f       : bfile;
-        s       : string;
-        total      : longint;
-        position   : longint;
-        percent    : integer;
-        ppercent   : integer;
-        scrup      : TPercentUpdateProc;
-        fnamebak   : STRING;
+var     f        : bfile;
+        fnamebak : string;
 begin
-        if FileExists(fname) THEN BEGIN
+        if FileExists(fname) then begin
                 fnamebak := change_ext(fname, '.bak');
                 if FileExists(fnamebak) then FileDelete(fnamebak);
                 assign(f, fname);
                 rename(f, fnamebak);
-        END;
-        assign(f, fname);
-        rewrite(f);
-        if not isopen(f) then errCode := 105 else errCode := 0;
-        if errCode <> 0 then exit;
-        scrup := TPercentUpdateProc(scrupdate);
-        total := renum(r);
-        position := 0;
-        ppercent := -1;
-        while r <> nil do begin
-                strs.get(r, s);
-                writeln(f, s);
-                r := strs.go_next(r);
-                if scrupdate <> nil then begin
-                        inc(position);
-                        percent := (position * 100) div total;
-                        if percent <> ppercent then begin
-                                scrup(position, total);
-                                ppercent := percent;
-                        end;
-                end;
         end;
-        truncate(f);
-        close(f);
+
+        if memType = MT_DOS then
+                strsdos.to_file(fname, pointer(r), errCode, scrupdate)
+        else
+                strsext.to_file(fname, longint(r), errCode, scrupdate);
 end;
 
 function new : EditorStr;
