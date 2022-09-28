@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$Q-,R-}
 unit dwedaddo;
 
 interface
@@ -34,19 +33,18 @@ procedure calculator(var ctx : TEditorContext);
 
 implementation
 
-uses system2, strutil, str, kminput, scr, scrui, strs, event;
+uses system2, strutil, str, kminput, event, scr, scrui, strs;
 
 type
 RadixType = (RADIX2, RADIX10, RADIX16);
 
 const addons_menu : pchar =
 ' ASCII-Table        Ctrl+Alt+A ' + #$0A +
-' Calculator         Ctrl+Alt+C '
-;
+' Calculator         Ctrl+Alt+C ';
 
 procedure addons_window(var ctx : TEditorContext);
-var sitem : integer;
-    e     : TEvent;
+var     sitem : integer;
+        e     : TEvent;
 begin
         scr.push;
         sitem := 0;
@@ -84,7 +82,8 @@ begin
         inc(ctx.current^.editor.x, str_len);
 end;
 
-const ascii_tbl_sel : byte = 0;
+const
+ascii_tbl_sel : byte = 0;
 
 procedure ascii_table(var ctx : TEditorContext);
 var     x, y, i, j : integer;
@@ -172,13 +171,11 @@ procedure calculator(var ctx : TEditorContext);
 var     x, y, i    : integer;
         key        : word;
         ch         : char;
-        insertStr  : string;
         e          : TEvent;
 begin
         scr.set_cursor(scr.cursor);
         x := (scr.getwidth - 41) shr 1;
         y := (scr.getheight - 10) shr 1;
-        insertStr := '';
         scrui.box(x, y, 41, 10, $1b);
         for i := 1 to 8 do scr.hprint(x + 1, y + i, $1b, ' ', 39);
         scr.printhl(x + 2, y + 1, $1b, $1e, 'Dec~:');
@@ -211,7 +208,7 @@ begin
                         if e.etype = KEYBOARD then break;
                 end;
                 case e.scancode of
-                SCAN_ESC: begin insertStr := ''; break; end;
+                SCAN_ESC: break;
                 SCAN_ENTER: begin
                         if e.ctrl_keys <> key_shift then begin
                                 case calc_op of
@@ -265,9 +262,6 @@ begin
                         end;
                 end;
         end;
-        if length(insertStr) <> 0 then begin
-        end;
-
 end;
 
 end.

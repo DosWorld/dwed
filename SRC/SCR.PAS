@@ -278,13 +278,15 @@ asm
         push       ds
 
 
+        mov        ax, screen_size
+        shr        ax, 1
+        mov        cx, ax
         mov        ax, vseg
         mov        es, ax
-        mov        cx, screen_size
         lds        si, screen
         xor        di, di
         cld
-        repz       movsb
+        repz       movsw
 
         pop        ds
         pop        es
@@ -342,7 +344,7 @@ begin
         p^.prev := last_scr_buf;
         p^.x := getx;
         p^.y := gety;
-        move(screen[0], p^.buf, p^.size);
+        move(screen^, p^.buf, p^.size);
         last_scr_buf := p;
 end;
 
@@ -350,7 +352,7 @@ procedure pop;
 var p : PScr;
 begin
         if last_scr_buf = nil then exit;
-        move(last_scr_buf^.buf, screen[0], last_scr_buf^.size);
+        move(last_scr_buf^.buf, screen^, last_scr_buf^.size);
         p := last_scr_buf;
         last_scr_buf := last_scr_buf^.prev;
         scr.locate(p^.x, p^.y);
@@ -360,7 +362,7 @@ end;
 procedure pick;
 begin
         if last_scr_buf = nil then exit;
-        move(last_scr_buf^.buf, screen[0], last_scr_buf^.size);
+        move(last_scr_buf^.buf, screen^, last_scr_buf^.size);
         scr.locate(last_scr_buf^.x, last_scr_buf^.y);
 end;
 
@@ -454,6 +456,6 @@ begin
         screen_size := (scr.getwidth * scr.getheight) shl 1;
         line_size := scr.getwidth shl 1;
         getmem(screen, screen_size);
-        move(mem[vseg:0], screen[0], screen_size);
+        move(mem[vseg:0], screen^, screen_size);
         mouse_show;
 end.

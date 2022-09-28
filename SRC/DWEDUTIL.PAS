@@ -31,16 +31,16 @@ type
 pfast_jmp_list = ^fast_jmp_list;
 fast_jmp_list = record
         text : string[80];
-        line : longint;
+        line : dword;
         next : pfast_jmp_list;
 end;
 
 procedure get_sel_coord(
         var ctx : TEditorContext;
         var sb_x : integer;
-        var sb_y : longint;
+        var sb_y : dword;
         var se_x : integer;
-        var se_y : longint);
+        var se_y : dword);
 
 function norm_xy(var ctx : TEditorContext; r : integer) : integer;
 
@@ -69,8 +69,8 @@ function mk_short_name(fname : string) : string;
 procedure new_file(var ctx : TEditorContext; fname : string);
 function load_file(var ctx : TEditorContext; fname : string; var errCode : integer; percent_proc : pointer) : integer;
 
-procedure load_file_progress(value, total : longint);
-procedure save_file_progress(value, total : longint);
+procedure load_file_progress(value, total : dword);
+procedure save_file_progress(value, total : dword);
 
 procedure handle_error(var ctx : TEditorContext; errCode:integer);
 
@@ -81,7 +81,7 @@ function get_err_msg(errCode:integer) : string;
 
 implementation
 
-uses kminput, scr, scrui, strs, str, dwedhl, dwedlnch, event, system2, wincb;
+uses system2, wincb, kminput, event, scr, scrui, strs, str, dwedhl, dwedlnch;
 
 const
 SPINNER : string[8] = '|/-\|/-\';
@@ -376,11 +376,11 @@ end;
 procedure get_sel_coord(
         var ctx : TEditorContext;
         var sb_x : integer;
-        var sb_y : longint;
+        var sb_y : dword;
         var se_x : integer;
-        var se_y : longint);
+        var se_y : dword);
 var x : integer;
-        y        : longint;
+        y        : dword;
 begin
         commit(ctx);
         with ctx.current^ do begin
@@ -432,7 +432,7 @@ end;
 
 procedure copy_selected(var ctx : TEditorContext);
 var
-        sb_y, se_y, clinenum : longint;
+        sb_y, se_y, clinenum : dword;
         sb_x, se_x : integer;
         pos        : word;
         line       : EditorStr;
@@ -488,7 +488,7 @@ end;
 
 procedure delete_selected(var ctx : TEditorContext);
 var
-        sb_y, se_y        : longint;
+        sb_y, se_y        : dword;
         sb_x, se_x        : integer;
         bline, eline      : EditorStr;
         lineStr  : string;
@@ -720,7 +720,7 @@ var     r, l, c  : pfast_jmp_list;
         rline    : EditorStr;
         line     : string;
         uline    : string;
-        lnum     : longint;
+        lnum     : dword;
         i        : integer;
         t        : string;
         name     : string;
@@ -797,7 +797,7 @@ var     r         : integer;
         i, sitem  : integer;
         rline     : EditorStr;
         e         : TEvent;
-        clnum     : longint;
+        clnum     : dword;
 begin
         r := SCRU_NONE;
         scr.cursor_off;
@@ -856,13 +856,13 @@ begin
         fast_jmp := r;
 end;
 
-function get_spinner(value : longint) : char;
+function get_spinner(value : dword) : char;
 begin
         get_spinner := SPINNER[(value mod length(SPINNER)) + 1];
 end;
 
 {$F+}
-procedure load_file_progress(value, total : longint);
+procedure load_file_progress(value, total : dword);
 var     percent, w : integer;
         msg        : string;
         scry       : integer;
@@ -880,7 +880,7 @@ begin
         scr.show;
 end;
 
-procedure save_file_progress(value, total : longint);
+procedure save_file_progress(value, total : dword);
 var     percent, w : integer;
         msg        : string;
         scry       : integer;

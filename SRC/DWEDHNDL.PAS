@@ -33,10 +33,20 @@ implementation
 
 uses dwedhelp, scr, kminput, scrui, strs, str, dwedscru, dwedutil, dwedaddo, dwedhl, dwedlnch, system2, wincb, dwedtbl;
 
-{$F+}const handlers : PEventHandler = nil;{$F+}
+{$F+}
+const
+handlers : PEventHandler = nil;
 
+function hk_default(var ctx : TEditorContext; event : PEvent) : integer;forward;
+function handle_mouse(var ctx : TEditorContext; event : PEvent) : integer;forward;
+procedure check_begin_selection(var ctx:TEditorContext);forward;
+function hk_cb_paste(var ctx:TEditorContext; event:PEvent):integer;forward;
+function hk_cb_copy(var ctx:TEditorContext; event:PEvent):integer;forward;
+function hk_cb_cut(var ctx:TEditorContext; event:PEvent):integer;forward;
+
+{$F-}
 procedure reg_handler(scancode : byte; is_ctrl, is_shift, is_alt, reset_selection : boolean; proc : pointer);
-var h : PEventHandler;
+var     h : PEventHandler;
 begin
         getmem(h, sizeof(TEventHandler));
         h^.next := handlers;
@@ -47,45 +57,42 @@ begin
         handlers := h;
 end;
 
-function hk_default(var ctx : TEditorContext; event : PEvent) : integer;forward;
-function handle_mouse(var ctx : TEditorContext; event : PEvent) : integer;forward;
-procedure check_begin_selection(var ctx:TEditorContext);forward;
-function hk_cb_paste(var ctx:TEditorContext; event:PEvent):integer;forward;
-function hk_cb_copy(var ctx:TEditorContext; event:PEvent):integer;forward;
-function hk_cb_cut(var ctx:TEditorContext; event:PEvent):integer;forward;
-
-{$F-}
 function compare_event(var e1, e2 : TEvent) : boolean;
 begin
         compare_event := (e1.scancode = e2.scancode)
                         and (e1.ctrl_keys = e2.ctrl_keys);
 end;
-{$F+}
+
+function lookop_event_handler(var e : TEvent) : PEventHandler;
+var     h : PEventHandler;
+begin
+        h := handlers;
+        while h <> nil do begin
+                if compare_event(e, h^.event) then break;
+                h := h^.next;
+        end;
+        lookop_event_handler := h;
+end;
 
 function process_event(var ctx : TEditorContext; var e : TEvent) : integer;
-var     h    : PEventHandler;
-        r    : integer;
-        xofs : integer;
-        proc : TEventProc;
+var     h         : PEventHandler;
+        r         : integer;
+        prev_scrx : integer;
+        proc      : TEventProc;
 begin
         r := SCRU_NONE;
         if (e.etype = KEYBOARD) then begin
-                h := handlers;
-                xofs := ctx.current^.scrx;
-                while (h <> nil) do begin
-                        if compare_event(e, h^.event) then begin
-                                proc := TEventProc(h^.proc);
-                                r := proc(ctx, @e);
-                                if h^.reset_selection and ctx.current^.editor.selection then begin
-                                        ctx.current^.editor.selection := false;
-                                        r := SCRU_FULL;
-                                end;
-                                break;
+                prev_scrx := ctx.current^.scrx;
+                h := lookop_event_handler(e);
+                if h <> nil then begin
+                        proc := TEventProc(h^.proc);
+                        r := proc(ctx, @e);
+                        if h^.reset_selection and ctx.current^.editor.selection then begin
+                                ctx.current^.editor.selection := false;
+                                r := SCRU_FULL;
                         end;
-                        h := h^.next;
-                end;
-                if h = nil then r := hk_default(ctx, @e);
-                if xofs <> ctx.current^.scrx then r := SCRU_FULL;
+                end else r := hk_default(ctx, @e);
+                if prev_scrx <> ctx.current^.scrx then r := SCRU_FULL;
         end else if e.etype in [MOUSE_MOVE,
                 MOUSE_PRESS_B1, MOUSE_PRESS_B2,
                 MOUSE_RELEASE_B1, MOUSE_RELEASE_B2 ] then begin
@@ -97,8 +104,8 @@ end;
 
 {$F+}
 function goto_mouse(var ctx : TEditorContext; event : PEvent) : integer;
-var  r, step, steps : integer;
-     line           : EditorStr;
+var     r, step, steps : integer;
+        line           : EditorStr;
 begin
         commit(ctx);
         dec(event^.mouse_y);
@@ -126,11 +133,11 @@ MM_T2 : string[24] = ' Cut '+#$0a+' Copy ' + #0;
 MM_T3 : string[24] = ' Cut '+#$0a+' Copy '+#$0a+' Paste ' + #0;
 
 function handle_mouse(var ctx : TEditorContext; event : PEvent) : integer;
-var  r, mt, x, y : integer;
-     menu        : string;
-     have_cb     : boolean;
-     key         : word;
-     selItem     : integer;
+var     r, mt, x, y : integer;
+        menu        : string;
+        have_cb     : boolean;
+        key         : word;
+        selItem     : integer;
 begin
         r := SCRU_NONE;
         if event^.etype = MOUSE_PRESS_B1 then begin
@@ -262,7 +269,7 @@ begin
 end;
 
 function hk_sup(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
+var     r : integer;
 begin
         check_begin_selection(ctx);
         r := go_line_up(ctx);
@@ -271,7 +278,7 @@ begin
 end;
 
 function hk_sdown(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
+var     r : integer;
 begin
         check_begin_selection(ctx);
         r := go_line_down(ctx);
@@ -280,7 +287,7 @@ begin
 end;
 
 function hk_sleft(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
+var     r : integer;
 begin
         check_begin_selection(ctx);
         r := go_char_left(ctx);
@@ -289,7 +296,7 @@ begin
 end;
 
 function hk_sright(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
+var     r : integer;
 begin
         check_begin_selection(ctx);
         r := go_char_right(ctx);
@@ -298,7 +305,7 @@ begin
 end;
 
 function hk_spgup(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
+var     r : integer;
 begin
         check_begin_selection(ctx);
         r := go_page_up(ctx);
@@ -308,7 +315,7 @@ begin
 end;
 
 function hk_spgdown(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
+var     r : integer;
 begin
         check_begin_selection(ctx);
         r := go_page_down(ctx);
@@ -317,7 +324,7 @@ begin
 end;
 
 function hk_shome(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
+var     r : integer;
 begin
         check_begin_selection(ctx);
         r := go_line_begin(ctx);
@@ -326,7 +333,7 @@ begin
 end;
 
 function hk_send(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
+var     r : integer;
 begin
         check_begin_selection(ctx);
         r := go_line_end(ctx);
@@ -400,8 +407,8 @@ begin
 end;
 
 function hk_esc(var ctx:TEditorContext; event:PEvent):integer;
-var    r, errCode : integer;
-       c, srcctx  : PFileContext;
+var     r, errCode : integer;
+        c, srcctx  : PFileContext;
 begin
         r := SCRU_QUIT;
         commit(ctx);
@@ -447,8 +454,8 @@ begin
 end;
 
 function hk_save(var ctx:TEditorContext; event:PEvent):integer;
-var    srcctx  : PFileContext;
-       errCode : integer;
+var     srcctx  : PFileContext;
+        errCode : integer;
 begin
         srcctx := ctx.current;
         commit(ctx);
@@ -482,9 +489,9 @@ end;
 
 
 function hk_save_as(var ctx:TEditorContext; event:PEvent):integer;
-var    errCode      : integer;
-       newname, msg : string;
-       start_save   : boolean;
+var     errCode      : integer;
+        newname, msg : string;
+        start_save   : boolean;
 begin
         commit(ctx);
 
@@ -564,7 +571,7 @@ begin
 end;
 
 function hk_del(var ctx:TEditorContext; event:PEvent):integer;
-var r : integer;
+var     r : integer;
 begin
         r := SCRU_NONE;
         if ctx.current^.editor.selection then begin
@@ -632,9 +639,9 @@ begin
 end;
 
 function hk_cb_paste(var ctx:TEditorContext; event:PEvent):integer;
-var lnum    : word;
-    isfist  : boolean;
-    cbsize  : dword;
+var     lnum    : word;
+        isfist  : boolean;
+        cbsize  : dword;
 begin
         commit(ctx);
         if ctx.current^.editor.selection then begin
@@ -660,12 +667,12 @@ begin
 end;
 
 function hk_goto_line(var ctx:TEditorContext; event:PEvent):integer;
-var r          : integer;
-    lNumStr    : string;
-    msg        : string;
-    lnum       : longint;
-    newLine    : EditorStr;
-    start_find : boolean;
+var     r          : integer;
+        lNumStr    : string;
+        msg        : string;
+        lnum       : longint;
+        newLine    : EditorStr;
+        start_find : boolean;
 begin
         r := SCRU_CLINE;
         lnum := 0;
@@ -968,7 +975,8 @@ end;
 
 function hk_start_find(var ctx:TEditorContext; event:PEvent):integer;
 var     r              : integer;
-        sb_y, se_y, clinenum : longint;
+        clinenum       : longint;
+        sb_y, se_y     : longint;
         sb_x, se_x     : integer;
         msg            : string;
         searchStr      : string;
@@ -1077,8 +1085,7 @@ begin
 end;
 
 function hk_cb_load(var ctx:TEditorContext; event:PEvent):integer;
-var     fname      : string;
-        msg        : string;
+var     fname, msg : string;
         start_load : boolean;
         errCode    : integer;
 begin
@@ -1114,13 +1121,13 @@ begin
         hk_addons := SCRU_FULL;
 end;
 
-
 function hk_close(var ctx:TEditorContext; event:PEvent):integer;
-var     canclose : boolean;
-        r, next, prev : PFileContext;
-        msg      : string;
-        res      : integer;
-        errCode  : integer;
+var     canclose   : boolean;
+        r          : PFileContext;
+        next, prev : PFileContext;
+        msg        : string;
+        res        : integer;
+        errCode    : integer;
 begin
         res := SCRU_FULL;
         commit(ctx);

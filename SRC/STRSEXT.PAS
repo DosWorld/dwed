@@ -21,67 +21,74 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$A-}
+{$A-,F-}
 unit strsext;
 
 { External memory string-storage }
 
 interface
 
-procedure init_tempfile;
+uses dwedtype;
+
+procedure init;
 procedure done;
 
-function new : longint;
-procedure free(r : longint);
+function new : dword;
+procedure free(r : dword);
 
-function create(next, prev : longint; body : string) : longint;
+function create(next, prev : dword; body : string) : dword;
 
-function put(r : longint; var body : string) : longint;
-procedure get(r : longint; var dest : string);
-function delete(r : longint; num_from, num_to : longint) : longint;
-function merge(r : longint) : longint;
+function put(r : dword; var body : string) : dword;
+procedure get(r : dword; var dest : string);
+function delete(r : dword; num_from, num_to : dword) : dword;
+function merge(r : dword) : dword;
 
-function is_first(r : longint) : boolean;
-function is_last(r : longint) : boolean;
+function is_first(r : dword) : boolean;
+function is_last(r : dword) : boolean;
 
-function go_first(r : longint) : longint;
-function go_last(r : longint) : longint;
+function go_first(r : dword) : dword;
+function go_last(r : dword) : dword;
 
-function go_prev(r : longint) : longint;
-function go_next(r : longint) : longint;
+function go_prev(r : dword) : dword;
+function go_next(r : dword) : dword;
 
-function renum(r : longint) : longint;
-function get_num(r : longint) : longint;
-function append(r : longint; var pos : integer; p : pchar; var lnum:word) : longint;
-function split(r : longint; pos : integer) : longint;
+function is_nil(r : dword) : boolean;
 
-function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : longint;
-procedure to_file(fname : string; r : longint; var errCode : integer; scrupdate : pointer);
+function renum(r : dword) : dword;
+function get_num(r : dword) : dword;
+function append(r : dword; var pos : integer; p : pchar; var lnum:word) : dword;
+function split(r : dword; pos : integer) : dword;
+
+function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : dword;
+procedure to_file(fname : string; r : dword; var errCode : integer; scrupdate : pointer);
 
 implementation
 
-uses system2, str, dbm, dbb, dwedtype, strutil;
+uses system2, str, dbm, dbb, strutil;
 
 type
-TString = record
-        next   : longint;
-        prev   : longint;
+TExtStringRec = record
+        next   : dword;
+        prev   : dword;
         len    : word;
-        num    : longint;
-        recno  : longint;
+        num    : dword;
+        recno  : dword;
 end;
 
-const   MEM_BLK_SIZE = 32;
-        IDX_BLK_SIZE = sizeof(TString);
+const
+MEM_BLK_SIZE = 32;
+IDX_BLK_SIZE = sizeof(TExtStringRec);
 
 var     dbm_mem : DBMFile;
         dbb_idx : DBBFile;
 
-function create(next, prev : longint; body : string) : longint;
-var     r   : longint;
-        rec : TString;
+{$F-}
+
+function create(next, prev : dword; body : string) : dword;
+var     r   : dword;
+        rec : TExtStringRec;
 begin
-        FillChar(rec, SizeOf(TString), #0);
+        FillChar(rec, SizeOf(TExtStringRec), #0);
         rec.next := next;
         rec.prev := prev;
         rec.recno := 0;
@@ -102,8 +109,8 @@ begin
         create := r;
 end;
 
-procedure free_str(r : longint);
-var     rec : TString;
+procedure free_str(r : dword);
+var     rec : TExtStringRec;
 begin
         if r = 0 then exit;
         dbb_get(dbb_idx, r, rec);
@@ -111,8 +118,8 @@ begin
         dbb_free(dbb_idx, r);
 end;
 
-function put(r : longint; var body : string) : longint;
-var     rec : TString;
+function put(r : dword; var body : string) : dword;
+var     rec : TExtStringRec;
 begin
         dbb_get(dbb_idx, r, rec);
         dbm_free(dbm_mem, rec.recno);
@@ -126,13 +133,13 @@ begin
         put := r;
 end;
 
-function new : longint;
+function new : dword;
 begin
         new := create(0, 0, '');
 end;
 
-procedure get(r : longint; var dest : string);
-var     rec : TString;
+procedure get(r : dword; var dest : string);
+var     rec : TExtStringRec;
 begin
         dest := '';
         if r <> 0 then begin
@@ -141,22 +148,22 @@ begin
         end;
 end;
 
-function is_first(r : longint) : boolean;
-var     rec : TString;
+function is_first(r : dword) : boolean;
+var     rec : TExtStringRec;
 begin
         dbb_get(dbb_idx, r, rec);
         is_first := rec.prev = 0;
 end;
 
-function is_last(r : longint) : boolean;
-var     rec : TString;
+function is_last(r : dword) : boolean;
+var     rec : TExtStringRec;
 begin
         dbb_get(dbb_idx, r, rec);
         is_last := rec.next = 0;
 end;
 
-function go_first(r : longint) : longint;
-var     rec : TString;
+function go_first(r : dword) : dword;
+var     rec : TExtStringRec;
 begin
         if r <> 0 then begin
                 dbb_get(dbb_idx, r, rec);
@@ -168,8 +175,8 @@ begin
         go_first := r;
 end;
 
-function go_last(r : longint) : longint;
-var     rec : TString;
+function go_last(r : dword) : dword;
+var     rec : TExtStringRec;
 begin
         if r <> 0 then begin
                 dbb_get(dbb_idx, r, rec);
@@ -181,8 +188,8 @@ begin
         go_last := r;
 end;
 
-function go_prev(r : longint) : longint;
-var     rec : TString;
+function go_prev(r : dword) : dword;
+var     rec : TExtStringRec;
 begin
         if r <> 0 then begin
                 dbb_get(dbb_idx, r, rec);
@@ -191,8 +198,8 @@ begin
         go_prev := r;
 end;
 
-function go_next(r : longint) : longint;
-var     rec : TString;
+function go_next(r : dword) : dword;
+var     rec : TExtStringRec;
 begin
         if r <> 0 then begin
                 dbb_get(dbb_idx, r, rec);
@@ -201,8 +208,8 @@ begin
         go_next := r;
 end;
 
-procedure free(r : longint);
-var     rec : TString;
+procedure free(r : dword);
+var     rec : TExtStringRec;
 begin
         while r <> 0 do begin
                 dbb_get(dbb_idx, r, rec);
@@ -212,9 +219,9 @@ begin
         end;
 end;
 
-function renum(r : longint) : longint;
-var     rec : TString;
-        res : longint;
+function renum(r : dword) : dword;
+var     rec : TExtStringRec;
+        res : dword;
 begin
         res := 0;
         while r <> 0 do begin
@@ -227,17 +234,17 @@ begin
         renum := res;
 end;
 
-function get_num(r : longint) : longint;
-var     rec : TString;
+function get_num(r : dword) : dword;
+var     rec : TExtStringRec;
 begin
         dbb_get(dbb_idx, r, rec);
         get_num := rec.num;
 end;
 
-function delete(r : longint; num_from, num_to : longint) : longint;
-var     rno, lrno   : longint;
-        line, lline : longint;
-        rec         : TString;
+function delete(r : dword; num_from, num_to : dword) : dword;
+var     rno, lrno   : dword;
+        line, lline : dword;
+        rec         : TExtStringRec;
 begin
         rno := r;
         line := 1;
@@ -278,10 +285,10 @@ begin
         delete := r;
 end;
 
-function merge(r : longint) : longint;
+function merge(r : dword) : dword;
 var     s1, s2 : string;
-        t1, t2 : TString;
-        r1, r2 : longint;
+        t1, t2 : TExtStringRec;
+        r1, r2 : dword;
 begin
         r1 := r;
         dbb_get(dbb_idx, r1, t1);
@@ -309,11 +316,11 @@ begin
         merge := r;
 end;
 
-function append(r : longint; var pos : integer; p : pchar; var lnum:word) : longint;
+function append(r : dword; var pos : integer; p : pchar; var lnum:word) : dword;
 var     s, src, s1, s2 : string;
         c   : char;
         len : integer;
-        rec : TString;
+        rec : TExtStringRec;
 begin
         lnum := 0;
         if not ((r = 0) or (p = nil)) then begin
@@ -321,8 +328,8 @@ begin
                 dbb_get(dbb_idx, r, rec);
                 src := '';
                 if (rec.recno <> 0) and (rec.len <> 1) then dbm_get(dbm_mem, rec.recno, src, rec.len);
-                while p[0] <> #0 do begin
-                        c := p[0];
+                while p^ <> #0 do begin
+                        c := p^;
                         case c of
                         #$0A: begin
                                 inc(lnum);
@@ -361,9 +368,9 @@ begin
         append := r;
 end;
 
-function split(r : longint; pos : integer) : longint;
+function split(r : dword; pos : integer) : dword;
 var     s1, s2 : string;
-        rec : TString;
+        rec : TExtStringRec;
 begin
         s1 := '';
         dbb_get(dbb_idx, r, rec);
@@ -379,8 +386,10 @@ begin
         split := r;
 end;
         
-procedure init_tempfile;
+procedure init;
 begin
+        FillChar(dbm_mem, SizeOf(DBMFile), #0);
+        FillChar(dbb_idx, SizeOf(DBBFile), #0);
         dbm_rewrite_temp(dbm_mem, MEM_BLK_SIZE);
         dbb_rewrite_temp(dbb_idx, IDX_BLK_SIZE);
 end;
@@ -391,55 +400,56 @@ begin
         dbb_close(dbb_idx);
 end;
 
-function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : longint;
-var     root       : longint;
+function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : dword;
+var     root       : dword;
         f          : bfile;
         s          : string;
-        total      : longint;
-        position   : longint;
+        total      : dword;
+        position   : dword;
         percent    : integer;
         ppercent   : integer;
         scrup      : TPercentUpdateProc;
         tabs       : string;
-        prec, crec : TString;
-        pno, cno   : longint;
+        prec, crec : TExtStringRec;
+        pno, cno   : dword;
+        readed     : integer;
 begin
         scrup := TPercentUpdateProc(scrupdate);
-        fillchar(tabs[0], 256, #32);
+
+        fillchar(f, sizeof(bfile), #0);
+        fillchar(prec, sizeof(TExtStringRec), #0);
+        fillchar(tabs[1], 255, #32);
         tabs[0] := chr(tab_size);
-        fillchar(prec, sizeof(TString), #0);
-        pno := 0;
-        cno := 0;
+
         ppercent := -1;
         root := 0;
-        errCode := 0;
-        
-        if not FileExists(fname) then begin
-                errCode := 104;
-        end;
-        if errCode = 0 then begin
-                assign(f, fname);
-                reset(f);
-                if not IsOpen(f) then errCode := 104;
-        end;
+        readed := 0;
+        total := 0;
+        position := 0;        
 
-        position := 0;
-        if errCode = 0 then begin
-                total := filesize(f);
-                if total <> 0 then begin
-                        while not eof(f) do begin
-                                readln(f, s);
-                                remove_tabs(s, tabs);
-                                fillchar(crec, sizeof(TString), #0);
-                                crec.prev := pno;
-                                crec.len := length(s) + 1;
-                                if s[0] <> #0 then crec.recno := dbm_add(dbm_mem, s, crec.len);
-                                cno := dbb_add(dbb_idx, crec);
-                                if root = 0 then root := cno;
-                                if pno <> 0 then begin
-                                        prec.next := cno;
-                                        dbb_put(dbb_idx, pno, prec);
-                                end;
+        pno := 0;
+        cno := 0;
+
+        assign(f, fname);
+        reset(f);
+        if not IsOpen(f) then errCode := 104 else total := filesize(f);
+
+        if total <> 0 then begin
+                while not eof(f) do begin
+                        readln(f, s);
+                        remove_tabs(s, tabs);
+                        fillchar(crec, sizeof(TExtStringRec), #0);
+                        crec.prev := pno;
+                        crec.len := length(s) + 1;
+                        if s[0] <> #0 then crec.recno := dbm_add(dbm_mem, s, crec.len);
+                        cno := dbb_add(dbb_idx, crec);
+                        if root = 0 then root := cno;
+                        if pno <> 0 then begin
+                                prec.next := cno;
+                                dbb_put(dbb_idx, pno, prec);
+                        end;
+                        inc(readed, ord(s[0]));
+                        if readed > PROGRESS_UPDATE then begin
                                 if scrupdate <> nil then begin
                                         position := filepos(f);
                                         percent := (position * 100) div total;
@@ -448,50 +458,53 @@ begin
                                                 ppercent := percent;
                                         end;
                                 end;
-                                prec := crec;
-                                pno := cno;
-
+                                readed := 0;
                         end;
+                        prec := crec;
+                        pno := cno;
+
                 end;
-                close(f);
         end;
+
+        if IsOpen(f) then close(f);
+
         if root = 0 then root := strsext.new;
         from_file := root;
 end;
 
-procedure to_file(fname : string; r : longint; var errCode : integer; scrupdate : pointer);
-var
-        f          : bfile;
+procedure to_file(fname : string; r : dword; var errCode : integer; scrupdate : pointer);
+var     f          : bfile;
         s          : string;
-        total      : longint;
-        position   : longint;
+        total      : dword;
+        position   : dword;
         percent    : integer;
         ppercent   : integer;
         scrup      : TPercentUpdateProc;
-        rec        : TString;
-        one_step   : word;
-        sone_step  : word;
+        rec        : TExtStringRec;
+        writed     : integer;
 begin
         assign(f, fname);
         rewrite(f);
-        if not isopen(f) then errCode := 105 else errCode := 0;
-        if errCode <> 0 then exit;
+        if not isopen(f) then begin
+                errCode := 105;
+                exit;
+        end;
+
         scrup := TPercentUpdateProc(scrupdate);
         total := strsext.renum(r);
         position := 0;
         ppercent := -1;
-        one_step := 1;
-        sone_step := total div 100;
-        if sone_step = 0 then sone_step := 1;
+        writed := 0;
+
         while r <> 0 do begin
                 dbb_get(dbb_idx, r, rec);
                 if rec.recno <> 0 then dbm_get(dbm_mem, rec.recno, s, rec.len)
                 else s[0] := #0;
                 writeln(f, s);
                 r := rec.next;
-                dec(one_step);
+                inc(writed, ord(s[0]));
                 inc(position);
-                if one_step = 0 then begin
+                if writed > PROGRESS_UPDATE then begin
                         if scrupdate <> nil then begin
                                 percent := (position * 100) div total;
                                 if percent <> ppercent then begin
@@ -499,14 +512,16 @@ begin
                                         ppercent := percent;
                                 end;
                         end;
-                        one_step := sone_step;
+                        writed := 0;
                 end;
         end;
         truncate(f);
         close(f);
 end;
 
+function is_nil(r : dword) : boolean;
 begin
-        FillChar(dbm_mem, SizeOf(DBMFile), #0);
-        FillChar(dbb_idx, SizeOf(DBBFile), #0);
+        is_nil := r = 0;
+end;
+
 end.

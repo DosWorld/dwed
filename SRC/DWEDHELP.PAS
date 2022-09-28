@@ -33,18 +33,18 @@ procedure dwed_help(var topic_id:integer;
 
 implementation
 
-uses scr, scrui, kminput, str, help, event;
+uses kminput, event, scr, scrui, str, help;
 
 procedure helpbin;external;
 {$L dwedhelp.obj}
 
-var topic_list : PHelpTopicList;
+var     topic_list : PHelpTopicList;
         topic_menu : pchar;
         width      : integer;
 
 function get_name(t : PHelpTopicList):string;
-var s : string;
-    i : integer;
+var     s : string;
+        i : integer;
 begin
         s := '';
         for i := 1 to 12 do s := s + t^.topic.name[i];
@@ -56,7 +56,8 @@ procedure dwed_help(var topic_id:integer;
         help_menu_sel_clr,
         help_clr,
         help_hl_clr : byte);
-var r : PHelpTopicList;
+
+var     r : PHelpTopicList;
         y, i      : integer;
         p         : pchar;
         helpStr   : string;
@@ -120,11 +121,11 @@ begin
 end;
 
 procedure init;
-var t           : PHelpTopicList;
-    len, maxlen : integer;
-    totallen    : integer;
-    i, pos      : integer;
-    topicname   : string;
+var     t           : PHelpTopicList;
+        len, maxlen : integer;
+        totallen    : integer;
+        i, pos      : integer;
+        topicname   : string;
 begin
         topic_list := from_memory(Pointer(@helpbin));
         maxlen := 0;

@@ -27,7 +27,6 @@ unit help;
 interface
 
 type
-
 PHelpTopic = ^THelpTopic;
 THelpTopic = record
         name  : array[1..12] of char;
@@ -208,7 +207,7 @@ begin
                 c^.hlen := nt - ((c^.topic.recno shl 7) + c^.topic.ofs) + 1;
                 getmem(c^.htext, c^.hlen);
                 seek(f, (c^.topic.recno shl 7) + c^.topic.ofs);
-                blockread(f, c^.htext[0], c^.hlen - 1);
+                blockread(f, c^.htext^, c^.hlen - 1);
                 c^.htext[c^.hlen - 1] := #0;
                 c := c^.next;
         end;
@@ -225,7 +224,7 @@ begin
         rp := p;
         while true do begin
                 getmem(c, sizeof(THelpTopicList));
-                move(rp[0], c^.topic, sizeof(THelpTopic));
+                move(rp^, c^.topic, sizeof(THelpTopic));
                 inc(rp, sizeof(THelpTopic));
                 c^.next := nil;
                 c^.htext := nil;
@@ -236,7 +235,7 @@ begin
                 l := c;
         end;
         ep := rp;
-        while ep[0] <> #$1a do inc(ep);
+        while ep^ <> #$1a do inc(ep);
         rp := p;
         fs := ep - rp;
         c := r;

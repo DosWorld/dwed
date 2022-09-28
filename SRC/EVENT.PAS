@@ -24,12 +24,13 @@ SOFTWARE.
 unit event;
 
 interface
-CONST
-key_ctrl = 1;
-key_shift = 2;
-key_alt = 4;
 
-Type
+const
+key_ctrl  = 1;
+key_shift = 2;
+key_alt   = 4;
+
+type
 EventType = (NONE,
         KEYBOARD,
         MOUSE_MOVE,
@@ -63,16 +64,14 @@ begin
 end;
 
 procedure wait_event(var e : TEvent);
-var state    : byte;
-    newstate : byte;
-    mx, my   : integer;
-    flags    : byte;
-    key      : word;
+var     state    : byte;
+        newstate : byte;
+        mx, my   : integer;
+        flags    : byte;
+        key      : word;
 begin
-        e.scancode := 0;
-        e.ascii := #0;
+        fillchar(e, sizeof(TEvent), #0);
         e.etype := NONE;
-        e.ctrl_keys := 0;
         if mouse_avail then begin
                 state := mouse_buttons;
                 e.mouse_x := mouse_getx;

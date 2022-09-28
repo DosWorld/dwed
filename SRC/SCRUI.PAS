@@ -85,8 +85,8 @@ begin
 
         total := 0;
         tmp := mtext;
-        while tmp[0] <> #0 do begin
-                if tmp[0] = #$0a then inc(total);
+        while tmp^ <> #0 do begin
+                if tmp^ = #$0a then inc(total);
                 inc(tmp);
         end;
         while true do begin
@@ -96,11 +96,11 @@ begin
                 scr_y := selItem mod h;
                 tmp := mtext;
                 i := 0;
-                while tmp[0] <> #0 do begin
+                while tmp^ <> #0 do begin
                         if (i >= scr_ofs) and (i < (scr_ofs + h)) then begin
                                 s := '';
-                                while (tmp[0] <> #0) and (tmp[0] <> #$0a) do begin
-                                        if (tmp[0] <> #$0d) then s := s + tmp[0];
+                                while (tmp^ <> #0) and (tmp^ <> #$0a) do begin
+                                        if (tmp^ <> #$0d) then s := s + tmp^;
                                         inc(tmp);
                                 end;
                                 if length(s) > w then s := copy(s, 1, w);
@@ -108,10 +108,10 @@ begin
                                 if i = scr_ofs + scr_y then c := sclr else c := mclr;
                                 scr.print(x, y + i - scr_ofs, c, s);
                         end else begin
-                                while (tmp[0] <> #0) and (tmp[0] <> #$0a) do inc(tmp);
+                                while (tmp^ <> #0) and (tmp^ <> #$0a) do inc(tmp);
                         end;
                         inc(i);
-                        if tmp[0] <> #0 then inc(tmp);
+                        if tmp^ <> #0 then inc(tmp);
                         if i >= (scr_ofs + h) then break;
                 end;
                 scr.show;

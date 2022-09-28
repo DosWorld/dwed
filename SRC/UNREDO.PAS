@@ -56,6 +56,8 @@ var     dbm_mem : DBMFile;
 
 procedure init;
 begin
+        FillChar(dbm_mem, SizeOf(DBMFile), #0);
+        FillChar(dbb_idx, SizeOf(DBBFile), #0);
         dbm_rewrite_temp(dbm_mem, MEM_BLK_SIZE);
         dbb_rewrite_temp(dbb_idx, IDX_BLK_SIZE);
 end;
@@ -66,8 +68,5 @@ begin
         dbb_close(dbb_idx);
 end;
 
-begin
-        FillChar(dbm_mem, SizeOf(DBMFile), #0);
-        FillChar(dbb_idx, SizeOf(DBBFile), #0);
 end.
 

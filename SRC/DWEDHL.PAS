@@ -21,13 +21,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$B-,D-,L-}
+{$A-}
 unit dwedhl;
 
 interface
 
 type
-
 SourceType = (SRC_C, SRC_CMM, SRC_PAS, SRC_BAS, SRC_ASM, SRC_BAT, SRC_MD,
                 SRC_XML, SRC_HTML, SRC_FORTH, SRC_NONE,
                 SRC_DISABLE);
@@ -38,10 +37,9 @@ procedure change_hl(var st : SourceType; color, color_sel : byte);
 
 implementation
 
-uses scr, scrui, kminput, str, event;
+uses kminput, event, scr, scrui, str;
 
 type
-
 PVocabEntry = ^TVocabEntry;
 TVocabEntry = record
         hash        : word;
@@ -114,8 +112,8 @@ begin
         lng^.next := langs;
         fillchar(lng^.hlchars[1], 255, #0);
         lng^.hlchars[0] := #255;
-        while hlchars[0] <> #0 do begin
-                lng^.hlchars[ord(hlchars[0]) + 1] := #1;
+        while hlchars^ <> #0 do begin
+                lng^.hlchars[ord(hlchars^) + 1] := #1;
                 inc(hlchars);
         end;
         langs := lng;
@@ -215,7 +213,7 @@ begin
                                         end;
 {
                                         while wordStart < scr do begin
-                                                wordStart[0] := chr(hlclr);
+                                                wordStart^ := chr(hlclr);
                                                 inc(wordStart, 2);
                                         end;
 }                                       

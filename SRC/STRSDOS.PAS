@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-{$A-}
+{$A-,F-}
 unit strsdos;
 
 { Conventional memory string-storage }
@@ -51,6 +51,8 @@ function go_last(r : pointer) : pointer;
 function go_prev(r : pointer) : pointer;
 function go_next(r : pointer) : pointer;
 
+function is_nil(r : pointer) : boolean;
+
 function renum(r : pointer) : longint;
 function get_num(r : pointer) : longint;
 function append(r : pointer; var pos : integer; p : pchar; var lnum:word) : pointer;
@@ -64,16 +66,17 @@ implementation
 uses system2, str, dwedtype, strutil;
 
 type
-
-PString =^ TString;
-TString = record
-        next       : PString;
-        prev       : PString;
+PDosStringRec = ^TDosStringRec;
+TDosStringRec = record
+        next       : PDosStringRec;
+        prev       : PDosStringRec;
         allocated  : word;
         num        : longint;
         len        : byte;
         body       : array[1..1] of char;
 end;
+
+{$F-}
 
 function norm_len(len : word) : word;
 var w : word;
@@ -86,40 +89,40 @@ end;
 
 function create(next, prev : pointer; body : string) : pointer;
 var len, nlen : word;
-        r : PString;
+        r : PDosStringRec;
 begin
         len := length(body);
         nlen := norm_len(len);
-        getmem(r, sizeof(TString) + nlen - 1);
-        r^.next := PString(next);
-        r^.prev := PString(prev);
+        getmem(r, sizeof(TDosStringRec) + nlen - 1);
+        r^.next := PDosStringRec(next);
+        r^.prev := PDosStringRec(prev);
         r^.len := len;
         r^.allocated := nlen;
         move(body[1], r^.body[1], len);
-        if prev <> nil then PString(prev)^.next := r;
-        if next <> nil then PString(next)^.prev := r;
+        if prev <> nil then PDosStringRec(prev)^.next := r;
+        if next <> nil then PDosStringRec(next)^.prev := r;
         create := r;
 end;
 
 procedure free_str(r : pointer);
 begin
         if r = nil then exit;
-        freemem(r, sizeof(TString) + PString(r)^.allocated - 1);
+        freemem(r, sizeof(TDosStringRec) + PDosStringRec(r)^.allocated - 1);
 end;
 
 function put(r : pointer; var body : string) : pointer;
 var len : word;
-        old : PString;
+        old : PDosStringRec;
 begin
         len := norm_len(length(body));
-        if len = PString(r)^.allocated then begin
+        if len = PDosStringRec(r)^.allocated then begin
                 len := length(body);
-                move(body[1], PString(r)^.body[1], len);
-                PString(r)^.len := len;
+                move(body[1], PDosStringRec(r)^.body[1], len);
+                PDosStringRec(r)^.len := len;
         end else begin
                 old := r;
-                r := PString(create(PString(r)^.next, PString(r)^.prev, body));
-                PString(r)^.num := old^.num;
+                r := PDosStringRec(create(PDosStringRec(r)^.next, PDosStringRec(r)^.prev, body));
+                PDosStringRec(r)^.num := old^.num;
                 strsdos.free_str(old);
         end;
         put := r;
@@ -133,25 +136,25 @@ end;
 procedure get(r : pointer; var dest : string);
 begin
         if r <> nil then begin
-                move(PString(r)^.body[1], dest[1], PString(r)^.len);
-                dest[0] := chr(PString(r)^.len);
+                move(PDosStringRec(r)^.body[1], dest[1], PDosStringRec(r)^.len);
+                dest[0] := chr(PDosStringRec(r)^.len);
         end else dest := '';
 end;
 
 function is_first(r : pointer) : boolean;
 begin
-        is_first := PString(r)^.prev = nil;
+        is_first := PDosStringRec(r)^.prev = nil;
 end;
 
 function is_last(r : pointer) : boolean;
 begin
-        is_last := PString(r)^.next = nil;
+        is_last := PDosStringRec(r)^.next = nil;
 end;
 
 function go_first(r : pointer) : pointer;
 begin
         if r <> nil then begin
-                while PString(r)^.prev <> nil do r := PString(r)^.prev;
+                while PDosStringRec(r)^.prev <> nil do r := PDosStringRec(r)^.prev;
         end;
         go_first := r;
 end;
@@ -159,20 +162,20 @@ end;
 function go_last(r : pointer) : pointer;
 begin
         if r <> nil then begin
-                while PString(r)^.next <> nil do r := PString(r)^.next;
+                while PDosStringRec(r)^.next <> nil do r := PDosStringRec(r)^.next;
         end;
         go_last := r;
 end;
 
 function go_prev(r : pointer) : pointer;
 begin
-        if r <> nil then r := PString(r)^.prev;
+        if r <> nil then r := PDosStringRec(r)^.prev;
         go_prev := r;
 end;
 
 function go_next(r : pointer) : pointer;
 begin
-        if r <> nil then r := PString(r)^.next;
+        if r <> nil then r := PDosStringRec(r)^.next;
         go_next := r;
 end;
 
@@ -180,7 +183,7 @@ procedure free(r : pointer);
 var o : pointer;
 begin
         while r <> nil do begin
-                o := PString(r)^.next;
+                o := PDosStringRec(r)^.next;
                 strsdos.free_str(r);
                 r := o;
         end;
@@ -192,19 +195,19 @@ begin
         res := 0;
         while r <> nil do begin
                 inc(res);
-                PString(r)^.num := res;
-                r := PString(r)^.next;
+                PDosStringRec(r)^.num := res;
+                r := PDosStringRec(r)^.next;
         end;
         renum := res;
 end;
 
 function get_num(r : pointer) : longint;
 begin
-        get_num := PString(r)^.num;
+        get_num := PDosStringRec(r)^.num;
 end;
 
-function del_str(r : PString) : PString;
-var t : PString;
+function del_str(r : PDosStringRec) : PDosStringRec;
+var t : PDosStringRec;
 begin
         if r <> nil then begin
                 t := r;
@@ -219,7 +222,7 @@ begin
 end;
 
 function delete(r : pointer; num_from, num_to : longint) : pointer;
-var t  : PString;
+var t  : PDosStringRec;
     n  : longint;
 begin
         t := r;
@@ -242,9 +245,9 @@ end;
 
 function merge(r : pointer) : pointer;
 var s1, s2 : string;
-        t1, t2 :PString;
+        t1, t2 :PDosStringRec;
 begin
-        if PString(r)^.next <> nil then begin
+        if PDosStringRec(r)^.next <> nil then begin
                 t1 := r;
                 t2 := t1^.next;
                 strsdos.get(t1, s1);
@@ -267,8 +270,8 @@ begin
         if not ((r = nil) or (p = nil)) then begin
                 s := '';
                 strsdos.get(r, src);
-                while p[0] <> #0 do begin
-                        c := p[0];
+                while p^ <> #0 do begin
+                        c := p^;
                         case c of
                         #$0A: begin
                                 inc(lnum);
@@ -279,7 +282,7 @@ begin
                                 if pos <= len then s2 := copy(src, pos, len - pos + 1);
                                 s1 := s1 + s;
                                 r := strsdos.put(r, s1);
-                                r := strsdos.create(Pstring(r)^.next, r, s2);
+                                r := strsdos.create(PDosStringRec(r)^.next, r, s2);
                                 src := s2;
                                 pos := 1;
                                 s := '';
@@ -305,7 +308,7 @@ begin
         s2 := copy(s1, pos, length(s1) - pos + 1);
         s1 := rtrim(copy(s1, 1, pos - 1));
         r := strsdos.put(r, s1);
-        strsdos.create(PString(r)^.next, r, s2);
+        strsdos.create(PDosStringRec(r)^.next, r, s2);
         split := r;
 end;
 
@@ -320,31 +323,33 @@ var     root, cur, last : Pointer;
         ppercent   : integer;
         scrup      : TPercentUpdateProc;
         tabs       : string;
+        readed     : integer;
 begin
         scrup := TPercentUpdateProc(scrupdate);
-        fillchar(tabs[0], 256, #32);
+
+        fillchar(f, sizeof(bfile), #0);
+        fillchar(tabs[1], 255, #32);
         tabs[0] := chr(tab_size);
+
         ppercent := -1;
         root := nil; last := nil;
-        errCode := 0;
-        if not FileExists(fname) then begin
-                errCode := 104;
-        end;
-        if errCode = 0 then begin
-                assign(f, fname);
-                reset(f);
-                if not IsOpen(f) then errCode := 104;
-        end;
+        readed := 0;
+        total := 0;
         position := 0;
-        if errCode = 0 then begin
-                total := filesize(f);
-                if total <> 0 then begin
-                        while not eof(f) do begin
-                                readln(f, s);
-                                remove_tabs(s, tabs);
-                                cur := strsdos.create(nil, last, s);
-                                if root = nil then root := cur;
-                                last := cur;
+
+        assign(f, fname);
+        reset(f);
+        if not IsOpen(f) then errCode := 104 else total := filesize(f);
+
+        if total <> 0 then begin
+                while not eof(f) do begin
+                        readln(f, s);
+                        remove_tabs(s, tabs);
+                        cur := strsdos.create(nil, last, s);
+                        if root = nil then root := cur;
+                        last := cur;
+                        inc(readed, ord(s[0]));
+                        if readed > PROGRESS_UPDATE then begin
                                 if scrupdate <> nil then begin
                                         position := filepos(f);
                                         percent := (position * 100) div total;
@@ -353,43 +358,56 @@ begin
                                                 ppercent := percent;
                                         end;
                                 end;
+                                readed := 0;
                         end;
                 end;
-                close(f);
         end;
+
+        if IsOpen(f) then close(f);
+
         if root = nil then root := strsdos.new;
         from_file := root;
 end;
 
 procedure to_file(fname : string; r : pointer; var errCode : integer; scrupdate : pointer);
-var
-        f       : bfile;
-        s       : string;
+var     f          : bfile;
+        s          : string;
         total      : longint;
         position   : longint;
         percent    : integer;
         ppercent   : integer;
         scrup      : TPercentUpdateProc;
+        writed     : integer;
 begin
         assign(f, fname);
         rewrite(f);
-        if not isopen(f) then errCode := 105 else errCode := 0;
-        if errCode <> 0 then exit;
+        if not isopen(f) then begin
+                errCode := 105;
+                exit;
+        end;
+
         scrup := TPercentUpdateProc(scrupdate);
         total := renum(r);
         position := 0;
         ppercent := -1;
+        writed := 0;
+
         while r <> nil do begin
                 strsdos.get(r, s);
                 writeln(f, s);
                 r := strsdos.go_next(r);
-                if scrupdate <> nil then begin
-                        inc(position);
-                        percent := (position * 100) div total;
-                        if percent <> ppercent then begin
-                                scrup(position, total);
-                                ppercent := percent;
+
+                inc(writed, ord(s[0]));
+                if writed > PROGRESS_UPDATE then begin
+                        if scrupdate <> nil then begin
+                                inc(position);
+                                percent := (position * 100) div total;
+                                if percent <> ppercent then begin
+                                        scrup(position, total);
+                                        ppercent := percent;
+                                end;
                         end;
+                        writed := 0;
                 end;
         end;
         truncate(f);
@@ -402,6 +420,11 @@ end;
 
 procedure done;
 begin
+end;
+
+function is_nil(r : pointer) : boolean;
+begin
+        is_nil := r = nil;
 end;
 
 end.

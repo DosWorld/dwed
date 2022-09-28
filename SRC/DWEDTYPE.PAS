@@ -29,7 +29,6 @@ interface
 uses strs, dwedhl, event;
 
 const
-
 SCRU_QUIT   = 1;
 SCRU_NONE   = 2;
 SCRU_TOP    = 3;
@@ -38,11 +37,45 @@ SCRU_SD     = 5;
 SCRU_SU     = 6;
 SCRU_FULL   = 7;
 
-const
+CB_SIZE         = 1024 * 32;
+PROGRESS_UPDATE = 1024 * 4;
 
-CB_SIZE = 32 * 1024;
+MEM_DOS  = 'DOS';
+MEM_SWAP = 'SWAP';
+
+ENV_TEMP = 'TEMP';
+ENV_TMP  = 'TMP';
+
+OVERLAY_MSG             = 'This is overlay. Run DWED.EXE';
+WELCOME_MSG             = 'Welcome!  Press ~F1~ for help';
+DEFAULT_FILE_NAME       = 'NONAME.TXT';
+
+CONFIG_FILE_NAME        = 'DWED.CFG';
+
+CFG_TAB_SIZE            = 'TAB_SIZE';
+CFG_COLOR_TOP           = 'COLOR.TOP';
+CFG_COLOR_TOP_HL        = 'COLOR.TOP_HL';
+CFG_COLOR_TEXT          = 'COLOR.TEXT';
+CFG_COLOR_TEXT_HL       = 'COLOR.TEXT_HL';
+CFG_COLOR_TEXT_DL       = 'COLOR.TEXT_DL';
+CFG_COLOR_TEXT_SEL      = 'COLOR.TEXT_SEL';
+CFG_COLOR_MENU          = 'COLOR.MENU';
+CFG_COLOR_MENU_SEL      = 'COLOR.MENU_SEL';
+CFG_COLOR_HELP_MENU     = 'COLOR.HELP_MENU';
+CFG_COLOR_HELP_MENU_SEL = 'COLOR.HELP_MENU_SEL';
+CFG_COLOR_HELP          = 'COLOR.HELP';
+CFG_COLOR_HELP_HL       = 'COLOR.HELP_HL';
+CFG_USR_DEF_F5          = 'USR.DEF.F5';
+CFG_USR_DEF_F8          = 'USR.DEF.F8';
+CFG_USR_DEF_F9          = 'USR.DEF.F9';
+CFG_HL_ENABLE           = 'HL.ENABLE';
+CFG_MEMORY              = 'MEMORY';
 
 type
+PString  = ^String;
+PWord    = ^Word;
+PLongint = ^Longint;
+DWord    = Longint;
 
 PColorConfig =^ TColorConfig;
 TColorConfig = record
@@ -78,7 +111,7 @@ TLineEditorContext = record
         line      : string;
         chg       : boolean;
         selection : boolean;
-        sel_row   : longint;
+        sel_row   : DWord;
         sel_x     : integer;
 end;
 
@@ -88,7 +121,7 @@ TFileContext = record
         sfname       : string;
         st           : SourceType;
         chg          : boolean;
-        total        : longint;
+        total        : DWord;
         scrx, scry   : integer;
         next         : PFileContext;
         rline        : EditorStr;
@@ -116,7 +149,7 @@ end;
 
 {$F+}
 TEventProc = function(var ctx : TEditorContext; e : PEvent) : integer;
-TPercentUpdateProc = procedure(value, total : longint);
+TPercentUpdateProc = procedure(value, total : DWord);
 {$F-}
 
 PEventHandler =^ TEventHandler;
@@ -126,8 +159,6 @@ TEventHandler = record
         proc            : pointer;
         next            : PEventHandler;
 end;
-
-PString = ^String;
 
 implementation
 

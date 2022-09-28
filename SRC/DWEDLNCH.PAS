@@ -21,12 +21,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
+{$A-,F-}
 unit dwedlnch;
 
 interface
 
 const
-
 EXEC_USER_CMD = 254;
 
 function is_installed : boolean;
@@ -35,13 +35,9 @@ procedure set_exec_cmd(cmd : string);
 
 implementation
 
-uses dos, strutil, system2;
+uses dwedtype;
 
-Type
-PString = ^String;
-PWord = ^Word;
-
-Var     parent : pchar;
+var     parent : pchar;
         ppsp   : word;
 
 function is_installed : boolean;

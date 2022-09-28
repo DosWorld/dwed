@@ -69,7 +69,7 @@ BEGIN
                 WriteLnErr(ERR_NO_FILE + fname);
                 Halt(ERROR);
         END;
-        w := BlockRead(f, p[0], 65000 - 1);
+        w := BlockRead(f, p^, 65000 - 1);
         Close(f);
         p[w] := #0;
         WCB_Copy(p, w + 1);
@@ -88,7 +88,7 @@ BEGIN
                 WriteLnErr(ERR_NO_MEMORY);
                 Halt(ERROR);
         END;
-        IF WCB_Paste(p[0], 65000) THEN System.WriteLn(p);
+        IF WCB_Paste(p^, 65000) THEN System.WriteLn(p);
         FreeMem(p, 65000);
         Halt(OK);
 END;

@@ -29,9 +29,7 @@ unit strs;
 interface
 
 type
-
 MemoryType = (MT_DOS, MT_TEMP);
-
 EditorStr = pointer;
 
 procedure init(mType : MemoryType);
@@ -72,51 +70,49 @@ implementation
 
 uses strsdos, strsext, dwedtype, system2, str, strutil;
 
-const memType : MemoryType = MT_DOS;
-const BUF_SIZE = 4 * 1024;
+const
+memType : MemoryType = MT_DOS;
 
 procedure init(mType : MemoryType);
 begin
         memType := mType;
-
-        case mType of
-        MT_TEMP:     strsext.init_tempfile;
-        ELSE strsdos.done;
-        end;
+        if mType = MT_TEMP then strsext.init else strsdos.init;
 end;
 
 procedure done;
 begin
-        if memType = MT_DOS then strsdos.done
-        else strsext.done;
+        if memType = MT_TEMP then strsext.done else strsdos.done;
 end;
 
 function put(r : EditorStr; var body : string) : EditorStr;
 begin
-        if memType = MT_DOS then put := strsdos.put(r, body)
-        else put := EditorStr(strsext.put(longint(r), body));
+        if memType = MT_TEMP then put := EditorStr(strsext.put(dword(r), body))
+        else put := EditorStr(strsdos.put(pointer(r), body));
 end;
 
 function create(next, prev : EditorStr; var body : string) : EditorStr;
 begin
-        if memType = MT_DOS then create := strsdos.create(next, prev, body)
-        else create := EditorStr(strsext.create(longint(next), longint(prev), body));
+        if memType = MT_TEMP then create := EditorStr(strsext.create(dword(next), dword(prev), body))
+        else create := EditorStr(strsdos.create(pointer(next), pointer(prev), body));
 end;
 
 function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : EditorStr;
-var     root : EditorStr;
 begin
-        if memType = MT_DOS then
-                root := EditorStr(strsdos.from_file(fname, tab_size, errCode, scrupdate))
+        errCode := 0;
+        if not FileExists(fname) then begin
+                errCode := 104;
+                from_file := EditorStr(strs.new);
+        end else if memType = MT_TEMP then
+                from_file := EditorStr(strsext.from_file(fname, tab_size, errCode, scrupdate))
         else
-                root := EditorStr(strsext.from_file(fname, tab_size, errCode, scrupdate));
-        from_file := root;
+                from_file := EditorStr(strsdos.from_file(fname, tab_size, errCode, scrupdate));
 end;
 
 procedure to_file(fname : string; r : EditorStr; var errCode : integer; scrupdate : pointer);
 var     f        : bfile;
         fnamebak : string;
 begin
+        errCode := 0;
         if FileExists(fname) then begin
                 fnamebak := change_ext(fname, '.bak');
                 if FileExists(fnamebak) then FileDelete(fnamebak);
@@ -124,114 +120,115 @@ begin
                 rename(f, fnamebak);
         end;
 
-        if memType = MT_DOS then
-                strsdos.to_file(fname, pointer(r), errCode, scrupdate)
+        if memType = MT_TEMP then
+                strsext.to_file(fname, dword(r), errCode, scrupdate)
         else
-                strsext.to_file(fname, longint(r), errCode, scrupdate);
+                strsdos.to_file(fname, pointer(r), errCode, scrupdate);
 end;
 
 function new : EditorStr;
 begin
-        if memType = MT_DOS then new := strsdos.new
-        else new := EditorStr(strsext.new);
+        if memType = MT_TEMP then new := EditorStr(strsext.new)
+        else new := EditorStr(strsdos.new);
 end;
 
 procedure get(r : EditorStr; var dest : string);
 begin
-        if memType = MT_DOS then strsdos.get(r, dest)
-        else strsext.get(longint(r), dest);
+        if memType = MT_TEMP then strsext.get(dword(r), dest)
+        else strsdos.get(pointer(r), dest);
 end;
 
 function is_first(r : EditorStr) : boolean;
 begin
-        if memType = MT_DOS then is_first := strsdos.is_first(r)
-        else is_first := strsext.is_first(longint(r));
+        if memType = MT_TEMP then is_first := strsext.is_first(dword(r))
+        else is_first := strsdos.is_first(pointer(r));
 end;
 
 function is_last(r : EditorStr) : boolean;
 begin
-        if memType = MT_DOS then is_last := strsdos.is_last(r)
-        else is_last := strsext.is_last(longint(r));
+        if memType = MT_TEMP then is_last := strsext.is_last(dword(r))
+        else is_last := strsdos.is_last(pointer(r));
 end;
 
 function go_first(r : EditorStr) : EditorStr;
 begin
-        if memType = MT_DOS then go_first := strsdos.go_first(r)
-        else go_first := EditorStr(strsext.go_first(longint(r)));
+        if memType = MT_TEMP then go_first := EditorStr(strsext.go_first(dword(r)))
+        else go_first := EditorStr(strsdos.go_first(pointer(r)));
 end;
 
 function go_last(r : EditorStr) : EditorStr;
 begin
-        if memType = MT_DOS then go_last := strsdos.go_last(r)
-        else go_last := EditorStr(strsext.go_last(longint(r)));
+        if memType = MT_TEMP then go_last := EditorStr(strsext.go_last(dword(r)))
+        else go_last := EditorStr(strsdos.go_last(pointer(r)));
 end;
 
 function go_prev(r : EditorStr) : EditorStr;
 begin
-        if memType = MT_DOS then go_prev := strsdos.go_prev(r)
-        else go_prev := EditorStr(strsext.go_prev(longint(r)));
+        if memType = MT_TEMP then go_prev := EditorStr(strsext.go_prev(dword(r)))
+        else go_prev := EditorStr(strsdos.go_prev(pointer(r)));
 end;
 
 function go_next(r : EditorStr) : EditorStr;
 begin
-        if memType = MT_DOS then go_next := strsdos.go_next(r)
-        else go_next := EditorStr(strsext.go_next(longint(r)));
+        if memType = MT_TEMP then go_next := EditorStr(strsext.go_next(dword(r)))
+        else go_next := EditorStr(strsdos.go_next(pointer(r)));
 end;
 
 procedure free(r : EditorStr);
 begin
-        if memType = MT_DOS then strsdos.free(r)
-        else strsext.free(longint(r));
+        if memType = MT_TEMP then strsext.free(dword(r))
+        else strsdos.free(pointer(r));
 end;
 
-function renum(r : EditorStr) : longint;
+function renum(r : EditorStr) : dword;
 begin
-        if memType = MT_DOS then renum := strsdos.renum(r)
-        else renum := strsext.renum(longint(r));
+        if memType = MT_TEMP then renum := strsext.renum(dword(r))
+        else renum := strsdos.renum(pointer(r));
 end;
 
-function get_num(r : EditorStr) : longint;
+function get_num(r : EditorStr) : dword;
 begin
-        if memType = MT_DOS then get_num := strsdos.get_num(r)
-        else get_num := strsext.get_num(longint(r));
+        if memType = MT_TEMP then get_num := strsext.get_num(dword(r))
+        else get_num := strsdos.get_num(pointer(r));
 end;
 
-function find_num(r : EditorStr; num : longint) : EditorStr;
+function find_num(r : EditorStr; num : dword) : EditorStr;
 begin
-        while r <> nil do begin
+        while not is_nil(r) do begin
                 if num = strs.get_num(r) then break;
                 r := strs.go_next(r);
         end;
         find_num := r;
 end;
 
-function delete(r : EditorStr; num_from, num_to : longint) : EditorStr;
+function delete(r : EditorStr; num_from, num_to : dword) : EditorStr;
 begin
-        if memType = MT_DOS then delete := strsdos.delete(r, num_from, num_to)
-        else delete := EditorStr(strsext.delete(longint(r), num_from, num_to));
+        if memType = MT_TEMP then delete := EditorStr(strsext.delete(dword(r), num_from, num_to))
+        else delete := EditorStr(strsdos.delete(pointer(r), num_from, num_to));
 end;
 
 function merge(r : EditorStr) : EditorStr;
 begin
-        if memType = MT_DOS then merge := strsdos.merge(r)
-        else merge := EditorStr(strsext.merge(longint(r)));
+        if memType = MT_TEMP then merge := EditorStr(strsext.merge(dword(r)))
+        else merge := EditorStr(strsdos.merge(pointer(r)));
 end;
 
 function append(r : EditorStr; var pos : integer; p : pchar; var lnum:word) : EditorStr;
 begin
-        if memType = MT_DOS then append := strsdos.append(r, pos, p, lnum)
-        else append := EditorStr(strsext.append(longint(r), pos, p, lnum));
+        if memType = MT_TEMP then append := EditorStr(strsext.append(dword(r), pos, p, lnum))
+        else append := EditorStr(strsdos.append(pointer(r), pos, p, lnum));
 end;
 
 function split(r : EditorStr; pos : integer) : EditorStr;
 begin
-        if memType = MT_DOS then split := strsdos.split(r, pos)
-        else split := EditorStr(strsext.split(longint(r), pos));
+        if memType = MT_TEMP then split := EditorStr(strsext.split(dword(r), pos))
+        else split := strsdos.split(pointer(r), pos);
 end;
 
 function is_nil(r : EditorStr) : boolean;
 begin
-        is_nil := r = nil;
+        if memType = MT_TEMP then is_nil := strsext.is_nil(dword(r))
+        else is_nil := strsdos.is_nil(pointer(r));
 end;
 
 end.

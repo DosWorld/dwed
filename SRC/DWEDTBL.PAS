@@ -37,10 +37,9 @@ implementation
 uses kminput, scr, scrui, strs, strutil, dwedhl, dwedlnch, dwedutil;
 
 const
-tbl_column_chars : string = '³º';
-
-tbl_transl_chars1 : string = 'ÃÅÂ´ÆÑµÚ¿ÕØ¸³ÌÎË¹ÇÒ×¶Ö·É»º';
-tbl_transl_chars2 : string = '³³³³³³³³³³³³³ººººººººººººº';
+tbl_column_chars  : string[2]  = '³º';
+tbl_transl_chars1 : string[26] = 'ÃÅÂ´ÆÑµÚ¿ÕØ¸³ÌÎË¹ÇÒ×¶Ö·É»º';
+tbl_transl_chars2 : string[26] = '³³³³³³³³³³³³³ººººººººººººº';
 
 function is_in_table_str(var line : string) : boolean;
 var     r         : boolean;
