@@ -465,7 +465,14 @@ begin
 
                 end;
         end;
-
+        if scrupdate <> nil then begin
+                position := filepos(f);
+                percent := (position * 100) div total;
+                if percent <> ppercent then begin
+                        scrup(position, total);
+                        ppercent := percent;
+                end;
+        end;
         if IsOpen(f) then close(f);
 
         if root = 0 then root := strsext.new;
