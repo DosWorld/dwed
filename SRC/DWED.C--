@@ -22,11 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+
 /*
-   New launcher for DWED (2022)
+   Launcher for DWED
 
    Don't touch this options, if don't known "why" and "what is it".
 */
+
 ?argc FALSE
 ?parsecommandline FALSE
 ?codesize
@@ -70,13 +72,11 @@ void PUTS(SI) {
 }
 
 inline char GETCURDRIVE() {
-        AH = 0x19;
-        $INT  0x21
+        AH = 0x19; $INT  0x21;
 }
 
 inline void SETCURDRIVE(DL) {
-        AH = 0x0E;
-        $INT  0x21
+        AH = 0x0E; $INT  0x21;
 }
 
 inline void GETDIR(DL, SI) {
@@ -86,8 +86,7 @@ inline void GETDIR(DL, SI) {
         $INT 0x21;
         $POP SI, DX;
         IF(CARRYFLAG) {
-                AH = 0x47;
-                $INT 0x21;
+                AH = 0x47; $INT 0x21;
         }
 }
 
@@ -98,8 +97,7 @@ inline void CHDIR(DX) {
         $INT  0x21;
         $POP DX;
         IF(CARRYFLAG) {
-                AH = 0x3b;
-                $INT  0x21;
+                AH = 0x3b; $INT  0x21;
         }
 }
 
@@ -152,8 +150,7 @@ word SPAWN(DX, BX, CX) {
                   AX = error code */
 
 inline char GETEXITCODE() {
-        AH = 0x4d;
-        $INT 0x21;
+        AH = 0x4d; $INT 0x21;
 }
 
 char RANDOM_CHR() {
@@ -176,7 +173,7 @@ char RANDOM_CHR() {
 
         DH = 0;
         $POP CX;
-        return DSBYTE[DX + rndchars];
+        return rndchars[DX];
 }
 
 inline char CHECK_INSTALL(BX) {
@@ -287,7 +284,7 @@ inline void INIT() {
         DSWORD[5] = #dwed_info;
 }
 
-int main() {
+void main() {
         @INIT();
         IF(@CHECK_INSTALL(DSWORD[PARENT_PSP])) {
                 PUTS("Cycle!");
@@ -305,8 +302,7 @@ int main() {
                         @SETCURDRIVE(cur_drive);
                         @CHDIR(#cur_dir);
                         // wait key
-                        AX = 0;
-                        $INT 0x16;
+                        AX = 0; $INT 0x16;
                 }
         }
         AH = 0x4c; $INT 0x21;
