@@ -5,20 +5,20 @@ dwed.exe: dwed.c--
 
 dwclip.exe: dwclip.pas
 	tpc -B -$D- -$G- -$R- -$S- -$I- -$E- dwclip.pas
-	upx -9 --8086 dwclip.exe
+	lzexe dwclip.exe
 
 debug: dwedovl.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsdos.pas strsext.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedaddo.pas dwedlnch.pas mouse.pas event.pas dwedtbl.pas
-        tpc -B -DDEBUG -$D+ -$L+ -$G- -$R- -$S- -$I- -$E- -$Q- -$B- dwedovl.pas
+        tpc -B -V -DDEBUG -$D+ -$L+ -$G- -$R- -$S- -$I- -$E- -$Q- -$B- dwedovl.pas
 
 dwedovl.exe: dwedovl.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsdos.pas strsext.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedaddo.pas dwedlnch.pas mouse.pas event.pas dwedtbl.pas
-        tpc -B -$D- -$L- -$G- -$R- -$S- -$I- -$E- -$Q- -$B- dwedovl.pas
+        tpc -B -$D+ -$L+ -$G- -$R- -$S- -$I- -$E- -$Q- -$B- dwedovl.pas
 
 dwedhelp.hlp: dwed.txt hlpc.exe
         hlpc dwed.txt dwedhelp.hlp
 
 hlpc.exe: hlpc.pas help.pas
         tpc -B -$D- -$G- -$R- -$S- -$I- -$E- hlpc.pas
-	upx -9 --8086 hlpc.exe
+	lzexe hlpc.exe
 
 dwedhelp.obj: dwedhelp.hlp
         bin2obj dwedhelp.hlp dwedhelp.obj HELPBIN

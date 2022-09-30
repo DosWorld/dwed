@@ -1,5 +1,4 @@
-{
- MIT License
+{ MIT License
 
 Copyright (c) 2022 Viacheslav Komenda
 
@@ -19,8 +18,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-}
+SOFTWARE. }
 {$I-}
 unit strs;
 
@@ -47,7 +45,6 @@ function put(r : EditorStr; var body : string) : EditorStr;
 procedure get(r : EditorStr; var dest : string);
 function delete(r : EditorStr; num_from, num_to : longint) : EditorStr;
 function merge(r : EditorStr) : EditorStr;
-
 function is_first(r : EditorStr) : boolean;
 function is_last(r : EditorStr) : boolean;
 

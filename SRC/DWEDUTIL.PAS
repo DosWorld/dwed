@@ -1,5 +1,4 @@
-{
- MIT License
+{ MIT License
 
 Copyright (c) 2020 Viacheslav Komenda
 
@@ -19,8 +18,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-}
+SOFTWARE. }
 unit dwedutil;
 
 interface
@@ -69,8 +67,8 @@ function mk_short_name(fname : string) : string;
 procedure new_file(var ctx : TEditorContext; fname : string);
 function load_file(var ctx : TEditorContext; fname : string; var errCode : integer; percent_proc : pointer) : integer;
 
-procedure load_file_progress(value, total : dword);
-procedure save_file_progress(value, total : dword);
+procedure load_file_progress(value, total, start_time : dword);
+procedure save_file_progress(value, total, start_time : dword);
 
 procedure handle_error(var ctx : TEditorContext; errCode:integer);
 
@@ -79,12 +77,19 @@ function fast_jmp(var ctx:TEditorContext; fjl : pfast_jmp_list) : integer;
 
 function get_err_msg(errCode:integer) : string;
 
+function get_ticks : longint;
+
 implementation
 
 uses system2, wincb, kminput, event, scr, scrui, strs, str, dwedhl, dwedlnch;
 
 const
 SPINNER : string[8] = '|/-\|/-\';
+
+function get_ticks : longint;
+begin
+     get_ticks := meml[Seg0040:$006c];
+end;
 
 procedure commit(var ctx : TEditorContext);
 begin
@@ -856,13 +861,42 @@ begin
         fast_jmp := r;
 end;
 
+{$F-}
 function get_spinner(value : dword) : char;
 begin
         get_spinner := SPINNER[(value mod length(SPINNER)) + 1];
 end;
 
+function get_time_diff(start_time : dword) : string;
+var     ctime : longint;
+        h, m, s: integer;
+        t, r : string;
+begin
+        ctime := get_ticks;
+        dec(ctime, start_time);
+        ctime := ctime div 18;
+        h := 0;
+        m := 0;
+        s := ctime mod 60;
+        ctime := ctime div 60;
+        m := ctime mod 60;
+        ctime := ctime div 60;
+        h := ctime;
+        r := '';
+        t := itoa(h);
+        if t[0] = #1 then t := '0' + t;
+        r := t + ':';
+        t := itoa(m);
+        if t[0] = #1 then t := '0' + t;
+        r := r + t + ':';
+        t := itoa(s);
+        if t[0] = #1 then t := '0' + t;
+        r := r + t;
+        get_time_diff := r;
+end;
+
 {$F+}
-procedure load_file_progress(value, total : dword);
+procedure load_file_progress(value, total, start_time : dword);
 var     percent, w : integer;
         msg        : string;
         scry       : integer;
@@ -875,12 +909,14 @@ begin
         scr.hprint(2, scry + 1, $70, #$B0, scr.getwidth - 4);
         if percent = 0 then w := 0 else w := ((scr.getwidth - 4) * percent) div 100;
         scr.hprint(2, scry + 1, $70, #$DB,  w);
-        msg := '[ ' + get_spinner(percent) + ' Load ' + lpad(itoa(percent), 3) + '% ]';
+        msg := '[ Load ' + lpad(itoa(percent), 3) + '%  '
+                + get_time_diff(start_time) + ' ]';
         scr.print(3, scry, $70, msg);
+        scr.print(0, 0, $20, get_spinner(percent));
         scr.show;
 end;
 
-procedure save_file_progress(value, total : dword);
+procedure save_file_progress(value, total, start_time : dword);
 var     percent, w : integer;
         msg        : string;
         scry       : integer;
@@ -893,8 +929,10 @@ begin
         scr.hprint(2, scry + 1, $70, #$B0, scr.getwidth - 4);
         if percent = 0 then w := 0 else w := ((scr.getwidth - 4) * percent) div 100;
         scr.hprint(2, scry + 1, $70, #$DB,  w);
-        msg := '[ ' + get_spinner(percent) + ' Save ' + lpad(itoa(percent), 3) + '% ]';
+        msg := '[ Save ' + lpad(itoa(percent), 3) + '%  '
+                + get_time_diff(start_time) + ' ]';
         scr.print(3, scry, $70, msg);
+        scr.print(0, 0, $20, get_spinner(percent));
         scr.show;
 end;
 

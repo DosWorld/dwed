@@ -1,5 +1,4 @@
-{
- MIT License
+{ MIT License
 
 Copyright (c) 2022 Viacheslav Komenda
 
@@ -19,8 +18,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-}
+SOFTWARE. }
 {$A-,F-}
 unit strsdos;
 
@@ -63,7 +61,7 @@ procedure to_file(fname : string; r : pointer; var errCode : integer; scrupdate 
 
 implementation
 
-uses system2, str, dwedtype, strutil;
+uses system2, str, strutil, dwedtype, dwedutil;
 
 type
 PDosStringRec = ^TDosStringRec;
@@ -324,8 +322,10 @@ var     root, cur, last : Pointer;
         scrup      : TPercentUpdateProc;
         tabs       : string;
         readed     : integer;
+        start_date : longint;
 begin
         scrup := TPercentUpdateProc(scrupdate);
+        start_date := get_ticks;
 
         fillchar(f, sizeof(bfile), #0);
         fillchar(tabs[1], 255, #32);
@@ -354,7 +354,7 @@ begin
                                         position := filepos(f);
                                         percent := (position * 100) div total;
                                         if percent <> ppercent then begin
-                                                scrup(position, total);
+                                                scrup(position, total, start_date);
                                                 ppercent := percent;
                                         end;
                                 end;
@@ -378,6 +378,7 @@ var     f          : bfile;
         ppercent   : integer;
         scrup      : TPercentUpdateProc;
         writed     : integer;
+        start_date : longint;
 begin
         assign(f, fname);
         rewrite(f);
@@ -387,6 +388,8 @@ begin
         end;
 
         scrup := TPercentUpdateProc(scrupdate);
+        start_date := get_ticks;
+
         total := renum(r);
         position := 0;
         ppercent := -1;
@@ -403,7 +406,7 @@ begin
                                 inc(position);
                                 percent := (position * 100) div total;
                                 if percent <> ppercent then begin
-                                        scrup(position, total);
+                                        scrup(position, total, start_date);
                                         ppercent := percent;
                                 end;
                         end;

@@ -1,5 +1,4 @@
-{
- MIT License
+{ MIT License
 
 Copyright (c) 2022 Viacheslav Komenda
 
@@ -19,8 +18,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-}
+SOFTWARE. }
 {$A-,F-}
 unit strsext;
 
@@ -64,7 +62,7 @@ procedure to_file(fname : string; r : dword; var errCode : integer; scrupdate : 
 
 implementation
 
-uses system2, str, dbm, dbb, strutil;
+uses system2, str, dbm, dbb, strutil, dwedutil;
 
 type
 TExtStringRec = record
@@ -91,8 +89,6 @@ begin
         FillChar(rec, SizeOf(TExtStringRec), #0);
         rec.next := next;
         rec.prev := prev;
-        rec.recno := 0;
-        rec.num := 0;
         rec.len := length(body) + 1;
         if rec.len <> 1 then rec.recno := dbm_add(dbm_mem, body, rec.len);
         r := dbb_add(dbb_idx, rec);
@@ -121,15 +117,17 @@ end;
 function put(r : dword; var body : string) : dword;
 var     rec : TExtStringRec;
 begin
-        dbb_get(dbb_idx, r, rec);
-        dbm_free(dbm_mem, rec.recno);
-        rec.len := length(body) + 1;
-        if rec.len = 1 then begin
-                rec.recno := 0;
-        end else begin
-                rec.recno := dbm_add(dbm_mem, body, rec.len)
+        if r <> 0 then begin
+                dbb_get(dbb_idx, r, rec);
+                dbm_free(dbm_mem, rec.recno);
+                rec.len := length(body) + 1;
+                if rec.len = 1 then begin
+                        rec.recno := 0;
+                end else begin
+                        rec.recno := dbm_add(dbm_mem, body, rec.len)
+                end;
+                dbb_put(dbb_idx, r, rec);
         end;
-        dbb_put(dbb_idx, r, rec);
         put := r;
 end;
 
@@ -141,7 +139,7 @@ end;
 procedure get(r : dword; var dest : string);
 var     rec : TExtStringRec;
 begin
-        dest := '';
+        dest[0] := #0;
         if r <> 0 then begin
                 dbb_get(dbb_idx, r, rec);
                 if rec.recno <> 0 then dbm_get(dbm_mem, rec.recno, dest, rec.len);
@@ -390,8 +388,8 @@ procedure init;
 begin
         FillChar(dbm_mem, SizeOf(DBMFile), #0);
         FillChar(dbb_idx, SizeOf(DBBFile), #0);
-        dbm_rewrite_temp(dbm_mem, MEM_BLK_SIZE);
-        dbb_rewrite_temp(dbb_idx, IDX_BLK_SIZE);
+        dbm_rewritetemp(dbm_mem, MEM_BLK_SIZE);
+        dbb_rewritetemp(dbb_idx, IDX_BLK_SIZE);
 end;
 
 procedure done;
@@ -413,8 +411,10 @@ var     root       : dword;
         prec, crec : TExtStringRec;
         pno, cno   : dword;
         readed     : integer;
+        start_date : longint;
 begin
         scrup := TPercentUpdateProc(scrupdate);
+        start_date := get_ticks;
 
         fillchar(f, sizeof(bfile), #0);
         fillchar(prec, sizeof(TExtStringRec), #0);
@@ -454,7 +454,7 @@ begin
                                         position := filepos(f);
                                         percent := (position * 100) div total;
                                         if percent <> ppercent then begin
-                                                scrup(position, total);
+                                                scrup(position, total, start_date);
                                                 ppercent := percent;
                                         end;
                                 end;
@@ -469,7 +469,7 @@ begin
                 position := filepos(f);
                 percent := (position * 100) div total;
                 if percent <> ppercent then begin
-                        scrup(position, total);
+                        scrup(position, total, start_date);
                         ppercent := percent;
                 end;
         end;
@@ -489,6 +489,7 @@ var     f          : bfile;
         scrup      : TPercentUpdateProc;
         rec        : TExtStringRec;
         writed     : integer;
+        start_date : longint;
 begin
         assign(f, fname);
         rewrite(f);
@@ -498,6 +499,8 @@ begin
         end;
 
         scrup := TPercentUpdateProc(scrupdate);
+        start_date := get_ticks;
+
         total := strsext.renum(r);
         position := 0;
         ppercent := -1;
@@ -515,7 +518,7 @@ begin
                         if scrupdate <> nil then begin
                                 percent := (position * 100) div total;
                                 if percent <> ppercent then begin
-                                        scrup(position, total);
+                                        scrup(position, total, start_date);
                                         ppercent := percent;
                                 end;
                         end;

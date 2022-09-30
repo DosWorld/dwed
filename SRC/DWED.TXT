@@ -7,7 +7,8 @@ cliboard and syntax highlight support.
 You can use ~DWED~ as ~IDE~ for programming.
 
 Designed for ~IBM-XT~-grade PC with Intel ~8086~/~88~ CPU
-and works in Real Mode ~without~ DPMI.
+and works in Real Mode ~without~ DPMI, but support editing
+up to ~2G~ files.
 
         (c) ~DosWorld~ 2020  MIT License
 
@@ -153,13 +154,9 @@ To configure actions, put into ~DWED.CFG~ lines like:
 ///1EXT-MEMORY
         Ex~t~ended (XMS) ~/~ Ex~p~anded (EMS) memory.
 
-~DWED~ does not use ~XMS~/~EMS~. But if you need use this
-memory - you can do it in indirect way. Just point your
-~TMP~ directory to ramdisk and choose ~swap~ memory of ~DWED~.
-
-~DWED~ have two memory model - conventional (OS) memory
-and "external string storage". External string storage is
-file on disk (into ~TMP~ or ~TEMP~ dir).
+~DWED~ use ~XMS~/~EMS~ for cache only (1-2M). But if you want use
+full memory - you can do it in indirect way. Just point
+your ~TMP~ directory to RamDisk and choose ~swap~ memory.
 
 Memory model could be configured via config setting:
 
@@ -167,9 +164,10 @@ Memory model could be configured via config setting:
 
    Values:
 
-~dos~     - Use MS-DOS conventional memory. IRL up to 350K.
+~dos~     - Use ~MS-DOS~ conventional memory. Fast.
+          IRL up to ~350K~.
 ~swap~    - Temporary files as string storage (with or
-          without EMS/XMS cache). In theory, up to 2G.
+          without ~EMS~/~XMS~ cache). In theory, up to ~2G~.
           Require free space into ~TMP~ (or ~TEMP~) dir.
 
 At the same time, you can specify one option only.
@@ -213,7 +211,7 @@ it is mean ~7~ - foreground color and ~0~ - background.
         All configuration options.
 
 ~hl.enable~ = 1
-~memory~ = dos~|~swap~|~xms~|~ems   (see ~EXT-MEMORY~)
+~memory~ = dos~|~swap~    (see ~EXT-MEMORY~)
 ~tab_size~ = 8
 ~color.top~ = 70
 ~color.top_hl~ = 74

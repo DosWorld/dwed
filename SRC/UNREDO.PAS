@@ -1,5 +1,4 @@
-{
- MIT License
+{ MIT License
 
 Copyright (c) 2022 Viacheslav Komenda
 
@@ -19,8 +18,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-}
+SOFTWARE. }
 {$A-}
 unit unredo;
 
@@ -58,8 +56,8 @@ procedure init;
 begin
         FillChar(dbm_mem, SizeOf(DBMFile), #0);
         FillChar(dbb_idx, SizeOf(DBBFile), #0);
-        dbm_rewrite_temp(dbm_mem, MEM_BLK_SIZE);
-        dbb_rewrite_temp(dbb_idx, IDX_BLK_SIZE);
+        dbm_rewritetemp(dbm_mem, MEM_BLK_SIZE);
+        dbb_rewritetemp(dbb_idx, IDX_BLK_SIZE);
 end;
 
 procedure done;
