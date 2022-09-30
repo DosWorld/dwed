@@ -864,6 +864,7 @@ end;
 {$F-}
 function get_spinner(value : dword) : char;
 begin
+        value := (get_ticks - value) div 18;
         get_spinner := SPINNER[(value mod length(SPINNER)) + 1];
 end;
 
@@ -897,10 +898,14 @@ end;
 
 {$F+}
 procedure load_file_progress(value, total, start_time : dword);
-var     percent, w : integer;
+var     w, scry    : integer;
         msg        : string;
-        scry       : integer;
+        percent    : longint;
 begin
+        if (value > 1000000) and (total > 1000000) then begin
+                value := value div 1000;
+                total := total div 1000;
+        end;
         percent := (value * 100) div total;
         if percent < 0 then percent := 0;
         if percent > 100 then percent := 100;
@@ -912,15 +917,19 @@ begin
         msg := '[ Load ' + lpad(itoa(percent), 3) + '%  '
                 + get_time_diff(start_time) + ' ]';
         scr.print(3, scry, $70, msg);
-        scr.print(0, 0, $20, get_spinner(percent));
+        scr.print(0, 0, $20, get_spinner(start_time));
         scr.show;
 end;
 
 procedure save_file_progress(value, total, start_time : dword);
-var     percent, w : integer;
+var     w, scry    : integer;
         msg        : string;
-        scry       : integer;
+        percent    : longint;
 begin
+        if (value > 1000000) and (total > 1000000) then begin
+                value := value div 1000;
+                total := total div 1000;
+        end;
         percent := (value * 100) div total;
         if percent < 0 then percent := 0;
         if percent > 100 then percent := 100;
@@ -932,7 +941,7 @@ begin
         msg := '[ Save ' + lpad(itoa(percent), 3) + '%  '
                 + get_time_diff(start_time) + ' ]';
         scr.print(3, scry, $70, msg);
-        scr.print(0, 0, $20, get_spinner(percent));
+        scr.print(0, 0, $20, get_spinner(start_time));
         scr.show;
 end;
 

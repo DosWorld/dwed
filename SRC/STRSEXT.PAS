@@ -404,8 +404,6 @@ var     root       : dword;
         s          : string;
         total      : dword;
         position   : dword;
-        percent    : integer;
-        ppercent   : integer;
         scrup      : TPercentUpdateProc;
         tabs       : string;
         prec, crec : TExtStringRec;
@@ -421,7 +419,6 @@ begin
         fillchar(tabs[1], 255, #32);
         tabs[0] := chr(tab_size);
 
-        ppercent := -1;
         root := 0;
         readed := 0;
         total := 0;
@@ -452,11 +449,7 @@ begin
                         if readed > PROGRESS_UPDATE then begin
                                 if scrupdate <> nil then begin
                                         position := filepos(f);
-                                        percent := (position * 100) div total;
-                                        if percent <> ppercent then begin
-                                                scrup(position, total, start_date);
-                                                ppercent := percent;
-                                        end;
+                                        scrup(position, total, start_date);
                                 end;
                                 readed := 0;
                         end;
@@ -467,11 +460,7 @@ begin
         end;
         if scrupdate <> nil then begin
                 position := filepos(f);
-                percent := (position * 100) div total;
-                if percent <> ppercent then begin
-                        scrup(position, total, start_date);
-                        ppercent := percent;
-                end;
+                scrup(position, total, start_date);
         end;
         if IsOpen(f) then close(f);
 
@@ -484,8 +473,6 @@ var     f          : bfile;
         s          : string;
         total      : dword;
         position   : dword;
-        percent    : integer;
-        ppercent   : integer;
         scrup      : TPercentUpdateProc;
         rec        : TExtStringRec;
         writed     : integer;
@@ -503,7 +490,6 @@ begin
 
         total := strsext.renum(r);
         position := 0;
-        ppercent := -1;
         writed := 0;
 
         while r <> 0 do begin
@@ -516,11 +502,7 @@ begin
                 inc(position);
                 if writed > PROGRESS_UPDATE then begin
                         if scrupdate <> nil then begin
-                                percent := (position * 100) div total;
-                                if percent <> ppercent then begin
-                                        scrup(position, total, start_date);
-                                        ppercent := percent;
-                                end;
+                                scrup(position, total, start_date);
                         end;
                         writed := 0;
                 end;

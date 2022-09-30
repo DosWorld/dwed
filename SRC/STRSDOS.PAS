@@ -317,8 +317,6 @@ var     root, cur, last : Pointer;
         i          : integer;
         total      : longint;
         position   : longint;
-        percent    : integer;
-        ppercent   : integer;
         scrup      : TPercentUpdateProc;
         tabs       : string;
         readed     : integer;
@@ -331,7 +329,6 @@ begin
         fillchar(tabs[1], 255, #32);
         tabs[0] := chr(tab_size);
 
-        ppercent := -1;
         root := nil; last := nil;
         readed := 0;
         total := 0;
@@ -352,11 +349,7 @@ begin
                         if readed > PROGRESS_UPDATE then begin
                                 if scrupdate <> nil then begin
                                         position := filepos(f);
-                                        percent := (position * 100) div total;
-                                        if percent <> ppercent then begin
-                                                scrup(position, total, start_date);
-                                                ppercent := percent;
-                                        end;
+                                        scrup(position, total, start_date);
                                 end;
                                 readed := 0;
                         end;
@@ -374,8 +367,6 @@ var     f          : bfile;
         s          : string;
         total      : longint;
         position   : longint;
-        percent    : integer;
-        ppercent   : integer;
         scrup      : TPercentUpdateProc;
         writed     : integer;
         start_date : longint;
@@ -392,7 +383,6 @@ begin
 
         total := renum(r);
         position := 0;
-        ppercent := -1;
         writed := 0;
 
         while r <> nil do begin
@@ -404,11 +394,7 @@ begin
                 if writed > PROGRESS_UPDATE then begin
                         if scrupdate <> nil then begin
                                 inc(position);
-                                percent := (position * 100) div total;
-                                if percent <> ppercent then begin
-                                        scrup(position, total, start_date);
-                                        ppercent := percent;
-                                end;
+                                scrup(position, total, start_date);
                         end;
                         writed := 0;
                 end;
