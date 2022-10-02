@@ -65,7 +65,7 @@ function is_nil(r : EditorStr) : boolean;
 
 implementation
 
-uses strsdos, strsext, dwedtype, system2, str, strutil;
+uses system2, scr, strsdos, strsext, dwedtype, str, strutil;
 
 const
 memType : MemoryType = MT_DOS;
@@ -191,10 +191,12 @@ end;
 
 function find_num(r : EditorStr; num : dword) : EditorStr;
 begin
+        spinner_start;
         while not is_nil(r) do begin
                 if num = strs.get_num(r) then break;
                 r := strs.go_next(r);
         end;
+        spinner_stop;
         find_num := r;
 end;
 

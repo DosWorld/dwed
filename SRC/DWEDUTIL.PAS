@@ -83,9 +83,6 @@ implementation
 
 uses system2, wincb, kminput, event, scr, scrui, strs, str, dwedhl, dwedlnch;
 
-const
-SPINNER : string[8] = '|/-\|/-\';
-
 function get_ticks : longint;
 begin
      get_ticks := meml[Seg0040:$006c];
@@ -862,11 +859,6 @@ begin
 end;
 
 {$F-}
-function get_spinner(value : dword) : char;
-begin
-        value := (get_ticks - value) div 18;
-        get_spinner := SPINNER[(value mod length(SPINNER)) + 1];
-end;
 
 function get_time_diff(start_time : dword) : string;
 var     ctime : longint;
@@ -917,7 +909,6 @@ begin
         msg := '[ Load ' + lpad(itoa(percent), 3) + '%  '
                 + get_time_diff(start_time) + ' ]';
         scr.print(3, scry, $70, msg);
-        scr.print(0, 0, $20, get_spinner(start_time));
         scr.show;
 end;
 
@@ -941,7 +932,6 @@ begin
         msg := '[ Save ' + lpad(itoa(percent), 3) + '%  '
                 + get_time_diff(start_time) + ' ]';
         scr.print(3, scry, $70, msg);
-        scr.print(0, 0, $20, get_spinner(start_time));
         scr.show;
 end;
 

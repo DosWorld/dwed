@@ -62,11 +62,15 @@ function gety:integer;
 procedure scroll_up(stx, sty, w, h, lines : integer);
 procedure scroll_down(stx, sty, w, h, lines : integer);
 
+procedure spinner_start;
+procedure spinner_stop;
+
 implementation
 
-uses kminput;
+uses kminput, dos;
 
 const vseg : word = 0;
+SPINNER : string[8] = '|/-\|/-\';
 
 type
 
@@ -80,6 +84,9 @@ end;
 
 const last_scr_buf : PScr = nil;
 var screen_size, line_size : word;
+
+var spinnerValue  : byte;
+    spinnerOldInt : pointer;
 
 function getheight : integer;assembler;
 asm
@@ -447,7 +454,31 @@ begin
         end;
 end;
 
+procedure spinner1c;interrupt;
+var spin : char;
 begin
+        spin := SPINNER[(spinnerValue shr 3) + 1];
+        mem[vseg:0] := Ord(spin);
+        mem[vseg:1] := $20;
+        screen^ := spin;
+        screen[1] := #$20;
+        Inc(spinnerValue);
+        spinnerValue := spinnerValue mod (length(SPINNER) shl 3);
+end;
+
+procedure spinner_start;
+begin
+        spinnerValue := 0;
+        SetIntVec($1c, @spinner1c);
+end;
+
+procedure spinner_stop;
+begin
+        SetIntVec($1c, spinnerOldInt);
+end;
+
+begin
+        GetIntVec($1c, spinnerOldInt);
         cursor := scr.get_cursor;
         if scr.is_monochrome then vseg := segb000 else vseg := segb800;
         scr.set_blink(false);

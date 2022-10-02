@@ -62,7 +62,7 @@ procedure to_file(fname : string; r : dword; var errCode : integer; scrupdate : 
 
 implementation
 
-uses system2, str, dbm, dbb, strutil, dwedutil;
+uses System2, scr, str, dbm, dbb, strutil, dwedutil;
 
 type
 TExtStringRec = record
@@ -221,6 +221,7 @@ function renum(r : dword) : dword;
 var     rec : TExtStringRec;
         res : dword;
 begin
+        spinner_start;
         res := 0;
         while r <> 0 do begin
                 inc(res);
@@ -229,6 +230,7 @@ begin
                 dbb_put(dbb_idx, r, rec);
                 r := rec.next;
         end;
+        spinner_stop;
         renum := res;
 end;
 
@@ -244,6 +246,7 @@ var     rno, lrno   : dword;
         line, lline : dword;
         rec         : TExtStringRec;
 begin
+        spinner_start;
         rno := r;
         line := 1;
         lrno := 0;
@@ -280,6 +283,7 @@ begin
                 inc(line);
                 rno := rec.next;
         end;
+        spinner_stop;
         delete := r;
 end;
 
@@ -320,6 +324,7 @@ var     s, src, s1, s2 : string;
         len : integer;
         rec : TExtStringRec;
 begin
+        spinner_start;
         lnum := 0;
         if not ((r = 0) or (p = nil)) then begin
                 s := '';
@@ -363,6 +368,7 @@ begin
                         r := strsext.put(r, s1);
                 end;
         end;
+        spinner_stop;
         append := r;
 end;
 
@@ -411,6 +417,7 @@ var     root       : dword;
         readed     : integer;
         start_date : longint;
 begin
+        spinner_start;
         scrup := TPercentUpdateProc(scrupdate);
         start_date := get_ticks;
 
@@ -466,6 +473,7 @@ begin
 
         if root = 0 then root := strsext.new;
         from_file := root;
+        spinner_stop;
 end;
 
 procedure to_file(fname : string; r : dword; var errCode : integer; scrupdate : pointer);
@@ -484,6 +492,8 @@ begin
                 errCode := 105;
                 exit;
         end;
+
+        spinner_start;
 
         scrup := TPercentUpdateProc(scrupdate);
         start_date := get_ticks;
@@ -509,6 +519,7 @@ begin
         end;
         truncate(f);
         close(f);
+        spinner_stop;
 end;
 
 function is_nil(r : dword) : boolean;

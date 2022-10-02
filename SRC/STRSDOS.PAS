@@ -61,7 +61,7 @@ procedure to_file(fname : string; r : pointer; var errCode : integer; scrupdate 
 
 implementation
 
-uses system2, str, strutil, dwedtype, dwedutil;
+uses System2, scr, str, strutil, dwedtype, dwedutil;
 
 type
 PDosStringRec = ^TDosStringRec;
@@ -190,12 +190,14 @@ end;
 function renum(r : pointer) : longint;
 var res : longint;
 begin
+        spinner_start;
         res := 0;
         while r <> nil do begin
                 inc(res);
                 PDosStringRec(r)^.num := res;
                 r := PDosStringRec(r)^.next;
         end;
+        spinner_stop;
         renum := res;
 end;
 
@@ -223,6 +225,7 @@ function delete(r : pointer; num_from, num_to : longint) : pointer;
 var t  : PDosStringRec;
     n  : longint;
 begin
+        spinner_start;
         t := r;
         n := 1;
         while (t <> nil) and (t^.num <> num_from) do begin
@@ -238,6 +241,7 @@ begin
                 t^.num := n; inc(n);
                 t := t^.next;
         end;
+        spinner_stop;
         delete := r;
 end;
 
@@ -264,6 +268,7 @@ var     s, src, s1, s2 : string;
         c : char;
         len : integer;
 begin
+        spinner_start;
         lnum := 0;
         if not ((r = nil) or (p = nil)) then begin
                 s := '';
@@ -296,6 +301,7 @@ begin
                         r := strsdos.put(r, s1);
                 end;
         end;
+        spinner_stop;
         append := r;
 end;
 
@@ -322,6 +328,7 @@ var     root, cur, last : Pointer;
         readed     : integer;
         start_date : longint;
 begin
+        spinner_start;
         scrup := TPercentUpdateProc(scrupdate);
         start_date := get_ticks;
 
@@ -359,6 +366,7 @@ begin
         if IsOpen(f) then close(f);
 
         if root = nil then root := strsdos.new;
+        spinner_stop;
         from_file := root;
 end;
 
@@ -377,7 +385,7 @@ begin
                 errCode := 105;
                 exit;
         end;
-
+        spinner_start;
         scrup := TPercentUpdateProc(scrupdate);
         start_date := get_ticks;
 
@@ -401,6 +409,7 @@ begin
         end;
         truncate(f);
         close(f);
+        spinner_stop;
 end;
 
 procedure init;
