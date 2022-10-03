@@ -235,6 +235,7 @@ end;
 var prevExitProc : pointer;
 procedure err_handler;
 begin
+        spinner_stop;
         IF (ErrorAddr <> NIL) AND (ExitCode <> 0) THEN BEGIN
                 scr.pop;
                 scr.show;
@@ -285,7 +286,8 @@ begin
         end;
 
         upstr(ctx.config.memory);
-        if ctx.config.memory = MEM_SWAP then strs.init(strs.MT_TEMP)
+        if ctx.config.memory = MEM_SXMS then strs.init(strs.MT_SXMS)
+        else if ctx.config.memory = MEM_SWAP then strs.init(strs.MT_SWAP)
         else strs.init(strs.MT_DOS);
         unredo.init;
         scr.push;

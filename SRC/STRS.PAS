@@ -27,7 +27,7 @@ unit strs;
 interface
 
 type
-MemoryType = (MT_DOS, MT_TEMP);
+MemoryType = (MT_DOS, MT_SWAP, MT_SXMS);
 EditorStr = pointer;
 
 procedure init(mType : MemoryType);
@@ -65,7 +65,7 @@ function is_nil(r : EditorStr) : boolean;
 
 implementation
 
-uses system2, scr, strsdos, strsext, dwedtype, str, strutil;
+uses system2, scr, strsdos, strssxms, strsswap, dwedtype, str, strutil;
 
 const
 memType : MemoryType = MT_DOS;
@@ -73,42 +73,53 @@ memType : MemoryType = MT_DOS;
 procedure init(mType : MemoryType);
 begin
         memType := mType;
-        if mType = MT_TEMP then strsext.init else strsdos.init;
+        if mType = MT_SXMS then strssxms.init
+        else if mType = MT_SWAP then strsswap.init
+        else strsdos.init;
 end;
 
 procedure done;
 begin
-        if memType = MT_TEMP then strsext.done else strsdos.done;
+        if memType = MT_SXMS then strssxms.done
+        else if memType = MT_SWAP then strsswap.done
+        else strsdos.done;
 end;
 
 function put(r : EditorStr; var body : string) : EditorStr;
 begin
-        if memType = MT_TEMP then put := EditorStr(strsext.put(dword(r), body))
+        if memType = MT_SXMS then put := EditorStr(strssxms.put(dword(r), body))
+        else if memType = MT_SWAP then put := EditorStr(strsswap.put(dword(r), body))
         else put := EditorStr(strsdos.put(pointer(r), body));
 end;
 
 function create(next, prev : EditorStr; var body : string) : EditorStr;
 begin
-        if memType = MT_TEMP then create := EditorStr(strsext.create(dword(next), dword(prev), body))
+        if memType = MT_SXMS then create := EditorStr(strssxms.create(dword(next), dword(prev), body))
+        else if memType = MT_SWAP then create := EditorStr(strsswap.create(dword(next), dword(prev), body))
         else create := EditorStr(strsdos.create(pointer(next), pointer(prev), body));
 end;
 
 function from_file(fname : string; tab_size : integer; var errCode : integer; scrupdate : pointer) : EditorStr;
 begin
+        spinner_start;
         errCode := 0;
         if not FileExists(fname) then begin
                 errCode := 104;
                 from_file := EditorStr(strs.new);
-        end else if memType = MT_TEMP then
-                from_file := EditorStr(strsext.from_file(fname, tab_size, errCode, scrupdate))
+        end else if memType = MT_SXMS then
+                from_file := EditorStr(strssxms.from_file(fname, tab_size, errCode, scrupdate))
+        else if memType = MT_SWAP then
+                from_file := EditorStr(strsswap.from_file(fname, tab_size, errCode, scrupdate))
         else
                 from_file := EditorStr(strsdos.from_file(fname, tab_size, errCode, scrupdate));
+        spinner_stop;
 end;
 
 procedure to_file(fname : string; r : EditorStr; var errCode : integer; scrupdate : pointer);
 var     f        : bfile;
         fnamebak : string;
 begin
+        spinner_start;
         errCode := 0;
         if FileExists(fname) then begin
                 fnamebak := change_ext(fname, '.bak');
@@ -117,75 +128,91 @@ begin
                 rename(f, fnamebak);
         end;
 
-        if memType = MT_TEMP then
-                strsext.to_file(fname, dword(r), errCode, scrupdate)
+        if memType = MT_SXMS then
+                strssxms.to_file(fname, dword(r), errCode, scrupdate)
+        else if memType = MT_SWAP then
+                strsswap.to_file(fname, dword(r), errCode, scrupdate)
         else
                 strsdos.to_file(fname, pointer(r), errCode, scrupdate);
+        spinner_stop;
 end;
 
 function new : EditorStr;
 begin
-        if memType = MT_TEMP then new := EditorStr(strsext.new)
+        if memType = MT_SXMS then new := EditorStr(strssxms.new)
+        else if memType = MT_SWAP then new := EditorStr(strsswap.new)
         else new := EditorStr(strsdos.new);
 end;
 
 procedure get(r : EditorStr; var dest : string);
 begin
-        if memType = MT_TEMP then strsext.get(dword(r), dest)
+        if memType = MT_SXMS then strssxms.get(dword(r), dest)
+        else if memType = MT_SWAP then strsswap.get(dword(r), dest)
         else strsdos.get(pointer(r), dest);
 end;
 
 function is_first(r : EditorStr) : boolean;
 begin
-        if memType = MT_TEMP then is_first := strsext.is_first(dword(r))
+        if memType = MT_SXMS then is_first := strssxms.is_first(dword(r))
+        else if memType = MT_SWAP then is_first := strsswap.is_first(dword(r))
         else is_first := strsdos.is_first(pointer(r));
 end;
 
 function is_last(r : EditorStr) : boolean;
 begin
-        if memType = MT_TEMP then is_last := strsext.is_last(dword(r))
+        if memType = MT_SXMS then is_last := strssxms.is_last(dword(r))
+        else if memType = MT_SWAP then is_last := strsswap.is_last(dword(r))
         else is_last := strsdos.is_last(pointer(r));
 end;
 
 function go_first(r : EditorStr) : EditorStr;
 begin
-        if memType = MT_TEMP then go_first := EditorStr(strsext.go_first(dword(r)))
+        if memType = MT_SXMS then go_first := EditorStr(strssxms.go_first(dword(r)))
+        else if memType = MT_SWAP then go_first := EditorStr(strsswap.go_first(dword(r)))
         else go_first := EditorStr(strsdos.go_first(pointer(r)));
 end;
 
 function go_last(r : EditorStr) : EditorStr;
 begin
-        if memType = MT_TEMP then go_last := EditorStr(strsext.go_last(dword(r)))
+        if memType = MT_SXMS then go_last := EditorStr(strssxms.go_last(dword(r)))
+        else if memType = MT_SWAP then go_last := EditorStr(strsswap.go_last(dword(r)))
         else go_last := EditorStr(strsdos.go_last(pointer(r)));
 end;
 
 function go_prev(r : EditorStr) : EditorStr;
 begin
-        if memType = MT_TEMP then go_prev := EditorStr(strsext.go_prev(dword(r)))
+        if memType = MT_SXMS then go_prev := EditorStr(strssxms.go_prev(dword(r)))
+        else if memType = MT_SWAP then go_prev := EditorStr(strsswap.go_prev(dword(r)))
         else go_prev := EditorStr(strsdos.go_prev(pointer(r)));
 end;
 
 function go_next(r : EditorStr) : EditorStr;
 begin
-        if memType = MT_TEMP then go_next := EditorStr(strsext.go_next(dword(r)))
+        if memType = MT_SXMS then go_next := EditorStr(strssxms.go_next(dword(r)))
+        else if memType = MT_SWAP then go_next := EditorStr(strsswap.go_next(dword(r)))
         else go_next := EditorStr(strsdos.go_next(pointer(r)));
 end;
 
 procedure free(r : EditorStr);
 begin
-        if memType = MT_TEMP then strsext.free(dword(r))
+        if memType = MT_SXMS then strssxms.free(dword(r))
+        else if memType = MT_SWAP then strsswap.free(dword(r))
         else strsdos.free(pointer(r));
 end;
 
 function renum(r : EditorStr) : dword;
 begin
-        if memType = MT_TEMP then renum := strsext.renum(dword(r))
+        spinner_start;
+        if memType = MT_SXMS then renum := strssxms.renum(dword(r))
+        else if memType = MT_SWAP then renum := strsswap.renum(dword(r))
         else renum := strsdos.renum(pointer(r));
+        spinner_stop;
 end;
 
 function get_num(r : EditorStr) : dword;
 begin
-        if memType = MT_TEMP then get_num := strsext.get_num(dword(r))
+        if memType = MT_SXMS then get_num := strssxms.get_num(dword(r))
+        else if memType = MT_SWAP then get_num := strsswap.get_num(dword(r))
         else get_num := strsdos.get_num(pointer(r));
 end;
 
@@ -202,31 +229,40 @@ end;
 
 function delete(r : EditorStr; num_from, num_to : dword) : EditorStr;
 begin
-        if memType = MT_TEMP then delete := EditorStr(strsext.delete(dword(r), num_from, num_to))
+        spinner_start;
+        if memType = MT_SXMS then delete := EditorStr(strssxms.delete(dword(r), num_from, num_to))
+        else if memType = MT_SWAP then delete := EditorStr(strsswap.delete(dword(r), num_from, num_to))
         else delete := EditorStr(strsdos.delete(pointer(r), num_from, num_to));
+        spinner_stop;
 end;
 
 function merge(r : EditorStr) : EditorStr;
 begin
-        if memType = MT_TEMP then merge := EditorStr(strsext.merge(dword(r)))
+        if memType = MT_SXMS then merge := EditorStr(strssxms.merge(dword(r)))
+        else if memType = MT_SWAP then merge := EditorStr(strsswap.merge(dword(r)))
         else merge := EditorStr(strsdos.merge(pointer(r)));
 end;
 
 function append(r : EditorStr; var pos : integer; p : pchar; var lnum:word) : EditorStr;
 begin
-        if memType = MT_TEMP then append := EditorStr(strsext.append(dword(r), pos, p, lnum))
+        spinner_start;
+        if memType = MT_SXMS then append := EditorStr(strssxms.append(dword(r), pos, p, lnum))
+        else if memType = MT_SWAP then append := EditorStr(strsswap.append(dword(r), pos, p, lnum))
         else append := EditorStr(strsdos.append(pointer(r), pos, p, lnum));
+        spinner_stop;
 end;
 
 function split(r : EditorStr; pos : integer) : EditorStr;
 begin
-        if memType = MT_TEMP then split := EditorStr(strsext.split(dword(r), pos))
+        if memType = MT_SXMS then split := EditorStr(strssxms.split(dword(r), pos))
+        else if memType = MT_SWAP then split := EditorStr(strsswap.split(dword(r), pos))
         else split := strsdos.split(pointer(r), pos);
 end;
 
 function is_nil(r : EditorStr) : boolean;
 begin
-        if memType = MT_TEMP then is_nil := strsext.is_nil(dword(r))
+        if memType = MT_SXMS then is_nil := strssxms.is_nil(dword(r))
+        else if memType = MT_SWAP then is_nil := strsswap.is_nil(dword(r))
         else is_nil := strsdos.is_nil(pointer(r));
 end;
 
