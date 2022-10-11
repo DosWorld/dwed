@@ -898,7 +898,8 @@ begin
                 value := value div 1000;
                 total := total div 1000;
         end;
-        percent := (value * 100) div total;
+        percent := 0;
+        if total <> 0 then percent := (value * 100) div total;
         if percent < 0 then percent := 0;
         if percent > 100 then percent := 100;
         scry := (scr.getheight div 2) - 1;
@@ -921,7 +922,8 @@ begin
                 value := value div 1000;
                 total := total div 1000;
         end;
-        percent := (value * 100) div total;
+        percent := 0;
+        if total <> 0 then percent := (value * 100) div total;
         if percent < 0 then percent := 0;
         if percent > 100 then percent := 100;
         scry := (scr.getheight div 2) - 1;
