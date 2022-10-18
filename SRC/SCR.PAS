@@ -35,7 +35,6 @@ procedure printhl(x, y : integer; clr, hlclr : byte; s : string);
 procedure hprint(x, y:integer; clr : byte; c : char; len : integer);
 procedure vprint(x, y:integer; clr : byte; c : char; len : integer);
 procedure chcolor(x, y:integer; clr : byte; len: integer);
-function is_monochrome:boolean;
 
 procedure push;
 procedure pop;
@@ -65,9 +64,18 @@ procedure scroll_down(stx, sty, w, h, lines : integer);
 procedure spinner_start;
 procedure spinner_stop;
 
+procedure Fade0;
+procedure FadeIn;
+procedure FadeOut;
+
+procedure reset_palette;
+procedure gray_palette;
+
+procedure WaitRetrace;
+
 implementation
 
-uses kminput, dos;
+uses kminput, dos, detect;
 
 const vseg : word = 0;
 SPINNER : string[8] = '|/-\|/-\';
@@ -82,11 +90,20 @@ TScr=record
         buf    : byte;
 end;
 
-const last_scr_buf : PScr = nil;
-var screen_size, line_size : word;
+const
+last_scr_buf : PScr = nil;
+FADE_STEP  = 8;
+FADE_DELAY = 15;
 
-var spinnerValue  : byte;
-    spinnerOldInt : pointer;
+var
+screen_size, line_size : word;
+
+spinnerValue  : word;
+spinnerOldInt : pointer;
+spinnerOn     : boolean;
+
+palette : array[0..(256 * 3)] of byte;
+vga     : boolean;
 
 function getheight : integer;assembler;
 asm
@@ -278,7 +295,7 @@ end;
 procedure show;assembler;
 asm
         call       mouse_hide
-
+        call       WaitRetrace
         push       es
         push       ds
 
@@ -357,6 +374,7 @@ procedure pop;
 var p : PScr;
 begin
         if last_scr_buf = nil then exit;
+        WaitRetrace;
         move(last_scr_buf^.buf, screen^, last_scr_buf^.size);
         p := last_scr_buf;
         last_scr_buf := last_scr_buf^.prev;
@@ -367,6 +385,7 @@ end;
 procedure pick;
 begin
         if last_scr_buf = nil then exit;
+        WaitRetrace;
         move(last_scr_buf^.buf, screen^, last_scr_buf^.size);
         scr.locate(last_scr_buf^.x, last_scr_buf^.y);
 end;
@@ -410,16 +429,6 @@ asm
         int        $10
 end;
 
-function is_monochrome : boolean;assembler;
-asm
-        push       ds
-        mov        ax, word ptr [seg0040]
-        mov        ds, ax
-        mov        al, byte ptr [$0065]
-        pop        ds
-        and        al, 4
-end;
-
 procedure scroll_up(stx, sty, w, h, lines : integer);
 var i      : integer;
     scrw   : integer;
@@ -430,6 +439,7 @@ begin
         slines := (lines * scrw) shl 1;
         cur := (stx + (sty * scrw)) shl 1;
         scrw := scrw shl 1;
+        WaitRetrace;
         while i < (h - lines) do begin
                 move(screen[slines + cur], screen[cur], w);
                 inc(cur, scrw);
@@ -447,6 +457,7 @@ begin
         slines := (lines * scrw) shl 1;
         cur := (stx + i * scrw) shl 1;
         scrw := scrw shl 1;
+        WaitRetrace;
         while i >= 0 do begin
                 move(screen[cur], screen[slines + cur], w);
                 dec(cur, scrw);
@@ -457,30 +468,157 @@ end;
 procedure spinner1c;interrupt;
 var spin : char;
 begin
-        spin := SPINNER[(spinnerValue shr 3) + 1];
+        spin := SPINNER[((spinnerValue shr 3) mod length(SPINNER)) + 1];
         mem[vseg:0] := Ord(spin);
         mem[vseg:1] := $20;
         screen^ := spin;
         screen[1] := #$20;
         Inc(spinnerValue);
-        spinnerValue := spinnerValue mod (length(SPINNER) shl 3);
+        if spinnerValue = 90 then gray_palette;
 end;
 
 procedure spinner_start;
 begin
+        if spinnerOn then exit;
         spinnerValue := 0;
         SetIntVec($1c, @spinner1c);
+        spinnerOn := true;
 end;
 
 procedure spinner_stop;
 begin
         SetIntVec($1c, spinnerOldInt);
+        reset_palette;
+        spinnerOn := false;
+end;
+
+procedure delay(ms : word); assembler;
+asm
+        mov  ax, 1000
+        mul  ms
+        mov  cx, dx
+        mov  dx, ax
+        mov  ah, $86
+        int  $15
+end;
+
+procedure save_palette;
+var     i : integer;
+begin
+        if not vga then exit;
+        for i := 0 to 255 do begin
+                Port[$3C7] := i;
+                Palette[i * 3] := Port[$3C9];
+                Palette[i * 3 + 1] := Port[$3C9];
+                Palette[i * 3 + 2] := Port[$3C9];
+        end;
+end;
+
+procedure set_color(num, r, g, b : byte);
+begin
+        Port[$3C8] := num;
+        Port[$3C9] := r;
+        Port[$3C9] := g;
+        Port[$3C9] := b;
+end;
+
+procedure reset_palette;
+var     i : integer;
+begin
+        if not vga then exit;
+        for i := 0 to 255 do begin
+                set_color(i, palette[i * 3], palette[i * 3 + 1], palette[i * 3 + 2]);
+        end;
+end;
+
+procedure gray_palette;
+var     i, n : integer;
+begin
+        if not vga then exit;
+        for i := 0 to 255 do begin
+                n := palette[i * 3] + palette[i * 3 + 1] + palette[i * 3 + 2];
+                n := n div 6;
+                set_color(i, n, n, n);
+        end;
+end;
+
+procedure Fade0;
+var     i : integer;
+begin
+        if not vga then exit;
+        WaitRetrace;
+        for i := 0 to 255 do begin
+                set_color(i, 0, 0, 0);
+        end;
+end;
+
+procedure FadeIn;
+var     op1, op2, op3 : byte;
+        p1, p2, p3    : byte;
+        i, j          : integer;
+begin
+        if not vga then exit;
+        Fade0;
+        for j := 0 to 7 do begin
+                WaitRetrace;
+                for i := 0 to 255 do begin
+                        Port[$3C7] := i;
+                        op1 := Port[$3C9];
+                        op2 := Port[$3C9];
+                        op3 := Port[$3C9];
+                        p1 := palette[i * 3];
+                        p2 := palette[i * 3 + 1];
+                        p3 := palette[i * 3 + 2];
+                        if op1 + FADE_STEP <= p1 then Inc(op1, FADE_STEP) else op1 := p1;
+                        if op2 + FADE_STEP <= p2 then Inc(op2, FADE_STEP) else op2 := p2;
+                        if op3 + FADE_STEP <= p3 then Inc(op3, FADE_STEP) else op3 := p3;
+                        set_color(i, op1, op2, op3);
+                end;
+                delay(FADE_DELAY);
+        end;
+end;
+
+
+procedure FadeOut;
+var     op1, op2, op3 : byte;
+        i, j          : integer;
+begin
+        if not vga then exit;
+        for j := 0 to 7 do begin
+                WaitRetrace;
+                for i := 0 to 255 do begin
+                        Port[$3C7] := i;
+                        op1 := Port[$3C9];
+                        op2 := Port[$3C9];
+                        op3 := Port[$3C9];
+                        if op1 >= FADE_STEP then Dec(op1, FADE_STEP) else op1 := 0;
+                        if op2 >= FADE_STEP then Dec(op2, FADE_STEP) else op2 := 0;
+                        if op3 >= FADE_STEP then Dec(op3, FADE_STEP) else op3 := 0;
+                        set_color(i, op1, op2, op3);
+                end;
+                delay(FADE_DELAY);
+        end;
+        reset_palette;
+end;
+
+procedure WaitRetrace; assembler;
+asm
+        mov  dx, $3da
+@l1:    in   al, dx
+        test al, 8
+        jnz  @l1
+@l2:    in   al, dx
+        test al, 8
+        jz   @l2
 end;
 
 begin
         GetIntVec($1c, spinnerOldInt);
+        spinnerOn := false;
+        vga := Detect.IsVga;
+        save_palette;
         cursor := scr.get_cursor;
-        if scr.is_monochrome then vseg := segb000 else vseg := segb800;
+        if (not vga) and IsMonochrome then vseg := segb000 else vseg := segb800;
         scr.set_blink(false);
         screen_size := (scr.getwidth * scr.getheight) shl 1;
         line_size := scr.getwidth shl 1;

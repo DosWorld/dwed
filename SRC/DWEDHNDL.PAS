@@ -355,6 +355,7 @@ end;
 function hk_file_end(var ctx:TEditorContext; event:PEvent):integer;
 begin
         commit(ctx);
+        spinner_start;
         with ctx.current^ do begin
                 while not strs.is_last(cline) do cline := strs.go_next(cline);
                 scrx := 0;
@@ -362,6 +363,7 @@ begin
                 editor.x := 1;
         end;
         load_ed(ctx);
+        spinner_stop;
         hk_file_end := SCRU_FULL;
 end;
 

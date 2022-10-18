@@ -33,7 +33,10 @@ scr, ansi;
 procedure edit(var ctx : TEditorContext; show_welcome_msg : boolean);
 var     scru, prev_scru, i : integer;
         event              : TEvent;
+        first_time         : boolean;
 begin
+        Fade0;
+        first_time := true;
         scru := SCRU_FULL;
         while scru <> SCRU_QUIT do begin
                 if scru <> SCRU_NONE then begin
@@ -47,6 +50,10 @@ begin
                                 show_welcome_msg := false;
                         end;
                         scru := SCRU_NONE;
+                        if first_time then begin
+                                first_time := false;
+                                FadeIn;
+                        end;
                 end;
                 if not kbd_haskey then begin
                         wait_event(event);
@@ -63,6 +70,7 @@ begin
                         end;
                 end;
         end;
+        FadeOut;
 end;
 
 procedure reset_context(var ctx : TEditorContext);
