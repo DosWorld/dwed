@@ -4,13 +4,13 @@ Text file editor and IDE for MS-DOS and 8086/88 CPU (IBM XT-grade PC) designed i
 
 Main features:
 
-* Support files with size over 64k
-* Dont require DPMI-server or 80286 CPU, but support huge swap-file (could be placed on ramdisk) - up to 2G
+* Support files with size over 64kb (~300kb conventional, or up to 2gb swap)
+* Dont require DPMI-server or 80286 CPU, but support huge swap-file (could be placed on ramdisk)
 * Support basic syntax highlight (C/C++/C--, Pascal, Basic, Assembler, Xml/Html, text files etc)
 * Support multiple file editing at the same time
-* Support internal clipboard (size up to 32k)
 * Support unix-like text files for open
 * Support Long File Names (LFN)
+* Support internal clipboard (size up to 32kb)
 * Support Windows Clipboard (you can use it with DosBox-X)
 * Support user's color scheme (via config-file)
 * Support user's shell script running by hotkeys **F5**, **F8**, **F9**.
@@ -19,8 +19,7 @@ Main features:
 
 Restrictions:
 
-* This software is writen in Borland Pascal, so string length is limited to 255 chars.
-* DOS-conventional memory will be enought to load file up to ~300k..400k (expect - 300k border).
+* This software is writen in Turbo Pascal, so string length is limited to 255 chars.
 * DWED don't parse file content in the same way, as compilers - so, some time syntax highlight can fail (be wrong). I know it. But it is better then nothing.
 * No Undo/Redo functionality. The reason is the same as why i dont build AST for syntax highlight - here is no memory/CPU speed for it.
 
