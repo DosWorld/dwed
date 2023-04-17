@@ -29,7 +29,8 @@ function process_event(var ctx : TEditorContext; var e : TEvent) : integer;
 
 implementation
 
-uses dwedhelp, scr, kminput, scrui, strs, str, dwedscru, dwedutil, dwedaddo, dwedhl, dwedlnch, system2, wincb, dwedtbl;
+uses dwedhelp, scr, kminput, cstring, scrui, strs, str, dwedscru, dwedutil,
+dwedaddo, dwedhl, dwedlnch, system2, wincb, dwedtbl;
 
 {$F+}
 const

@@ -81,7 +81,7 @@ function get_ticks : longint;
 
 implementation
 
-uses system2, wincb, kminput, event, scr, scrui, strs, str, dwedhl, dwedlnch;
+uses system2, wincb, kminput, event, cstring, scr, scrui, strs, str, dwedhl, dwedlnch;
 
 function get_ticks : longint;
 begin

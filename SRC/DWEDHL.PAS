@@ -25,7 +25,7 @@ unit dwedhl;
 interface
 
 type
-SourceType = (SRC_C, SRC_CMM, SRC_PAS, SRC_BAS, SRC_ASM, SRC_BAT, SRC_MD,
+SourceType = (SRC_C, SRC_CMM, SRC_PAS, SRC_MOD, SRC_OB, SRC_BAS, SRC_ASM, SRC_BAT, SRC_MD,
                 SRC_XML, SRC_HTML, SRC_FORTH, SRC_NONE,
                 SRC_DISABLE);
 
@@ -667,6 +667,62 @@ begin
         dwedhl.add_keyword(SRC_PAS, 'true');
         dwedhl.add_keyword(SRC_PAS, 'false');
         dwedhl.add_keyword(SRC_PAS, 'nil');
+
+        dwedhl.add_lang(SRC_MOD, '|mod|', true, ',.()+*-:=<>#$@^;{}[]'+#$27, '.mod Modula Source');
+        dwedhl.add_keyword(SRC_MOD, 'AND');
+        dwedhl.add_keyword(SRC_MOD, 'ARRAY');
+        dwedhl.add_keyword(SRC_MOD, 'BEGIN');
+        dwedhl.add_keyword(SRC_MOD, 'BY');
+        dwedhl.add_keyword(SRC_MOD, 'CASE');
+        dwedhl.add_keyword(SRC_MOD, 'CONST');
+        dwedhl.add_keyword(SRC_MOD, 'DEFINITION');
+        dwedhl.add_keyword(SRC_MOD, 'DIV');
+        dwedhl.add_keyword(SRC_MOD, 'DO');
+        dwedhl.add_keyword(SRC_MOD, 'ELSE');
+        dwedhl.add_keyword(SRC_MOD, 'ELSIF');
+        dwedhl.add_keyword(SRC_MOD, 'END');
+        dwedhl.add_keyword(SRC_MOD, 'EXIT');
+        dwedhl.add_keyword(SRC_MOD, 'EXPORT');
+        dwedhl.add_keyword(SRC_MOD, 'FOR');
+        dwedhl.add_keyword(SRC_MOD, 'FROM');
+        dwedhl.add_keyword(SRC_MOD, 'IF');
+        dwedhl.add_keyword(SRC_MOD, 'IMPLEMENTATION');
+        dwedhl.add_keyword(SRC_MOD, 'IMPORT');
+        dwedhl.add_keyword(SRC_MOD, 'IN');
+        dwedhl.add_keyword(SRC_MOD, 'LOOP');
+        dwedhl.add_keyword(SRC_MOD, 'MOD');
+        dwedhl.add_keyword(SRC_MOD, 'MODULE');
+        dwedhl.add_keyword(SRC_MOD, 'NOT');
+        dwedhl.add_keyword(SRC_MOD, 'OF');
+        dwedhl.add_keyword(SRC_MOD, 'OR');
+        dwedhl.add_keyword(SRC_MOD, 'POINTER');
+        dwedhl.add_keyword(SRC_MOD, 'PROCEDURE');
+        dwedhl.add_keyword(SRC_MOD, 'QUALIFIED');
+        dwedhl.add_keyword(SRC_MOD, 'RECORD');
+        dwedhl.add_keyword(SRC_MOD, 'REPEAT');
+        dwedhl.add_keyword(SRC_MOD, 'RETURN');
+        dwedhl.add_keyword(SRC_MOD, 'SET');
+        dwedhl.add_keyword(SRC_MOD, 'THEN');
+        dwedhl.add_keyword(SRC_MOD, 'TO');
+        dwedhl.add_keyword(SRC_MOD, 'TYPE');
+        dwedhl.add_keyword(SRC_MOD, 'UNTIL');
+        dwedhl.add_keyword(SRC_MOD, 'VAR');
+        dwedhl.add_keyword(SRC_MOD, 'WHILE');
+        dwedhl.add_keyword(SRC_MOD, 'WITH');
+
+        dwedhl.add_keyword(SRC_MOD, 'BITSET');
+        dwedhl.add_keyword(SRC_MOD, 'CARDINAL');
+        dwedhl.add_keyword(SRC_MOD, 'TRUE');
+        dwedhl.add_keyword(SRC_MOD, 'FALSE');
+        dwedhl.add_keyword(SRC_MOD, 'BOOLEAN');
+        dwedhl.add_keyword(SRC_MOD, 'CHAR');
+        dwedhl.add_keyword(SRC_MOD, 'FLOAT');
+        dwedhl.add_keyword(SRC_MOD, 'INTEGER');
+        dwedhl.add_keyword(SRC_MOD, 'LONGINT');
+        dwedhl.add_keyword(SRC_MOD, 'LONGREAL');
+        dwedhl.add_keyword(SRC_MOD, 'NIL');
+        dwedhl.add_keyword(SRC_MOD, 'REAL');
+        dwedhl.add_keyword(SRC_MOD, 'SIZE');
 
         s := '';
         for i := $B3 to $DA do s := s + chr(i);
