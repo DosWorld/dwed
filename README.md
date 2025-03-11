@@ -11,7 +11,7 @@ Main features:
 * Support unix-like text files for open
 * Support Long File Names (LFN)
 * Support internal clipboard (size up to 32kb)
-* Support Windows Clipboard (you can use it with DosBox-X)
+* Support Windows Clipboard (you can use it with [clipdrv](https://github.com/DosWorld/clipdrv) or DosBox-X)
 * Support user's color scheme (via config-file)
 * Support user's shell script running by hotkeys **F5**, **F8**, **F9**.
 * You can disable highlight and receive good speed with XT.
