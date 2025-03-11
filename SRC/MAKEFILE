@@ -1,11 +1,7 @@
-all : dwed.exe dwedovl.exe dwclip.exe
+all : dwed.exe dwedovl.exe
 
 dwed.exe: dwed.c--
         c-- dwed.c--
-
-dwclip.exe: dwclip.pas
-	tpc -B -$D- -$G- -$R- -$S- -$I- -$E- dwclip.pas
-	lzexe dwclip.exe
 
 debug: dwedovl.pas dwedtype.pas dwedhndl.pas dwedutil.pas strs.pas strsdos.pas strsswap.pas strssxms.pas dwedhl.pas dwedscru.pas dwedhelp.obj dwedhelp.pas dwedhelp.obj scr.pas scrui.pas help.pas strutil.pas kbd.pas dwedaddo.pas dwedlnch.pas mouse.pas event.pas dwedtbl.pas
         tpc -B -V -DDEBUG -$D+ -$L+ -$G- -$R- -$S- -$I- -$E- -$Q- -$B- dwedovl.pas

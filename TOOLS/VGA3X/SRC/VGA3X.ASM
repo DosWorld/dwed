@@ -15,11 +15,24 @@
 ;
 ; Published in Softpanorama 1993, Vol 4(38). SP54A
 ;
+; Build:
+;
+;  nasm -f bin vga3x.asm -DVGA30 -o vga30.com
+;  nasm -f bin vga3x.asm -DVGA34 -o vga34.com
+;
 ; License
 ;
 ; Public domain
 ;
-; I am not author, just translate to english and Nasm. :)
+; I am (DosWorld) not author, just translate to english and Nasm. :)
+;
+; Added lines (to reduce tsr-size):
+;
+;       mov      es, word[PSP_ENV_SEG]
+;       mov      ah, INT21_FREE_MEM
+;       int      21h
+;
+; Also, added few minor changes.
 ;
 ; Original author:
 ;
@@ -28,11 +41,21 @@
 ; Work phone : (0562)448-158
 ; Network 2:464/20.4@fidonet
 ;
+
+PSP_ENV_SEG        equ 2Ch
+
+INT21_FREE_MEM     equ 49h
+INT21_GET_INT_VECT equ 35h
+INT21_SET_INT_VECT equ 25h
+
+INT27_TSR          equ 27h
+
         section  .code
         bits     16
         org      100h
-start:
+
         jmp      main_part
+
 SeqData:
         dw       00100h
         dw       00001h
@@ -69,9 +92,9 @@ clear_scr:
 int10h:
         pushf
         cmp      ah, 0
-        je       anal_mode
+        je       analog_mode
         jmp      end_res
-anal_mode:
+analog_mode:
         mov      byte[cs: clear_scr],1
         cmp      al, 3
         je       set_30
@@ -194,17 +217,20 @@ end_set:
         iret
 end_res:
         popf
+; jmp far
         db       0eah
 old_10:
 offs:
         dw       0
 segm:
         dw       0
-
+; ----------------------------------------------
+tsr_end:
+msg:    db 'VGA3x driver installed.', 0Dh, 0Ah, '$'
 main_part:
-        mov      ax, cs
-        mov      ds, ax
-        mov      ah, 35h
+        push     cs
+        pop      ds
+        mov      ah, INT21_GET_INT_VECT
         mov      al, 10h
         int      21h
         mov      word[segm],es
@@ -212,14 +238,21 @@ main_part:
 
         mov      dx, int10h
         mov      al, 10h
-        mov      ah, 25h
+        mov      ah, INT21_SET_INT_VECT
         int      21h
 
         mov      ah, 0
         mov      al, 3
         int      10h
-        mov      dx, main_part
-        int      27h
 
+        mov      es, word[PSP_ENV_SEG]
+        mov      ah, INT21_FREE_MEM
+        int      21h
 
+        mov      dx, msg
+        mov      ah, 9
+        int      21h
+
+        mov      dx, tsr_end
+        int      INT27_TSR
 
