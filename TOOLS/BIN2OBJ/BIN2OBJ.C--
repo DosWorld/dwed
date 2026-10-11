@@ -59,7 +59,7 @@ int run(word iname, word oname, word pubname) {
 
     i = open(iname, F_READ);
     if(AX == 0) {
-        ERROR("ERROR:Could not read ", oname);
+        ERROR("ERROR:Could not read ", iname);
         return 1;
     }
     DSWORD[#pBegin + 2] = DSWORD[#pBegin] = 0;
@@ -74,14 +74,11 @@ int run(word iname, word oname, word pubname) {
         return 1;
     }
 
-    o = open(oname, F_WRITE);
+    o = create(oname, FA_NORMAL);
     if(AX == 0) {
-        o = create(oname, FA_NORMAL);
-        if(AX == 0) {
-            ERROR("ERROR:Could not write ", oname);
-            close(i);
-            return 1;
-        }
+        ERROR("ERROR:Could not write ", oname);
+        close(i);
+        return 1;
     }
 
     strcpy(#name2, oname);
