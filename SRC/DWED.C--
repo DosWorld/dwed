@@ -32,7 +32,7 @@ SOFTWARE.
 ?argc FALSE
 ?parsecommandline FALSE
 ?codesize
-?stack 32
+?stack 512
 ?pragma option TEXE
 ?startuptomain
 ?pragma option X
@@ -47,26 +47,49 @@ SOFTWARE.
 ?define ENV_COMSPEC   "COMSPEC"
 ?define UPTIME_LOW    0x46c
 ?define OVL_NAME      "DWEDOVL.EXE";
+?define RND_LEN       36
+?define DIR_MAX       264
+?define COPY_MAX      263
+?define PATH_MAX      300
+?define PATH_CAP      260
+?define MAX_TAIL      126
 
-char *rndchars = "QWERTYUIOPASDFGHJKLZXCVBNM1234567890";
+char rndchars[] = "QWERTYUIOPASDFGHJKLZXCVBNM1234567890";
 char cur_drive;
-char cur_dir[256];
-char dwed[256];
-char comspec[256];
+char cur_dir[DIR_MAX];
+char cur_sdir[DIR_MAX];
+char tmpbuf[DIR_MAX];
+char dwed[PATH_MAX];
+char comspec[PATH_MAX];
+char exit_code;
+char restore_failed;
+char comspec_long;
+char short_failed;
+char lfn_ok;
+char ovl_short_failed;
+char cs_short_failed;
 word seed;
+word err_code;
 
 struct {
         char sign[5];
         char ini_name[13];
         char cmd[256];
+        char show[256];
+        char bat[130];
 } dwed_info;
 
-void PUTS(SI) {
+void PUTS0(SI) {
         WHILE(TRUE) {
                 $LODSB;
                 IF(AL == 0) BREAK;
+                IF(AL == 0x0D) BREAK;
                 $INT 0x29;
         }
+}
+
+void PUTS(SI) {
+        PUTS0(SI);
         AL = 0x0D; $INT 0x29;
         AL = 0x0A; $INT 0x29;
 }
@@ -80,6 +103,7 @@ inline void SETCURDRIVE(DL) {
 }
 
 inline void GETDIR(DL, SI) {
+        CX = 0;
         AX = 0x7147;
         $STC;
         $PUSH DX, SI;
@@ -101,32 +125,131 @@ inline void CHDIR(DX) {
         }
 }
 
+void TO_SHORT(SI) {
+        $PUSH SI;
+        $PUSH DS;
+        $POP ES;
+        DI = #tmpbuf;
+        ESBYTE[DI] = 0;
+        CX = 1;
+        AX = 0x7160;
+        $STC;
+        $INT 0x21;
+        $POP SI;
+        IF(NOTCARRYFLAG) {
+                BX = #tmpbuf;
+                IF(DSBYTE[BX] != 0) {
+                        lfn_ok = 1;
+                        DI = SI;
+                        COPYSTR(#tmpbuf, DI);
+                        RETURN;
+                }
+        }
+        short_failed = 1;
+}
+
+void COPYSTR(SI, DI) {
+        $PUSH DS;
+        $POP ES;
+        CX = COPY_MAX;
+        WHILE(TRUE) {
+                $LODSB;
+                $STOSB;
+                IF(AL == 0) BREAK;
+                CX--;
+                IF(CX == 0) {
+                        AL = 0;
+                        $STOSB;
+                        BREAK;
+                }
+        }
+}
+
+void PUT_NUM() {
+        AX = err_code;
+        BX = 10;
+        CX = 0;
+        WHILE(TRUE) {
+                DX = 0;
+                $DIV BX;
+                $PUSH DX;
+                CX++;
+                IF(AX == 0) BREAK;
+        }
+        WHILE(CX != 0) {
+                $POP AX;
+                AL += 48;
+                $INT 0x29;
+                CX--;
+        }
+        AL = 0x0D; $INT 0x29;
+        AL = 0x0A; $INT 0x29;
+}
+
+void PUT_ERR() {
+        IF(err_code == 2) {
+                PUTS("File not found");
+                IF(short_failed != 0) {
+                        IF(lfn_ok != 0) {
+                                PUTS("Short path conversion failed");
+                        }
+                }
+                RETURN;
+        }
+        IF(err_code == 3) {
+                PUTS("Path not found");
+                IF(short_failed != 0) {
+                        IF(lfn_ok != 0) {
+                                PUTS("Short path conversion failed");
+                        }
+                }
+                RETURN;
+        }
+        IF(err_code == 5) {
+                PUTS("Access denied");
+                RETURN;
+        }
+        IF(err_code == 8) {
+                PUTS("Not enough memory");
+                RETURN;
+        }
+        IF(err_code == 10) {
+                PUTS("Bad environment");
+                RETURN;
+        }
+        IF(err_code == 11) {
+                PUTS("Bad EXE format");
+                RETURN;
+        }
+        PUTS0("DOS error ");
+        PUT_NUM();
+}
+
+inline char GETDOSVER() {
+        AH = 0x30; $INT 0x21;
+}
+
 //  return ES:DI = env string
-inline void ENVSTR(AX) {
-        $PUSH BX;
-        BX = AX;
-        WHILE(DSBYTE[BX] != 0) BX++;
+inline void ENVSTR(DX) {
         ES = DSWORD[ENV_IN_PSP];
         DI = 0;
         WHILE (ESBYTE[DI] != 0) {
-                SI = AX;
-                CX = 128;
-                $REPZ
-                $CMPSB
-                // matched only if we consumed the target's NUL (SI-1==BX)
-                // and the env byte we stopped on is '='
-                IF(SI - 1 == BX) {
-                        DI--;
+                SI = DX;
+                WHILE(DSBYTE[SI] != 0) {
+                        AL = DSBYTE[SI];
+                        IF(AL != ESBYTE[DI]) BREAK;
+                        SI++;
+                        DI++;
+                }
+                IF(DSBYTE[SI] == 0) {
                         IF(ESBYTE[DI] == '=') {
                                 DI++;
-                                $POP BX;
                                 RETURN;
                         }
                 }
                 WHILE(ESBYTE[DI] != 0) DI++;
                 DI++;
         }
-        $POP BX;
 }
 
 // DX = fname
@@ -169,15 +292,17 @@ char RANDOM_CHR() {
         CL = 7;
         AX = AX << CL;
         AX ^= DX;
+        DX = AX;
         CL = 9;
         AX = AX >> CL;
         AX ^= DX;
+        DX = AX;
         CL = 8;
         AX = AX << CL;
         AX ^= DX;
         seed = AX;
         DX = 0;
-        BX = 38;
+        BX = RND_LEN;
         $DIV BX;
 
         DH = 0;
@@ -187,19 +312,28 @@ char RANDOM_CHR() {
 
 inline char CHECK_INSTALL(BX) {
         AL = FALSE;
+        DX = 32;
         $PUSH CS;
         WHILE(BX != 0) {
                 DS = BX;
                 CX = BX;
+                IF(DSWORD[0] != 0x20CD) BREAK;
                 BX = DSWORD[5];
-                BX++;
-                IF(DSWORD[BX] == 'WD')
-                        IF(DSWORD[BX+2] == 'DE') {
-                                AL = TRUE;
-                                BREAK;
+                IF(BX >= 0x100)
+                        IF(BX < 0xFF00) {
+                                BX++;
+                                IF(DSWORD[BX] == 'WD')
+                                        IF(DSWORD[BX+2] == 'DE') {
+                                                AL = TRUE;
+                                                BREAK;
+                                        }
                         }
                 BX = DSWORD[PARENT_PSP];
                 IF (BX == CX) {
+                        BX = 0;
+                }
+                DX--;
+                IF(DX == 0) {
                         BX = 0;
                 }
         }
@@ -209,13 +343,28 @@ inline char CHECK_INSTALL(BX) {
 inline void INIT() {
         // save current state of FS: drive and dir
         cur_drive = @GETCURDRIVE();
-        @GETDIR(cur_drive, #cur_dir);
+        cur_dir[0] = '\\';
+        cur_dir[1] = 1;
+        @GETDIR(0, #cur_dir + 1);
+        IF(CARRYFLAG) {
+                cur_dir[0] = 0;
+        }
+        IF(cur_dir[1] == 1) {
+                cur_dir[0] = 0;
+        }
+        cur_sdir[0] = 0;
+        IF(cur_dir[0] != 0) {
+                COPYSTR(#cur_dir, #cur_sdir);
+                TO_SHORT(#cur_sdir);
+        }
+        short_failed = 0;
 
         // Init random session id
         $PUSH CS;
         DS = 0;
         AX = DSWORD[UPTIME_LOW];
         $POP DS;
+        IF(AX == 0) AX = 1;
         seed = AX;
         // fill signature
         BX = #dwed_info.sign;
@@ -244,30 +393,57 @@ inline void INIT() {
         }
 
         // Eval path to DWEDOVL.EXE
+        $PUSH CS;
+        $POP ES;
+        IF(DSWORD[ENV_IN_PSP] == 0) {
+                PUTS("No environment block");
+                AX = 0x4C01; $INT 0x21;
+        }
         DS = DSWORD[ENV_IN_PSP];
         SI = 0;
         DI = #dwed;
         AL = 1;
+        BX = 0;
         WHILE(AX != 0) {
                 AH = AL;
                 $LODSB;
+                IF(SI == 0) {
+                        BX = 2;
+                        BREAK;
+                }
         }
         SI += 2;
-        CX = 255;
+        CX = PATH_CAP;
         WHILE(TRUE) {
                 $LODSB;
                 IF(AL == 0) BREAK;
-                IF(CX == 0) BREAK;
+                IF(CX == 0) {
+                        BX = 1;
+                        BREAK;
+                }
                 $STOSB;
                 CX--;
         }
         ESBYTE[DI] = 0;
         $PUSH CS;
         $POP DS;
-        WHILE(DI != #dwed) {
-                AL = DSWORD[DI];
+        IF(BX != 0) {
+                PUTS("Invalid environment or program path is too long");
+                AX = 0x4C01; $INT 0x21;
+        }
+        TO_SHORT(#dwed);
+        ovl_short_failed = short_failed;
+        short_failed = 0;
+        DI = #dwed;
+        WHILE(DSBYTE[DI] != 0) DI++;
+        WHILE(TRUE) {
+                AL = DSBYTE[DI];
                 IF(AL == ':') BREAK;
                 IF(AL == '\\') BREAK;
+                IF(DI == #dwed) {
+                        DI--;
+                        BREAK;
+                }
                 DI--;
         }
         DI++;
@@ -286,42 +462,131 @@ inline void INIT() {
         $POP DS;
         $PUSH CS;
         $POP ES;
-        CX = 255;
+        CX = PATH_CAP;
+        BX = 0;
         WHILE(TRUE) {
                 $LODSB;
                 IF(AL == 0) BREAK;
-                IF(CX == 0) BREAK;
+                IF(CX == 0) {
+                        BX = 1;
+                        BREAK;
+                }
                 $STOSB;
                 CX--;
         }
+        IF(BX != 0) DI = #comspec;
         AL = 0;
         $STOSB;
         $PUSH CS;
         $POP DS;
+        IF(BX != 0) comspec_long = 1;
+        IF(comspec[0] != 0) TO_SHORT(#comspec);
+        cs_short_failed = short_failed;
         // CP/M BDOS API call - not need :)
         DSWORD[5] = #dwed_info;
 }
 
+void DEL_BAT() {
+        BX = #dwed_info.bat;
+        IF(DSBYTE[BX] != 0) {
+                DX = BX;
+                AH = 0x41;
+                $INT 0x21;
+                BX = #dwed_info.bat;
+                DSBYTE[BX] = 0;
+        }
+}
+
+void RESTORE_FS() {
+        restore_failed = 0;
+        @SETCURDRIVE(cur_drive);
+        IF(cur_dir[0] != 0) {
+                @CHDIR(#cur_dir);
+                IF(CARRYFLAG) {
+                        @CHDIR(#cur_sdir);
+                        IF(CARRYFLAG) {
+                                PUTS("Cannot restore current directory");
+                                restore_failed = 1;
+                        }
+                }
+        }
+}
+
 void main() {
+        restore_failed = 0;
+        comspec_long = 0;
+        short_failed = 0;
+        lfn_ok = 0;
+        ovl_short_failed = 0;
+        cs_short_failed = 0;
+        BX = #dwed_info.bat;
+        DSBYTE[BX] = 0;
+        @GETDOSVER();
+        IF(AL < 3) {
+                PUTS("DOS 3.0 or later is required");
+                AX = 0x4C01; $INT 0x21;
+        }
         @INIT();
         IF(@CHECK_INSTALL(DSWORD[PARENT_PSP])) {
                 PUTS("Cycle!");
                 AL = 1;
-        } ELSE {
+        } else {
                 WHILE(TRUE) {
                         SPAWN(#dwed, 0x80, DSWORD[ENV_IN_PSP]);
-                        IF(AX != 0) { AL = 1; BREAK; }
+                        $CLD;
+                        IF(AX != 0) {
+                                err_code = AX;
+                                short_failed = ovl_short_failed;
+                                PUTS("Cannot run DWEDOVL.EXE");
+                                PUT_ERR();
+                                AL = 1;
+                                BREAK;
+                        }
                         @GETEXITCODE();
+                        IF(AH != 0) {
+                                IF(AH != 3) {
+                                        PUTS("DWEDOVL was terminated");
+                                        AL = 1;
+                                        BREAK;
+                                }
+                        }
                         IF(AL != 254) BREAK;
                         // show command line
-                        PUTS(#dwed_info.cmd + 5);
-                        SPAWN(#comspec, #dwed_info.cmd, DSWORD[ENV_IN_PSP]);
-                        // restore FS state
-                        @SETCURDRIVE(cur_drive);
-                        @CHDIR(#cur_dir);
+                        PUTS(#dwed_info.show + 1);
+                        BX = #comspec;
+                        IF(DSBYTE[BX] == 0) {
+                                IF(comspec_long != 0) {
+                                        PUTS("COMSPEC is too long");
+                                } ELSE {
+                                        PUTS("COMSPEC is not set");
+                                }
+                        } ELSE {
+                                BX = #dwed_info.cmd;
+                                IF(DSBYTE[BX] > MAX_TAIL) {
+                                        PUTS("Command is too long");
+                                } ELSE {
+                                        SPAWN(#comspec, #dwed_info.cmd, DSWORD[ENV_IN_PSP]);
+                                        $CLD;
+                                        IF(AX != 0) {
+                                                err_code = AX;
+                                                short_failed = cs_short_failed;
+                                                PUTS("Cannot run command interpreter");
+                                                PUT_ERR();
+                                        }
+                                }
+                        }
+                        DEL_BAT();
+                        RESTORE_FS();
                         // wait key
                         AX = 0; $INT 0x16;
                 }
         }
+        exit_code = AL;
+        DEL_BAT();
+        RESTORE_FS();
+        IF(restore_failed != 0) {
+                IF(exit_code == 0) exit_code = 2;
+        }
+        AL = exit_code;
         AH = 0x4c; $INT 0x21;
 }

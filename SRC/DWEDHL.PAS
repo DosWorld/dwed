@@ -577,9 +577,9 @@ begin
         dwedhl.add_keyword(SRC_ASM, 'FAR');
 
         dwedhl.add_lang(SRC_MD, '|md|', false, '`^#@*_.,?+*/\-()!:;"=<>(){}[]~|'+#$27, '.md  Markdown file');
-        dwedhl.add_lang(SRC_XML, '|xmlxsd|', false, '=<>/"', '.xml XML/XSD Document');
+        dwedhl.add_lang(SRC_XML, '|xml|xsd|', false, '=<>/"', '.xml XML/XSD Document');
 
-        dwedhl.add_lang(SRC_HTML, '|htm|', false, '=<>/"', '.htm HTML Document');
+        dwedhl.add_lang(SRC_HTML, '|htm|html|', false, '=<>/"', '.htm HTML Document');
         dwedhl.add_keyword(SRC_HTML, 'body');
         dwedhl.add_keyword(SRC_HTML, 'script');
         dwedhl.add_keyword(SRC_HTML, 'pre');

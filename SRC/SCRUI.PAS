@@ -71,6 +71,9 @@ var     i, total : integer;
         s        : string;
         c        : byte;
         hi_key   : byte;
+        len, lim : integer;
+        last_ofs : integer;
+        page_ptr : pchar;
 begin
         scr.cursor_off;
         scr.push;
@@ -87,30 +90,46 @@ begin
                 if tmp^ = #$0a then inc(total);
                 inc(tmp);
         end;
+        lim := w;
+        if lim > 255 then lim := 255;
+        last_ofs := -1;
+        page_ptr := mtext;
         while true do begin
-                for i := 1 to h do scr.hprint(x, y + i - 1, mclr, ' ', w);
                 scr_ofs := selItem div h;
                 scr_ofs := scr_ofs * h;
                 scr_y := selItem mod h;
-                tmp := mtext;
-                i := 0;
-                while tmp^ <> #0 do begin
-                        if (i >= scr_ofs) and (i < (scr_ofs + h)) then begin
-                                s := '';
-                                while (tmp^ <> #0) and (tmp^ <> #$0a) do begin
-                                        if (tmp^ <> #$0d) then s := s + tmp^;
-                                        inc(tmp);
-                                end;
-                                if length(s) > w then s := copy(s, 1, w);
-                                while length(s) < w do s := s + ' ';
-                                if i = scr_ofs + scr_y then c := sclr else c := mclr;
-                                scr.print(x, y + i - scr_ofs, c, s);
-                        end else begin
+                if scr_ofs <> last_ofs then begin
+                        tmp := mtext;
+                        i := 0;
+                        while (i < scr_ofs) and (tmp^ <> #0) do begin
                                 while (tmp^ <> #0) and (tmp^ <> #$0a) do inc(tmp);
+                                if tmp^ <> #0 then inc(tmp);
+                                inc(i);
                         end;
+                        page_ptr := tmp;
+                        last_ofs := scr_ofs;
+                end;
+                tmp := page_ptr;
+                i := 0;
+                while (i < h) and (tmp^ <> #0) do begin
+                        len := 0;
+                        while (tmp^ <> #0) and (tmp^ <> #$0a) do begin
+                                if (tmp^ <> #$0d) and (len < lim) then begin
+                                        inc(len);
+                                        s[len] := tmp^;
+                                end;
+                                inc(tmp);
+                        end;
+                        if len < lim then fillchar(s[len + 1], lim - len, ' ');
+                        s[0] := chr(lim);
+                        if i = scr_y then c := sclr else c := mclr;
+                        scr.print(x, y + i, c, s);
                         inc(i);
                         if tmp^ <> #0 then inc(tmp);
-                        if i >= (scr_ofs + h) then break;
+                end;
+                while i < h do begin
+                        scr.hprint(x, y + i, mclr, ' ', w);
+                        inc(i);
                 end;
                 scr.show;
                 kbd_reset;
@@ -228,7 +247,11 @@ begin
                 if ofs_x < 0 then ofs_x := 0;
                 visstr := copy(str, ofs_x + 1, vislen);
                 locate(x + pos - ofs_x - 1, y);
-                visstr := rpad(visstr, vislen);
+                i := length(visstr);
+                if i < vislen then begin
+                        fillchar(visstr[i + 1], vislen - i, ' ');
+                        visstr[0] := chr(vislen);
+                end;
                 scr.print(x, y, clr, visstr);
                 selsb := 0;
                 selse := 0;
@@ -414,7 +437,7 @@ begin
         while r = MAYBE do begin
                 kbd_reset;
                 case hi(kbd_getkey) of
-                SCAN_ESC: r := NO;
+                SCAN_ESC: r := CANCEL;
                 SCAN_N: r := NO;
                 SCAN_ENTER: r := YES;
                 SCAN_Y: r := YES;

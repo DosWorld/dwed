@@ -86,6 +86,7 @@ begin
                 if h <> nil then begin
                         proc := TEventProc(h^.proc);
                         r := proc(ctx, @e);
+                        if r = SCRU_QUIT then begin process_event := r; exit; end;
                         if h^.reset_selection and ctx.current^.editor.selection then begin
                                 ctx.current^.editor.selection := false;
                                 r := SCRU_FULL;
@@ -97,7 +98,7 @@ begin
                 MOUSE_RELEASE_B1, MOUSE_RELEASE_B2 ] then begin
                 r := handle_mouse(ctx, @e);
         end;
-        if r <> SCRU_NONE then r := norm_xy(ctx, r);
+        if (r <> SCRU_NONE) and (r <> SCRU_QUIT) then r := norm_xy(ctx, r);
         process_event := r;
 end;
 
@@ -434,8 +435,8 @@ begin
                                                 scr.print(1, 0, config^.color.top, 'Save "' + sfname + '"');
                                                 scr.show;
                                                 strs.to_file(fname, rline, errCode, @save_file_progress);
-                                                r := SCRU_FULL;
                                                 if errCode <> 0 then begin
+                                                        r := SCRU_FULL;
                                                         handle_error(ctx, errCode);
                                                         break;
                                                 end else chg := false;
@@ -460,7 +461,7 @@ var     srcctx  : PFileContext;
 begin
         srcctx := ctx.current;
         commit(ctx);
-        if event^.ctrl_keys = key_shift then begin
+        if (event^.ctrl_keys and key_shift) <> 0 then begin
                 ctx.current := ctx.all;
                 while (ctx.current <> nil) do begin
                         commit(ctx);
@@ -617,7 +618,17 @@ end;
 function hk_cb_cut(var ctx:TEditorContext; event:PEvent):integer;
 begin
         if ctx.current^.editor.selection then begin
-                copy_selected(ctx);
+                if not copy_selected(ctx) then begin
+                        scr.push;
+                        scrui.msg_box(ctx.current^.config^.color.top, 'Cut',
+                                'Selection is too large for the clipboard.', '[ OK ]');
+                        scr.show;
+                        kbd_reset;
+                        kbd_getkey;
+                        scr.pop;
+                        hk_cb_cut := SCRU_FULL;
+                        exit;
+                end;
                 delete_selected(ctx);
                 with ctx.current^ do total := strs.renum(rline);
                 hk_cb_cut := SCRU_FULL;
@@ -837,10 +848,12 @@ function hk_default(var ctx:TEditorContext; event:PEvent):integer;
 var     r, len  : integer;
         c       : char;
         changed : boolean;
+        deleted : boolean;
 begin
         r := SCRU_NONE;
         c := event^.ascii;
         changed := false;
+        deleted := false;
         len := length(ctx.current^.editor.line);
 
         if (event^.ctrl_keys and (key_ctrl or key_alt)) <> 0 then c:=#0;
@@ -851,6 +864,8 @@ begin
                         delete_selected(ctx);
                         with ctx.current^ do total := strs.renum(rline);
                         r := SCRU_FULL;
+                        deleted := true;
+                        len := length(ctx.current^.editor.line);
                 end;
                 if (len + 1 = ctx.current^.editor.x) and (len <> 255) then begin
                                ctx.current^.editor.line := ctx.current^.editor.line + c;
@@ -866,7 +881,7 @@ begin
         if changed then with ctx.current^ do begin
                        editor.chg := true;
                        inc(editor.x);
-        end else r := SCRU_NONE;
+        end else if not deleted then r := SCRU_NONE;
         hk_default := r;
 end;
 
@@ -933,7 +948,8 @@ begin
                 count := 0;
                 if line = nil then begin
                         search_not_found(ctx);
-                end else while (line <> nil) and (ans in [YES, ALL]) do begin
+                end else while (line <> nil) and (ans <> CANCEL) do begin
+                        if ans = NO then ans := YES;
                         norm_xy(ctx, SCRU_FULL);
                         load_ed(ctx);
                         ctx.current^.editor.selection := true;
@@ -948,6 +964,10 @@ begin
                                          msg);
                                 scr.show;
                                 ans := scrui.yes_no_all;
+                        end;
+                        if ans = CANCEL then begin
+                                ctx.current^.editor.selection := false;
+                                break;
                         end;
                         if ans = NO then begin
                                 inc(ctx.current^.editor.x, length(searchText));
@@ -997,7 +1017,7 @@ var     r              : integer;
         start_find     : boolean;
         searchCaseSens : boolean;
 begin
-        searchCaseSens := event^.ctrl_keys = key_shift;
+        searchCaseSens := (event^.ctrl_keys and key_shift) <> 0;
         if ctx.current^.editor.selection then begin
                 get_sel_coord(ctx, sb_x, sb_y, se_x, se_y);
                 clinenum := strs.get_num(ctx.current^.cline);
@@ -1116,7 +1136,7 @@ begin
                 end else if event^.etype <> MOUSE_MOVE then begin start_load := false; break; end;
         end;
         errCode := 0;
-        if start_load then load_clipboard(ctx, fname);
+        if start_load then errCode := load_clipboard(ctx, fname);
         if errCode <> 0 then handle_error(ctx, errCode);
         hk_cb_load := SCRU_CLINE;
 end;
@@ -1262,6 +1282,8 @@ var     cmd        : string;
         t          : bfile;
         can_run    : boolean;
         srcctx     : PFileContext;
+        dir        : string;
+        batname    : string;
 begin
         cmd := '';
         r := SCRU_NONE;
@@ -1296,9 +1318,23 @@ begin
         end;
 
         if can_run then begin
+                dir := getpathname(ctx.temp);
+                if dir = ctx.temp then dir := '';
+                batname := short_dir(dir) + basename(change_ext(ctx.temp, '.bat'));
+                if not set_exec_cmd(cmd, batname) then begin
+                        handle_error(ctx, 105);
+                        can_run := false;
+                end;
+        end;
+
+        if can_run then begin
                 assign(t, ctx.temp);
                 rewrite(t);
-                if not isopen(t) then begin handle_error(ctx, 105); can_run := false; end else begin
+                if not isopen(t) then begin
+                        FileDelete(batname);
+                        handle_error(ctx, 105);
+                        can_run := false;
+                end else begin
                         serialize_fctx(t, ctx.all);
                         close(t);
                 end;
@@ -1313,12 +1349,10 @@ begin
                         ctx.all := ctx.all^.next;
                         freemem(srcctx, sizeof(TFileContext));
                 end;
+                ctx.current := nil;
         end;
 
-        if can_run then begin
-                set_exec_cmd(cmd);
-                ctx.exit_code := EXEC_USER_CMD;
-        end;
+        if can_run then ctx.exit_code := EXEC_USER_CMD;
         if can_run then r := SCRU_QUIT;
         hk_userdef := r;
 end;
@@ -1357,7 +1391,7 @@ begin
                 if strs.is_first(ctx.current^.cline) then ctx.current^.rline := ctx.current^.cline;
                 ctx.current^.cline := strs.go_next(ctx.current^.cline);
                 ctx.current^.cline := strs.put(ctx.current^.cline, s1);
-                if ctx.current^.scry <> ctx.config.height - 1 then inc(ctx.current^.scry);
+                if ctx.current^.scry <> ctx.config.height - 2 then inc(ctx.current^.scry);
                 ctx.current^.chg := true;
                 load_ed(ctx);
                 r := SCRU_FULL;

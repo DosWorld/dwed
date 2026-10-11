@@ -73,9 +73,19 @@ memType : MemoryType = MT_DOS;
 procedure init(mType : MemoryType);
 begin
         memType := mType;
-        if mType = MT_SXMS then strssxms.init
-        else if mType = MT_SWAP then strsswap.init
-        else strsdos.init;
+        if mType = MT_SXMS then begin
+                strssxms.init;
+                if not strssxms.is_open then begin
+                        memType := MT_DOS;
+                        strsdos.init;
+                end;
+        end else if mType = MT_SWAP then begin
+                strsswap.init;
+                if not strsswap.is_open then begin
+                        memType := MT_DOS;
+                        strsdos.init;
+                end;
+        end else strsdos.init;
 end;
 
 procedure done;
@@ -118,22 +128,49 @@ end;
 procedure to_file(fname : string; r : EditorStr; var errCode : integer; scrupdate : pointer);
 var     f        : bfile;
         fnamebak : string;
+        fnametmp : string;
+        s1, s2   : string;
+        same_bak : boolean;
 begin
         spinner_start;
         errCode := 0;
-        if FileExists(fname) then begin
-                fnamebak := change_ext(fname, '.bak');
-                if FileExists(fnamebak) then FileDelete(fnamebak);
-                assign(f, fname);
-                rename(f, fnamebak);
-        end;
+        fnamebak := change_ext(fname, '.bak');
+        fnametmp := change_ext(fname, '.$$$');
+        s1 := fname;
+        s2 := fnamebak;
+        upstr(s1);
+        upstr(s2);
+        same_bak := s1 = s2;
+        s2 := fnametmp;
+        upstr(s2);
+        if s1 = s2 then fnametmp := change_ext(fname, '.tmp');
+        if FileExists(fnametmp) then FileDelete(fnametmp);
 
         if memType = MT_SXMS then
-                strssxms.to_file(fname, dword(r), errCode, scrupdate)
+                strssxms.to_file(fnametmp, dword(r), errCode, scrupdate)
         else if memType = MT_SWAP then
-                strsswap.to_file(fname, dword(r), errCode, scrupdate)
+                strsswap.to_file(fnametmp, dword(r), errCode, scrupdate)
         else
-                strsdos.to_file(fname, pointer(r), errCode, scrupdate);
+                strsdos.to_file(fnametmp, pointer(r), errCode, scrupdate);
+
+        if errCode <> 0 then begin
+                if FileExists(fnametmp) then FileDelete(fnametmp);
+        end else begin
+                if FileExists(fname) then begin
+                        if same_bak then FileDelete(fname)
+                        else begin
+                                if FileExists(fnamebak) then FileDelete(fnamebak);
+                                assign(f, fname);
+                                rename(f, fnamebak);
+                                if f.ioresult <> 0 then errCode := 5;
+                        end;
+                end;
+                if errCode = 0 then begin
+                        assign(f, fnametmp);
+                        rename(f, fname);
+                        if f.ioresult <> 0 then errCode := 5;
+                end;
+        end;
         spinner_stop;
 end;
 

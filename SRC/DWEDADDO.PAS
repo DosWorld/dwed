@@ -234,7 +234,7 @@ begin
                 SCAN_BS: begin
                         if radix = RADIX2 then calc_op1 := calc_op1 shr 1
                         else if radix = RADIX10 then calc_op1 := calc_op1 div 10
-                        else if radix = RADIX16 then calc_op1 := calc_op1 shr 8;
+                        else if radix = RADIX16 then calc_op1 := calc_op1 shr 4;
                 end;
                 end;
                 ch := upcase(e.ascii);

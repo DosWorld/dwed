@@ -56,7 +56,7 @@ function go_word_right(var ctx : TEditorContext) : integer;
 function go_page_up(var ctx : TEditorContext) : integer;
 function go_page_down(var ctx : TEditorContext) : integer;
 
-procedure copy_selected(var ctx : TEditorContext);
+function copy_selected(var ctx : TEditorContext) : boolean;
 procedure delete_selected(var ctx : TEditorContext);
 function save_clipboard(var ctx : TEditorContext; fname:string) : integer;
 function load_clipboard(var ctx : TEditorContext; fname:string) : integer;
@@ -432,7 +432,7 @@ begin
         end;
 end;
 
-procedure copy_selected(var ctx : TEditorContext);
+function copy_selected(var ctx : TEditorContext) : boolean;
 var
         sb_y, se_y, clinenum : dword;
         sb_x, se_x : integer;
@@ -440,8 +440,11 @@ var
         line       : EditorStr;
         lineStr    : string;
         len        : integer;
+        full       : boolean;
 begin
+        copy_selected := false;
         if not ctx.current^.editor.selection then exit;
+        full := true;
         get_sel_coord(ctx, sb_x, sb_y, se_x, se_y);
         line := strs.find_num(ctx.current^.rline, sb_y);
         pos := 0;
@@ -455,7 +458,7 @@ begin
                 clinenum := strs.get_num(line);
                 len := length(lineStr);
                 if clinenum = sb_y then begin
-                        if pos > (CB_SIZE - (len + 3)) then break;
+                        if pos > (CB_SIZE - (len + 3)) then begin full := false; break; end;
                         dec(len, sb_x);
                         move(lineStr[sb_x], ctx.clipboard[pos], len + 1);
                         inc(pos, len + 1);
@@ -465,14 +468,14 @@ begin
                         inc(pos);
                 end else if clinenum = se_y then begin
                         len := se_x - 1;
-                        if pos > (CB_SIZE - (len + 1)) then break;
+                        if pos > (CB_SIZE - (len + 1)) then begin full := false; break; end;
                         if se_x > 0 then begin
                                 move(lineStr[1], ctx.clipboard[pos], len);
                                 inc(pos, len);
                         end;
                         break;
                 end else begin
-                        if pos > (CB_SIZE - (len + 3)) then break;
+                        if pos > (CB_SIZE - (len + 3)) then begin full := false; break; end;
                         move(lineStr[1], ctx.clipboard[pos], len);
                         inc(pos, len);
                         ctx.clipboard[pos] := #$0D;
@@ -486,6 +489,7 @@ begin
         if ctx.has_wincb then begin
                 WCB_Copy(ctx.clipboard[0], pos + 1);
         end;
+        copy_selected := full;
 end;
 
 procedure delete_selected(var ctx : TEditorContext);
@@ -736,7 +740,8 @@ begin
                         need_add := false;
                         lnum := strs.get_num(rline);
                         strs.get(rline, line);
-                        uline := trim(line);
+                        line := trim(line);
+                        uline := line;
                         upstr(uline);
                         if starts_with(uline, 'PROCEDURE ') then begin
                                 line := copy(line, 11, length(line) - 10);

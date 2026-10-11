@@ -389,6 +389,7 @@ begin
         while r <> nil do begin
                 strsdos.get(r, s);
                 writeln(f, s);
+                if f.ioresult <> 0 then break;
                 r := strsdos.go_next(r);
 
                 inc(writed, ord(s[0]));
@@ -400,8 +401,10 @@ begin
                         writed := 0;
                 end;
         end;
-        truncate(f);
+        if f.ioresult = 0 then truncate(f);
+        if f.ioresult <> 0 then errCode := 101;
         close(f);
+        if f.ioresult <> 0 then errCode := 101;
 end;
 
 procedure init;

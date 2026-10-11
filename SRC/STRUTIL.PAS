@@ -107,7 +107,7 @@ begin
         i := 1;
         r := '';
         while (i <= ord(s[0])) and (ord(r[0]) < 255) do begin
-                if s[i] = #9 then begin
+                if (s[i] = #9) and (ord(r[0]) + length(tabs) + (ord(s[0]) - i) <= 255) then begin
                         r := r + tabs;
                 end else begin
                         r[ord(r[0]) + 1] := s[i];

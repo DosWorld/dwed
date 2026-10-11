@@ -64,10 +64,12 @@ begin
                         while (i < 8) and kbd_haskey do begin
                                 wait_event(event);
                                 scru := process_event(ctx, event);
+                                if scru = SCRU_QUIT then break;
                                 if prev_scru < scru then prev_scru := scru;
                                 if (scru <> SCRU_NONE) and (scru <> SCRU_FULL) then begin scru := prev_scru; break; end;
                                 inc(i);
                         end;
+                        if scru <> SCRU_QUIT then scru := prev_scru;
                 end;
         end;
         FadeOut;
@@ -121,6 +123,7 @@ begin
         path := '';
         if length(path) = 0 then path := getenv(ENV_TEMP);
         if length(path) = 0 then path := getenv(ENV_TMP);
+        path := short_dir(path);
         if (length(path) <> 0) and (path[length(path)] <> '\') then path := path + '\';
         ctx.temp := path + ctx.temp;
 end;
@@ -128,7 +131,7 @@ end;
 procedure process_param(var ctx : TEditorContext; key, value : string);
 begin
         if length(key) = 0 then exit;
-        if key = CFG_TAB_SIZE then ctx.config.tab_size := ahtob(value)
+        if key = CFG_TAB_SIZE then ctx.config.tab_size := atoi(value, 8)
         else if key = CFG_COLOR_TOP then ctx.config.color.top := ahtob(value)
         else if key = CFG_COLOR_TOP_HL then ctx.config.color.top_hl := ahtob(value)
         else if key = CFG_COLOR_TEXT then ctx.config.color.text := ahtob(value)
@@ -190,6 +193,28 @@ begin
         close(f);
 end;
 
+procedure load_list(var ctx : TEditorContext; fname : string);
+var     f       : bfile;
+        line    : string;
+        errCode : integer;
+begin
+        assign(f, fname);
+        system2.reset(f);
+        if not isopen(f) then begin
+                handle_error(ctx, 104);
+                exit;
+        end;
+        while not eof(f) do begin
+                readln(f, line);
+                line := trim(line);
+                if (length(line) <> 0) and (not has_switch(line)) then begin
+                        load_file(ctx, line, errCode, @load_file_progress);
+                        if errCode <> 0 then handle_error(ctx, errCode);
+                end;
+        end;
+        close(f);
+end;
+
 procedure parse_temp(var ctx : TEditorContext);
 var   f : bfile;
       s, ss   : string;
@@ -232,6 +257,7 @@ begin
                         ctx.current^.scrx := scrx;
                         ctx.current^.scry := scry;
                         ctx.current^.cline := strs.find_num(ctx.current^.rline, cline_num);
+                        if strs.is_nil(ctx.current^.cline) then ctx.current^.cline := strs.go_last(ctx.current^.rline);
                         load_ed(ctx);
                         norm_xy(ctx, 0);
                 end;
@@ -304,11 +330,15 @@ begin
                 show_welcome_msg := false;
                 parse_temp(ctx);
                 FileDelete(ctx.temp);
+                FileDelete(change_ext(ctx.temp, '.bat'));
         end else begin
                 show_welcome_msg := true;
                 for i := 1 to pc do begin
                         param := paramstr(i);
-                        if not has_switch(param) then begin
+                        if (length(param) > 1) and (param[1] = '@') then begin
+                                System.delete(param, 1, 1);
+                                load_list(ctx, param);
+                        end else if not has_switch(param) then begin
                                 load_file(ctx, param, errCode, @load_file_progress);
                                 if errCode <> 0 then handle_error(ctx, errCode);
                         end;

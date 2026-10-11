@@ -29,6 +29,7 @@ interface
 uses dwedtype;
 
 procedure init;
+function is_open : boolean;
 procedure done;
 
 function new : dword;
@@ -307,9 +308,11 @@ begin
                         dbb_free(dbb_idx, r2);
                         dbm_free(dbm_mem, t2.recno);
 
-                        dbb_get(dbb_idx, t1.next, t2);
-                        t2.prev := r1;
-                        dbb_put(dbb_idx, t1.next, t2);
+                        if t1.next <> 0 then begin
+                                dbb_get(dbb_idx, t1.next, t2);
+                                t2.prev := r1;
+                                dbb_put(dbb_idx, t1.next, t2);
+                        end;
                         merged := true;
                 end;
         end;
@@ -377,7 +380,7 @@ begin
         if rec.recno <> 0 then dbm_get(dbm_mem, rec.recno, s1, rec.len);
         dbm_free(dbm_mem, rec.recno);
         rec.recno := 0;
-        s2 := trim(copy(s1, pos, length(s1) - pos + 1));
+        s2 := copy(s1, pos, length(s1) - pos + 1);
         s1 := rtrim(copy(s1, 1, pos - 1));
         rec.len := length(s1) + 1;
         if rec.len <> 1 then rec.recno := dbm_add(dbm_mem, s1, rec.len);
@@ -392,6 +395,11 @@ begin
         FillChar(dbb_idx, SizeOf(DBBFile), #0);
         dbm_rewritetemp(dbm_mem, MEM_BLK_SIZE);
         dbb_rewritetemp(dbb_idx, IDX_BLK_SIZE);
+end;
+
+function is_open : boolean;
+begin
+        is_open := dbm_isopen(dbm_mem) and dbb_isopen(dbb_idx);
 end;
 
 procedure done;
@@ -499,6 +507,7 @@ begin
                 if rec.recno <> 0 then dbm_get(dbm_mem, rec.recno, s, rec.len)
                 else s[0] := #0;
                 writeln(f, s);
+                if f.ioresult <> 0 then break;
                 r := rec.next;
                 inc(writed, ord(s[0]));
                 inc(position);
@@ -509,8 +518,10 @@ begin
                         writed := 0;
                 end;
         end;
-        truncate(f);
+        if f.ioresult = 0 then truncate(f);
+        if f.ioresult <> 0 then errCode := 101;
         close(f);
+        if f.ioresult <> 0 then errCode := 101;
 end;
 
 function is_nil(r : dword) : boolean;
